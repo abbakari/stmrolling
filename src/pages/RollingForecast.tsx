@@ -341,19 +341,19 @@ const RollingForecast: React.FC = () => {
 
     // Calculate from table data
     tableData.forEach(row => {
-      // Budget 2025 (existing budget)
-      totalBudget2025 += row.bud25;
-      totalUnitsBudget += Math.floor(row.bud25 / 100); // Assuming average rate of 100 per unit
-      
-      // Sales 2025 (YTD actuals)
-      totalSales2025 += row.ytd25;
-      totalUnitsSales += Math.floor(row.ytd25 / 100);
-      
-      // Forecast 2025 (user input forecasts)
+      // Budget 2025 (existing budget units)
+      totalBudget2025 += row.bud25 * 100; // Convert units to currency
+      totalUnitsBudget += row.bud25;
+
+      // Sales 2025 (YTD actuals units)
+      totalSales2025 += row.ytd25 * 100; // Convert units to currency
+      totalUnitsSales += row.ytd25;
+
+      // Forecast 2025 (user input forecasts units)
       const monthlyData = getMonthlyData(row.id);
-      const forecastTotal = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
-      totalForecast2025 += forecastTotal;
-      totalUnitsForecast += Math.floor(forecastTotal / 100);
+      const forecastTotalUnits = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+      totalForecast2025 += forecastTotalUnits * 100; // Convert units to currency
+      totalUnitsForecast += forecastTotalUnits;
     });
 
     return {
