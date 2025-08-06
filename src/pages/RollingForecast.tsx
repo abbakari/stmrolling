@@ -306,6 +306,21 @@ const RollingForecast: React.FC = () => {
         [month]: value
       }
     }));
+
+    // Update the main table forecast value for this row
+    setTableData(prevData =>
+      prevData.map(row => {
+        if (row.id === rowId) {
+          const updatedMonthlyData = {
+            ...monthlyForecastData[rowId],
+            [month]: value
+          };
+          const newForecastTotal = Object.values(updatedMonthlyData).reduce((sum, val) => sum + (val || 0), 0);
+          return { ...row, forecast: newForecastTotal };
+        }
+        return row;
+      })
+    );
   };
 
   const getMonthlyData = (rowId: string) => {
