@@ -103,45 +103,61 @@ const RollingForecast: React.FC = () => {
       id: '1',
       customer: 'Action Aid International (Tz)',
       item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
-      bud25: 0,
-      ytd25: 0,
+      bud25: 120,
+      ytd25: 45,
       forecast: 0,
       stock: 86,
       git: 0,
-      eta: ''
+      eta: '',
+      budgetDistribution: { JAN: 10, FEB: 8, MAR: 12, APR: 15, MAY: 10, JUN: 8, JUL: 12, AUG: 15, SEP: 10, OCT: 8, NOV: 6, DEC: 6 }
     },
     {
       id: '2',
       customer: 'Action Aid International (Tz)',
       item: 'BF GOODRICH TYRE 265/65R17 120/117S TL ATT/A KO2 LRERWLGO',
-      bud25: 0,
-      ytd25: 0,
+      bud25: 80,
+      ytd25: 25,
       forecast: 0,
       stock: 7,
       git: 0,
-      eta: ''
+      eta: '',
+      budgetDistribution: { JAN: 8, FEB: 6, MAR: 10, APR: 12, MAY: 8, JUN: 6, JUL: 10, AUG: 12, SEP: 8, OCT: 0, NOV: 0, DEC: 0 }
     },
     {
       id: '3',
       customer: 'Action Aid International (Tz)',
       item: 'MICHELIN TYRE 265/65R17 112T TL LTX TRAIL',
-      bud25: 0,
-      ytd25: 0,
+      bud25: 150,
+      ytd25: 60,
       forecast: 0,
       stock: 22,
       git: 100,
-      eta: '2025-08-24'
+      eta: '2025-08-24',
+      budgetDistribution: { JAN: 15, FEB: 12, MAR: 18, APR: 20, MAY: 15, JUN: 12, JUL: 18, AUG: 20, SEP: 15, OCT: 5, NOV: 0, DEC: 0 }
     },
     {
       id: '4',
       customer: 'ADVENT CONSTRUCTION LTD.',
       item: 'WHEEL BALANCE ALLOYD RIMS',
-      bud25: 0,
-      ytd25: 5,
+      bud25: 200,
+      ytd25: 85,
       forecast: 0,
       stock: 0,
       git: 0,
-      eta: ''
+      eta: '',
+      budgetDistribution: { JAN: 20, FEB: 15, MAR: 25, APR: 30, MAY: 20, JUN: 15, JUL: 25, AUG: 30, SEP: 20, OCT: 0, NOV: 0, DEC: 0 }
+    },
+    {
+      id: '5',
+      customer: 'ADVENT CONSTRUCTION LTD.',
+      item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
+      bud25: 90,
+      ytd25: 30,
+      forecast: 0,
+      stock: 15,
+      git: 50,
+      eta: '2025-09-15',
+      budgetDistribution: { JAN: 10, FEB: 8, MAR: 12, APR: 15, MAY: 10, JUN: 8, JUL: 12, AUG: 15, SEP: 0, OCT: 0, NOV: 0, DEC: 0 }
     }
   ]);
 
