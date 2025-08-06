@@ -921,9 +921,14 @@ const RollingForecast: React.FC = () => {
                                     </tr>
                                     <tr className="border-b border-gray-200 bg-orange-100">
                                       <td className="px-2 py-2 font-medium text-gray-700">BUD 2025'</td>
-                                      {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(month => (
-                                        <td key={month} className="px-2 py-2 text-center text-gray-600">0</td>
-                                      ))}
+                                      {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(month => {
+                                        const budgetValue = tableData.find(item => item.id === row.id)?.budgetDistribution?.[month] || 0;
+                                        return (
+                                          <td key={month} className="px-2 py-2 text-center text-gray-600 font-medium">
+                                            {budgetValue}
+                                          </td>
+                                        );
+                                      })}
                                     </tr>
                                     <tr className="bg-purple-100">
                                       <td className="px-2 py-2 font-medium text-gray-700">ACT 2025'</td>
