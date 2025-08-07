@@ -352,6 +352,87 @@ const SalesBudget: React.FC = () => {
     setTimeout(() => setNotification(null), 3000);
   };
 
+  // Handle customer click for forecast breakdown (Manager only)
+  const handleCustomerClick = (customerName: string) => {
+    if (user?.role === 'manager') {
+      setSelectedCustomerForBreakdown(customerName);
+      setIsCustomerForecastModalOpen(true);
+    }
+  };
+
+  // Generate customer forecast data for the modal
+  const generateCustomerForecastData = (customerName: string) => {
+    const customerRows = originalTableData.filter(row => row.customer === customerName);
+    if (customerRows.length === 0) return null;
+
+    // Calculate totals
+    const totalBudgetValue = customerRows.reduce((sum, row) => sum + row.budget2025, 0);
+    const totalActualValue = customerRows.reduce((sum, row) => sum + row.actual2025, 0);
+    const totalForecastValue = customerRows.reduce((sum, row) => sum + row.budgetValue2026, 0);
+    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + Math.floor(row.budget2025 / (row.rate || 1)), 0);
+    const totalActualUnits = customerRows.reduce((sum, row) => sum + Math.floor(row.actual2025 / (row.rate || 1)), 0);
+    const totalForecastUnits = customerRows.reduce((sum, row) => sum + row.budget2026, 0);
+
+    // Generate monthly data
+    const monthlyData = months.map(month => {
+      const monthlyBudgetValue = customerRows.reduce((sum, row) => {
+        const monthData = row.monthlyData.find(m => m.month === month.short);
+        return sum + (monthData?.budgetValue || 0);
+      }, 0);
+      const monthlyActualValue = customerRows.reduce((sum, row) => {
+        const monthData = row.monthlyData.find(m => m.month === month.short);
+        return sum + (monthData?.actualValue || 0);
+      }, 0);
+      const monthlyForecastValue = monthlyBudgetValue; // Same as budget for now
+      const monthlyBudgetUnits = Math.floor(monthlyBudgetValue / 100); // Assuming average rate
+      const monthlyActualUnits = Math.floor(monthlyActualValue / 100);
+      const monthlyForecastUnits = monthlyBudgetUnits;
+      const variance = monthlyForecastValue - monthlyBudgetValue;
+      const variancePercentage = monthlyBudgetValue > 0 ? (variance / monthlyBudgetValue) * 100 : 0;
+
+      return {
+        month: month.short,
+        budgetUnits: monthlyBudgetUnits,
+        actualUnits: monthlyActualUnits,
+        forecastUnits: monthlyForecastUnits,
+        budgetValue: monthlyBudgetValue,
+        actualValue: monthlyActualValue,
+        forecastValue: monthlyForecastValue,
+        rate: 100, // Average rate
+        variance,
+        variancePercentage
+      };
+    });
+
+    // Generate items data
+    const items = customerRows.map(row => ({
+      item: row.item,
+      category: row.category,
+      brand: row.brand,
+      budgetUnits: Math.floor(row.budget2025 / (row.rate || 1)),
+      actualUnits: Math.floor(row.actual2025 / (row.rate || 1)),
+      forecastUnits: row.budget2026,
+      budgetValue: row.budget2025,
+      actualValue: row.actual2025,
+      forecastValue: row.budgetValue2026,
+      rate: row.rate
+    }));
+
+    return {
+      customer: customerName,
+      totalBudgetUnits,
+      totalActualUnits,
+      totalForecastUnits,
+      totalBudgetValue,
+      totalActualValue,
+      totalForecastValue,
+      monthlyData,
+      items,
+      salesmanName: 'John Salesman', // This would come from the data
+      lastUpdated: new Date().toLocaleDateString()
+    };
+  };
+
   const handleDownloadBudget = () => {
     setIsExportModalOpen(true);
   };
