@@ -1201,17 +1201,19 @@ const SalesBudget: React.FC = () => {
                       </button>
                     </>
                   )}
-                  <button
-                    onClick={() => {
-                      console.log('Distribution button clicked');
-                      setDistribution();
-                    }}
-                    className="bg-blue-100 text-blue-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-blue-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                    title="Open distribution management for budget allocation"
-                  >
-                    <PieChart className="w-4 h-4" />
-                    <span>Distribution</span>
-                  </button>
+                  {user?.role === 'salesman' && (
+                    <button
+                      onClick={() => {
+                        console.log('Distribution button clicked');
+                        setDistribution();
+                      }}
+                      className="bg-blue-100 text-blue-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-blue-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                      title="Open distribution management for budget allocation"
+                    >
+                      <PieChart className="w-4 h-4" />
+                      <span>Distribution</span>
+                    </button>
+                  )}
 
                   <button
                     onClick={() => {
