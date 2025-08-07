@@ -254,6 +254,13 @@ const Dashboard: React.FC = () => {
             description: 'Monitor system health',
             color: 'orange-600',
             onClick: () => showNotification('System alerts checked', 'success')
+          },
+          {
+            icon: Truck,
+            title: 'GIT & ETA Management',
+            description: 'Manage Goods in Transit',
+            color: 'indigo-600',
+            onClick: () => setIsGitEtaModalOpen(true)
           }
         ];
 
