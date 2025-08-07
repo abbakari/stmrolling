@@ -1526,6 +1526,12 @@ const SalesBudget: React.FC = () => {
           selectedCustomer={selectedCustomer}
           year={selectedYear2026}
         />
+
+        <StockManagementModal
+          isOpen={isStockManagementModalOpen}
+          onClose={() => setIsStockManagementModalOpen(false)}
+          selectedItem={selectedStockItem}
+        />
       </div>
     </Layout>
   );
