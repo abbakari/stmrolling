@@ -179,6 +179,43 @@ const RollingForecast: React.FC = () => {
     }
   ]);
 
+  // Load saved forecast data for current user
+  useEffect(() => {
+    if (user) {
+      const savedForecastData = DataPersistenceManager.getRollingForecastDataByUser(user.name);
+      if (savedForecastData.length > 0) {
+        console.log('Loading saved forecast data for', user.name, ':', savedForecastData.length, 'items');
+
+        // Update monthly forecast data from saved data
+        const updatedMonthlyData: {[key: string]: {[month: string]: number}} = {};
+
+        savedForecastData.forEach(savedItem => {
+          const matchingRow = tableData.find(row =>
+            row.customer === savedItem.customer && row.item === savedItem.item
+          );
+
+          if (matchingRow && savedItem.forecastData) {
+            updatedMonthlyData[matchingRow.id] = savedItem.forecastData;
+          }
+        });
+
+        setMonthlyForecastData(updatedMonthlyData);
+
+        // Update table data with forecast totals
+        setTableData(prevData =>
+          prevData.map(row => {
+            const rowData = updatedMonthlyData[row.id];
+            if (rowData) {
+              const forecastTotal = Object.values(rowData).reduce((sum, value) => sum + (value || 0), 0);
+              return { ...row, forecast: forecastTotal };
+            }
+            return row;
+          })
+        );
+      }
+    }
+  }, [user]);
+
   // Load GIT data from admin system and update table data
   useEffect(() => {
     const updateGitDataInTable = () => {
