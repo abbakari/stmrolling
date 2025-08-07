@@ -83,6 +83,67 @@ const GitEtaManagement: React.FC<GitEtaManagementProps> = ({ isOpen, onClose }) 
     estimatedValue: 0
   });
 
+  // Load existing data from sales budget and forecast tables
+  const loadExistingData = () => {
+    const customers = new Set<string>();
+    const items = new Set<string>();
+    const categories = new Set<string>();
+    const brands = new Set<string>();
+    const suppliers = new Set<string>();
+
+    // Load from sales budget data
+    const salesBudgetData = localStorage.getItem('salesBudgetData');
+    if (salesBudgetData) {
+      try {
+        const budgetData = JSON.parse(salesBudgetData);
+        budgetData.forEach((item: any) => {
+          if (item.customer) customers.add(item.customer);
+          if (item.item) items.add(item.item);
+          if (item.category) categories.add(item.category);
+          if (item.brand) brands.add(item.brand);
+        });
+      } catch (error) {
+        console.error('Error loading sales budget data:', error);
+      }
+    }
+
+    // Load from rolling forecast data
+    const forecastData = localStorage.getItem('rolling_forecast_saved_data');
+    if (forecastData) {
+      try {
+        const forecast = JSON.parse(forecastData);
+        forecast.forEach((item: any) => {
+          if (item.customer) customers.add(item.customer);
+          if (item.item) items.add(item.item);
+          if (item.category) categories.add(item.category);
+          if (item.brand) brands.add(item.brand);
+        });
+      } catch (error) {
+        console.error('Error loading forecast data:', error);
+      }
+    }
+
+    // Load from existing GIT data for suppliers
+    gitItems.forEach(item => {
+      if (item.supplier) suppliers.add(item.supplier);
+    });
+
+    // Add some default suppliers
+    suppliers.add('BF Goodrich');
+    suppliers.add('Michelin');
+    suppliers.add('Bridgestone');
+    suppliers.add('Continental');
+    suppliers.add('Pirelli');
+
+    setExistingData({
+      customers: Array.from(customers).sort(),
+      items: Array.from(items).sort(),
+      categories: Array.from(categories).sort(),
+      brands: Array.from(brands).sort(),
+      suppliers: Array.from(suppliers).sort()
+    });
+  };
+
   // Load GIT/ETA data from localStorage
   useEffect(() => {
     const savedData = localStorage.getItem('git_eta_data');
@@ -91,7 +152,13 @@ const GitEtaManagement: React.FC<GitEtaManagementProps> = ({ isOpen, onClose }) 
       setGitItems(data);
       setFilteredItems(data);
     }
+    loadExistingData();
   }, []);
+
+  // Reload existing data when git items change
+  useEffect(() => {
+    loadExistingData();
+  }, [gitItems]);
 
   // Filter and search items
   useEffect(() => {
