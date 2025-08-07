@@ -1240,7 +1240,34 @@ const RollingForecast: React.FC = () => {
                         })()}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
-                        {row.eta || ''}
+                        {(() => {
+                          const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+
+                          if (gitSummary.eta) {
+                            const etaDate = new Date(gitSummary.eta);
+                            const today = new Date();
+                            const daysUntilEta = Math.ceil((etaDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+                            return (
+                              <div className="text-center">
+                                <div className="font-medium text-gray-900">
+                                  {etaDate.toLocaleDateString()}
+                                </div>
+                                <div className={`text-xs ${
+                                  daysUntilEta < 0 ? 'text-red-600' :
+                                  daysUntilEta <= 7 ? 'text-orange-600' :
+                                  'text-green-600'
+                                }`}>
+                                  {daysUntilEta < 0 ? `${Math.abs(daysUntilEta)} days overdue` :
+                                   daysUntilEta === 0 ? 'Today' :
+                                   `${daysUntilEta} days`}
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return <span className="text-gray-400">-</span>;
+                        })()}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center">
                         <button
