@@ -64,6 +64,8 @@ const SupplyChainManagement: React.FC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [followBackMessage, setFollowBackMessage] = useState('');
   const [showFollowBackModal, setShowFollowBackModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [newStatus, setNewStatus] = useState<ProcessedSubmission['status']>('pending');
 
   // Sample processed submissions data
   const [processedSubmissions, setProcessedSubmissions] = useState<ProcessedSubmission[]>([
@@ -472,15 +474,17 @@ const SupplyChainManagement: React.FC = () => {
                         >
                           <ArrowLeft className="h-4 w-4" />
                         </button>
-                        {submission.status === 'pending' && (
-                          <button
-                            onClick={() => handleStatusUpdate(submission.id, 'reviewed')}
-                            className="text-purple-600 hover:text-purple-900 p-1 rounded transition-colors"
-                            title="Mark as reviewed"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </button>
-                        )}
+                        <button
+                          onClick={() => {
+                            setSelectedSubmission(submission);
+                            setNewStatus(submission.status);
+                            setShowStatusModal(true);
+                          }}
+                          className="text-orange-600 hover:text-orange-900 p-1 rounded transition-colors"
+                          title="Update status"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -500,6 +504,167 @@ const SupplyChainManagement: React.FC = () => {
           )}
         </div>
 
+        {/* View Detail Modal */}
+        {showDetailModal && selectedSubmission && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Submission Details - {selectedSubmission.id}
+                  </h3>
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Type</label>
+                    <p className="text-lg font-semibold">
+                      {selectedSubmission.type === 'sales_budget' ? '💰 Sales Budget' : '📊 Rolling Forecast'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Status</label>
+                    <p className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(selectedSubmission.status)}`}>
+                      {selectedSubmission.status.toUpperCase()}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Customer</label>
+                    <p className="text-lg font-semibold">{selectedSubmission.customerName}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Submitted By</label>
+                    <p className="text-lg font-semibold">{selectedSubmission.submittedBy}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Total Value</label>
+                    <p className="text-lg font-semibold text-green-600">${selectedSubmission.totalValue.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Total Units</label>
+                    <p className="text-lg font-semibold">{selectedSubmission.totalUnits.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Items Count</label>
+                    <p className="text-lg font-semibold">{selectedSubmission.items}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Priority</label>
+                    <p className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(selectedSubmission.priority)}`}>
+                      {selectedSubmission.priority.toUpperCase()}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Supplier Requests</label>
+                    <p className="text-lg font-semibold">{selectedSubmission.supplierRequests}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Est. Delivery</label>
+                    <p className="text-lg font-semibold">{selectedSubmission.estimatedDelivery}</p>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="text-sm font-medium text-gray-600">Processing Notes</label>
+                  <p className="mt-1 p-3 bg-gray-50 rounded-lg text-sm">{selectedSubmission.processingNotes}</p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      handleFollowBack(selectedSubmission);
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Send Follow-back
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      setNewStatus(selectedSubmission.status);
+                      setShowStatusModal(true);
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    Update Status
+                  </button>
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-400 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Status Update Modal */}
+        {showStatusModal && selectedSubmission && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+              <div className="p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">
+                  Update Status
+                </h3>
+
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">Submission: {selectedSubmission.id}</p>
+                  <p className="text-sm text-gray-600">Customer: {selectedSubmission.customerName}</p>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    New Status
+                  </label>
+                  <select
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value as ProcessedSubmission['status'])}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="reviewed">Reviewed</option>
+                    <option value="processed">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      handleStatusUpdate(selectedSubmission.id, newStatus);
+                      setShowStatusModal(false);
+                      setSelectedSubmission(null);
+                    }}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    Update Status
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowStatusModal(false);
+                      setSelectedSubmission(null);
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Follow-back Modal */}
         {showFollowBackModal && selectedSubmission && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -508,7 +673,7 @@ const SupplyChainManagement: React.FC = () => {
                 <h3 className="text-lg font-bold text-gray-900 mb-4">
                   Send Follow-back Message
                 </h3>
-                
+
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 mb-2">To: {selectedSubmission.submittedBy}</p>
                   <p className="text-sm text-gray-600">Regarding: {selectedSubmission.customerName}</p>
