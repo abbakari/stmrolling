@@ -959,6 +959,9 @@ const BiDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* GIT Overview */}
+        <GitSummaryWidget userRole={user?.role} compact={true} />
+
         {/* Data Quality & Status */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Sources & Budget Integration</h3>
