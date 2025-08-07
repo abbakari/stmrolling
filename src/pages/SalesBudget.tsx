@@ -1240,6 +1240,11 @@ const SalesBudget: React.FC = () => {
                       <span>Customer Dashboard</span>
                     </button>
                   )}
+
+                  {/* Follow-backs button for salesman and manager */}
+                  {(user?.role === 'salesman' || user?.role === 'manager') && (
+                    <FollowBacksButton />
+                  )}
                 </div>
               </div>
             </div>
