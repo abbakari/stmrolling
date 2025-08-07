@@ -416,7 +416,7 @@ const ApprovalCenter: React.FC = () => {
                 <Building className="w-4 h-4" />
                 Customer Details ({item.customers.length})
               </h4>
-              
+
               {item.customers.map((customerName, index) => (
                 <div key={index}>
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -435,11 +435,115 @@ const ApprovalCenter: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                  
+
                   {renderCustomerInsight(customerName)}
                 </div>
               ))}
             </div>
+
+            {/* Forecast Details for Rolling Forecast Items */}
+            {item.type === 'rolling_forecast' && item.forecastData && (
+              <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="font-medium text-green-900 mb-3 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  Forecast Analysis ({item.forecastData.length} items)
+                </h4>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-white rounded-lg p-3 border border-green-200">
+                    <div className="text-sm text-green-700">Total Forecast Value</div>
+                    <div className="text-lg font-bold text-green-800">
+                      ${item.forecastData.reduce((sum, f) => sum + f.forecastValue, 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-green-200">
+                    <div className="text-sm text-green-700">Total Forecast Units</div>
+                    <div className="text-lg font-bold text-green-800">
+                      {item.forecastData.reduce((sum, f) => sum + f.forecastUnits, 0).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h5 className="text-sm font-medium text-green-800">Per Customer Breakdown:</h5>
+                  {Object.entries(
+                    item.forecastData.reduce((acc, forecast) => {
+                      if (!acc[forecast.customer]) {
+                        acc[forecast.customer] = { units: 0, value: 0, items: 0 };
+                      }
+                      acc[forecast.customer].units += forecast.forecastUnits;
+                      acc[forecast.customer].value += forecast.forecastValue;
+                      acc[forecast.customer].items += 1;
+                      return acc;
+                    }, {} as Record<string, {units: number, value: number, items: number}>)
+                  ).map(([customer, totals]) => (
+                    <div key={customer} className="flex justify-between items-center p-2 bg-white rounded border border-green-200">
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">{customer}</span>
+                        <span className="ml-2 text-xs text-gray-500">({totals.items} items)</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium text-green-700">{totals.units.toLocaleString()} units</div>
+                        <div className="text-xs text-green-600">${totals.value.toLocaleString()}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Budget Details for Sales Budget Items */}
+            {item.type === 'sales_budget' && item.budgetData && (
+              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  Budget Analysis ({item.budgetData.length} items)
+                </h4>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-white rounded-lg p-3 border border-blue-200">
+                    <div className="text-sm text-blue-700">Total Budget Value</div>
+                    <div className="text-lg font-bold text-blue-800">
+                      ${item.budgetData.reduce((sum, b) => sum + b.totalBudget, 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-blue-200">
+                    <div className="text-sm text-blue-700">Total Budget Units</div>
+                    <div className="text-lg font-bold text-blue-800">
+                      {item.budgetData.reduce((sum, b) =>
+                        sum + b.monthlyData.reduce((mSum, m) => mSum + m.budgetValue, 0), 0
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h5 className="text-sm font-medium text-blue-800">Per Customer Breakdown:</h5>
+                  {Object.entries(
+                    item.budgetData.reduce((acc, budget) => {
+                      if (!acc[budget.customer]) {
+                        acc[budget.customer] = { budget: 0, units: 0, items: 0 };
+                      }
+                      acc[budget.customer].budget += budget.totalBudget;
+                      acc[budget.customer].units += budget.monthlyData.reduce((sum, m) => sum + m.budgetValue, 0);
+                      acc[budget.customer].items += 1;
+                      return acc;
+                    }, {} as Record<string, {budget: number, units: number, items: number}>)
+                  ).map(([customer, totals]) => (
+                    <div key={customer} className="flex justify-between items-center p-2 bg-white rounded border border-blue-200">
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">{customer}</span>
+                        <span className="ml-2 text-xs text-gray-500">({totals.items} items)</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium text-blue-700">{totals.units.toLocaleString()} units</div>
+                        <div className="text-xs text-blue-600">${totals.budget.toLocaleString()}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Comments Section */}
             {item.comments.length > 0 && (
