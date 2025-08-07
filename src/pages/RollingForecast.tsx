@@ -988,10 +988,25 @@ const RollingForecast: React.FC = () => {
               <div className="text-sm text-gray-500">{summaryStats.unitsSales.toLocaleString()} Units</div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className={`rounded-lg p-4 transition-all duration-300 ${
+              summaryStats.unitsForecast > 0
+                ? 'bg-gradient-to-br from-green-50 to-green-100 border border-green-200'
+                : 'bg-gray-50'
+            }`}>
               <div className="text-sm text-gray-600 mb-1">Forecast 2025</div>
-              <div className="text-2xl font-bold text-gray-900">${summaryStats.forecast.toLocaleString()}</div>
-              <div className="text-sm text-gray-500">{summaryStats.unitsForecast.toLocaleString()} Units</div>
+              <div className={`text-2xl font-bold ${
+                summaryStats.unitsForecast > 0 ? 'text-green-900' : 'text-gray-900'
+              }`}>${summaryStats.forecast.toLocaleString()}</div>
+              <div className={`text-sm ${
+                summaryStats.unitsForecast > 0 ? 'text-green-600' : 'text-gray-500'
+              }`}>{summaryStats.unitsForecast.toLocaleString()} Units</div>
+              {summaryStats.unitsForecast > 0 && (
+                <div className="mt-1">
+                  <span className="inline-block px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full font-medium">
+                    📈 Active
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
