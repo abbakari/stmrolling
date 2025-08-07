@@ -341,19 +341,19 @@ const CustomerForecastModal: React.FC<CustomerForecastModalProps> = ({
                         <td className="px-4 py-3 text-sm text-gray-600">{item.category}</td>
                         <td className="px-4 py-3 text-sm text-gray-600">{item.brand}</td>
                         <td className="px-4 py-3 text-sm text-center">
-                          {viewType === 'sales_budget' 
+                          {viewType === 'sales_budget'
                             ? formatCurrency(item.budgetValue)
                             : `${item.budgetUnits.toLocaleString()} units`
                           }
                         </td>
                         <td className="px-4 py-3 text-sm text-center">
-                          {viewType === 'sales_budget' 
+                          {viewType === 'sales_budget'
                             ? formatCurrency(item.actualValue)
                             : `${item.actualUnits.toLocaleString()} units`
                           }
                         </td>
                         <td className="px-4 py-3 text-sm text-center">
-                          {viewType === 'sales_budget' 
+                          {viewType === 'sales_budget'
                             ? formatCurrency(item.forecastValue)
                             : `${item.forecastUnits.toLocaleString()} units`
                           }
@@ -364,6 +364,227 @@ const CustomerForecastModal: React.FC<CustomerForecastModalProps> = ({
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'git' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Truck className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-semibold text-gray-900">Goods in Transit (GIT) Information</h3>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">👑 Admin Managed</span>
+              </div>
+
+              {(() => {
+                // Get GIT data for all items of this customer
+                const allGitItems: any[] = [];
+                customerData.items.forEach(item => {
+                  const gitData = DataPersistenceManager.getGitDataForItem(customerData.customer, item.item);
+                  gitData.forEach((git: any) => {
+                    allGitItems.push({ ...git, itemName: item.item });
+                  });
+                });
+
+                if (allGitItems.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-gray-500">
+                      <Truck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-lg font-medium">No GIT Information</p>
+                      <p className="text-sm">No goods in transit found for this customer</p>
+                      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          GIT information is managed by administrators and will appear here once items are uploaded.
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Calculate GIT summary
+                const totalGitQuantity = allGitItems.reduce((sum, item) => sum + item.gitQuantity, 0);
+                const totalGitValue = allGitItems.reduce((sum, item) => sum + item.estimatedValue, 0);
+                const uniqueStatuses = [...new Set(allGitItems.map(item => item.status))];
+                const uniqueSuppliers = [...new Set(allGitItems.map(item => item.supplier))];
+
+                return (
+                  <div className="space-y-6">
+                    {/* GIT Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-blue-800">Total GIT Quantity</p>
+                            <p className="text-2xl font-bold text-blue-900">{totalGitQuantity.toLocaleString()}</p>
+                            <p className="text-xs text-blue-700">units</p>
+                          </div>
+                          <Package className="w-8 h-8 text-blue-600" />
+                        </div>
+                      </div>
+
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-green-800">Estimated Value</p>
+                            <p className="text-2xl font-bold text-green-900">{formatCurrency(totalGitValue)}</p>
+                            <p className="text-xs text-green-700">total value</p>
+                          </div>
+                          <TrendingUp className="w-8 h-8 text-green-600" />
+                        </div>
+                      </div>
+
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-purple-800">Active Shipments</p>
+                            <p className="text-2xl font-bold text-purple-900">{allGitItems.length}</p>
+                            <p className="text-xs text-purple-700">shipments</p>
+                          </div>
+                          <Truck className="w-8 h-8 text-purple-600" />
+                        </div>
+                      </div>
+
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-orange-800">Suppliers</p>
+                            <p className="text-2xl font-bold text-orange-900">{uniqueSuppliers.length}</p>
+                            <p className="text-xs text-orange-700">different suppliers</p>
+                          </div>
+                          <User className="w-8 h-8 text-orange-600" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* GIT Details Table */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full border border-gray-200 rounded-lg">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">ETA</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Priority</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Value</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">PO Number</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {allGitItems.map((gitItem, index) => {
+                            const etaDate = new Date(gitItem.eta);
+                            const today = new Date();
+                            const daysUntilEta = Math.ceil((etaDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+                            return (
+                              <tr key={index} className="hover:bg-gray-50">
+                                <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={gitItem.itemName}>
+                                  {gitItem.itemName}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-center font-medium">
+                                  {gitItem.gitQuantity.toLocaleString()}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-600">{gitItem.supplier}</td>
+                                <td className="px-4 py-3 text-center">
+                                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                                    gitItem.status === 'arrived' ? 'bg-green-100 text-green-800' :
+                                    gitItem.status === 'in_transit' ? 'bg-purple-100 text-purple-800' :
+                                    gitItem.status === 'shipped' ? 'bg-yellow-100 text-yellow-800' :
+                                    gitItem.status === 'delayed' ? 'bg-red-100 text-red-800' :
+                                    'bg-blue-100 text-blue-800'
+                                  }`}>
+                                    {gitItem.status.replace('_', ' ').toUpperCase()}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-sm text-center">
+                                  <div className="space-y-1">
+                                    <div>{etaDate.toLocaleDateString()}</div>
+                                    <div className={`text-xs ${
+                                      daysUntilEta < 0 ? 'text-red-600' :
+                                      daysUntilEta <= 7 ? 'text-orange-600' :
+                                      'text-green-600'
+                                    }`}>
+                                      {daysUntilEta < 0 ? `${Math.abs(daysUntilEta)} days overdue` :
+                                       daysUntilEta === 0 ? 'Today' :
+                                       `${daysUntilEta} days`}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                                    gitItem.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                                    gitItem.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                                    gitItem.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {gitItem.priority.toUpperCase()}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-sm text-center font-medium">
+                                  {formatCurrency(gitItem.estimatedValue)}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-600">{gitItem.poNumber || '-'}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Additional GIT Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 className="text-sm font-medium text-gray-800 mb-3">Status Distribution</h4>
+                        <div className="space-y-2">
+                          {uniqueStatuses.map(status => {
+                            const count = allGitItems.filter(item => item.status === status).length;
+                            const percentage = (count / allGitItems.length) * 100;
+                            return (
+                              <div key={status} className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600 capitalize">{status.replace('_', ' ')}</span>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-16 bg-gray-200 rounded-full h-2">
+                                    <div
+                                      className={`h-2 rounded-full ${
+                                        status === 'arrived' ? 'bg-green-500' :
+                                        status === 'in_transit' ? 'bg-purple-500' :
+                                        status === 'shipped' ? 'bg-yellow-500' :
+                                        status === 'delayed' ? 'bg-red-500' :
+                                        'bg-blue-500'
+                                      }`}
+                                      style={{ width: `${percentage}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="text-sm font-medium w-8">{count}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 className="text-sm font-medium text-gray-800 mb-3">Suppliers</h4>
+                        <div className="space-y-2">
+                          {uniqueSuppliers.map(supplier => {
+                            const supplierItems = allGitItems.filter(item => item.supplier === supplier);
+                            const supplierQuantity = supplierItems.reduce((sum, item) => sum + item.gitQuantity, 0);
+                            return (
+                              <div key={supplier} className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">{supplier}</span>
+                                <div className="text-right">
+                                  <div className="text-sm font-medium">{supplierQuantity.toLocaleString()} units</div>
+                                  <div className="text-xs text-gray-500">{supplierItems.length} shipments</div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
