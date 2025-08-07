@@ -1105,7 +1105,7 @@ const SalesBudget: React.FC = () => {
                         : 'text-gray-500'
                   }`}>
                     {budgetGrowth > 0 && '📈'}
-                    {budgetGrowth < 0 && '���'}
+                    {budgetGrowth < 0 && '📉'}
                     {budgetGrowth === 0 && '➡️'}
                     {budgetGrowth.toFixed(1)}%
                   </p>
@@ -1421,7 +1421,7 @@ const SalesBudget: React.FC = () => {
                                           }}
                                           className="bg-green-100 text-green-800 px-3 py-1 rounded text-xs hover:bg-green-200 transition-colors"
                                         >
-                                          📈 Seasonal Growth
+                                          ���� Seasonal Growth
                                         </button>
                                         <button
                                           onClick={() => {
@@ -1592,6 +1592,11 @@ const SalesBudget: React.FC = () => {
           isOpen={isStockManagementModalOpen}
           onClose={() => setIsStockManagementModalOpen(false)}
           selectedItem={selectedStockItem}
+        />
+
+        <ManagerDashboard
+          isOpen={isManagerDashboardOpen}
+          onClose={() => setIsManagerDashboardOpen(false)}
         />
       </div>
     </Layout>
