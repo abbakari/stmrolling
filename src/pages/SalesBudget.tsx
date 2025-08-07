@@ -771,7 +771,7 @@ const SalesBudget: React.FC = () => {
               }`}>
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
                   👤 CUSTOMER:
-                  {selectedCustomer && <span className="text-blue-600">✓</span>}
+                  {selectedCustomer && <span className="text-blue-600">��</span>}
                 </label>
                 <select
                   className="w-full text-xs p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
@@ -1225,8 +1225,28 @@ const SalesBudget: React.FC = () => {
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               ${(row.budgetValue2026/1000).toFixed(0)}k
                             </td>
-                            <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              ${(row.discount/1000).toFixed(0)}k
+                            <td className="p-2 border-b border-gray-200 text-xs">
+                              <div className="flex flex-col gap-1">
+                                <input
+                                  type="number"
+                                  className="w-full p-1 text-center border border-gray-300 rounded text-xs"
+                                  value={Math.round(row.discount)}
+                                  onChange={(e) => {
+                                    const value = parseInt(e.target.value) || 0;
+                                    setTableData(prev => prev.map(item =>
+                                      item.id === row.id ? {
+                                        ...item,
+                                        discount: value,
+                                        budgetValue2026: (item.budget2026 * item.rate) - value
+                                      } : item
+                                    ));
+                                  }}
+                                  placeholder="0"
+                                />
+                                <div className="text-xs text-gray-500">
+                                  {((row.discount / (row.budget2026 * row.rate || 1)) * 100).toFixed(1)}%
+                                </div>
+                              </div>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               <div className="flex gap-1">
