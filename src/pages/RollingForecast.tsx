@@ -5,6 +5,7 @@ import { Customer } from '../types/forecast';
 import { useBudget } from '../contexts/BudgetContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useWorkflow } from '../contexts/WorkflowContext';
+import CustomerForecastModal from '../components/CustomerForecastModal';
 import {
   getCurrentMonth,
   getCurrentYear,
@@ -43,6 +44,8 @@ const RollingForecast: React.FC = () => {
   const [selectedExistingCustomer, setSelectedExistingCustomer] = useState('');
   const [selectedExistingItem, setSelectedExistingItem] = useState('');
   const [showBudgetData, setShowBudgetData] = useState(true);
+  const [isCustomerForecastModalOpen, setIsCustomerForecastModalOpen] = useState(false);
+  const [selectedCustomerForBreakdown, setSelectedCustomerForBreakdown] = useState<string>('');
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
