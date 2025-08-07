@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { 
-  Package, 
-  Search, 
-  Filter, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle, 
-  TrendingUp, 
-  Users, 
+import {
+  Package,
+  Search,
+  Filter,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  TrendingUp,
+  Users,
   Building,
   FileText,
   Send,
@@ -22,7 +22,8 @@ import {
   Download,
   Eye,
   RefreshCw,
-  Bell
+  Bell,
+  X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useWorkflow } from '../contexts/WorkflowContext';
