@@ -30,6 +30,7 @@ import SalesTrendChart from '../components/charts/SalesTrendChart';
 import BudgetComparisonChart from '../components/charts/BudgetComparisonChart';
 import BudgetAllocationChart from '../components/charts/BudgetAllocationChart';
 import GaugeChart from '../components/charts/GaugeChart';
+import GitSummaryWidget from '../components/GitSummaryWidget';
 
 interface DashboardWidget {
   id: string;
