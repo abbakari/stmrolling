@@ -13,13 +13,17 @@ import {
   Save,
   X,
   Calendar,
-  Send
+  Send,
+  Package,
+  Users
 } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
 import DistributionModal, { DistributionConfig } from '../components/DistributionModal';
 import DistributionManager from '../components/DistributionManager';
 import YearlyBudgetModal from '../components/YearlyBudgetModal';
+import StockManagementModal from '../components/StockManagementModal';
+import ManagerDashboard from '../components/ManagerDashboard';
 
 interface MonthlyBudget {
   month: string;
@@ -70,6 +74,9 @@ const SalesBudget: React.FC = () => {
   const [newAdditionType] = useState<'customer' | 'item'>('item');
   const [isDistributionModalOpen, setIsDistributionModalOpen] = useState(false);
   const [isYearlyBudgetModalOpen, setIsYearlyBudgetModalOpen] = useState(false);
+  const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
+  const [selectedStockItem, setSelectedStockItem] = useState<any>(null);
+  const [isManagerDashboardOpen, setIsManagerDashboardOpen] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
@@ -296,14 +303,15 @@ const SalesBudget: React.FC = () => {
       // Use the row's default rate for calculation if available
       const defaultRate = row?.rate || 1;
       const totalBudget2026 = monthlyData.reduce((sum, month) => sum + (month.budgetValue * defaultRate), 0);
+      const totalDiscount = monthlyData.reduce((sum, month) => sum + month.discount, 0);
+      const netBudgetValue = totalBudget2026 - totalDiscount;
 
-      // Update monthly data with default values for other fields
+      // Update monthly data with calculated values
       const updatedMonthlyData = monthlyData.map(month => ({
         ...month,
-        rate: defaultRate,
-        stock: row?.stock || 0,
-        git: row?.git || 0,
-        discount: 0
+        rate: month.rate || defaultRate,
+        stock: month.stock || row?.stock || 0,
+        git: month.git || row?.git || 0
       }));
 
       setTableData(prev => prev.map(item =>
@@ -311,7 +319,8 @@ const SalesBudget: React.FC = () => {
           ...item,
           monthlyData: updatedMonthlyData,
           budget2026: budgetValue2026,
-          budgetValue2026: totalBudget2026
+          budgetValue2026: netBudgetValue,
+          discount: totalDiscount
         } : item
       ));
 
@@ -322,7 +331,7 @@ const SalesBudget: React.FC = () => {
         return newData;
       });
 
-      showNotification(`Monthly budget data saved for row ${rowId}`, 'success');
+      showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount)`, 'success');
     }
   };
 
@@ -483,9 +492,51 @@ const SalesBudget: React.FC = () => {
   };
 
   const handleApplyDistribution = (distribution: DistributionConfig) => {
-    // Implementation for distribution logic
+    // Create new distribution tracking entry
+    const newDistribution = {
+      id: `dist_${Date.now()}`,
+      type: distribution.type,
+      name: `${distribution.type.charAt(0).toUpperCase() + distribution.type.slice(1)} Distribution`,
+      appliedAt: new Date(),
+      segments: Object.keys(distribution.distributions).length,
+      totalAmount: distribution.totalBudget,
+      totalUnits: distribution.totalUnits,
+      isActive: true,
+      segments_detail: Object.entries(distribution.distributions).map(([name, data], index) => ({
+        name,
+        percentage: data.percentage,
+        amount: data.amount,
+        units: data.units,
+        color: `hsl(${(index * 360) / Object.keys(distribution.distributions).length}, 70%, 50%)`
+      }))
+    };
+
+    // Add to applied distributions
+    setAppliedDistributions(prev => [...prev, newDistribution]);
+
+    // Apply distribution to table data based on distribution type
+    setTableData(prev => prev.map(item => {
+      const totalBudget = item.budget2026 || 100; // Use current budget or default
+      const distributionEntry = Object.entries(distribution.distributions)[0]; // Use first distribution as example
+      const percentage = distributionEntry[1].percentage / 100;
+
+      // Update budget value based on distribution
+      const newBudget = Math.round(totalBudget * percentage);
+
+      return {
+        ...item,
+        budget2026: newBudget,
+        budgetValue2026: newBudget * item.rate,
+        // Update monthly data if exists
+        monthlyData: item.monthlyData.map(month => ({
+          ...month,
+          budgetValue: Math.round(month.budgetValue * percentage)
+        }))
+      };
+    }));
+
     showNotification(
-      `Distribution applied: ${Object.keys(distribution.distributions).length} segments created`,
+      `Distribution applied: ${Object.keys(distribution.distributions).length} segments created for ${distribution.type}`,
       'success'
     );
   };
@@ -530,30 +581,53 @@ const SalesBudget: React.FC = () => {
 
   // Submit budgets for manager approval
   const handleSubmitForApproval = () => {
-    if (yearlyBudgets.length === 0) {
-      showNotification('No budgets available to submit for approval', 'error');
-      return;
-    }
-
     setIsSubmittingForApproval(true);
 
     try {
-      // Submit all current user's budgets for approval
+      // Get budgets from both sources: yearlyBudgets and table data with budget2026 > 0
       const userBudgets = yearlyBudgets.filter(budget => budget.createdBy === user?.name);
 
-      if (userBudgets.length === 0) {
-        showNotification('No budgets created by you to submit', 'error');
+      // Convert table data entries with budget2026 > 0 to budget format
+      const tableBudgets = tableData
+        .filter(row => row.budget2026 > 0)
+        .map(row => ({
+          id: `table_budget_${row.id}`,
+          customer: row.customer,
+          item: row.item,
+          category: row.category,
+          brand: row.brand,
+          year: selectedYear2026,
+          totalBudget: row.budgetValue2026,
+          monthlyData: row.monthlyData,
+          createdBy: user?.name || 'Unknown',
+          createdAt: new Date().toISOString()
+        }));
+
+      const allBudgets = [...userBudgets, ...tableBudgets];
+
+      if (allBudgets.length === 0) {
+        showNotification('No budgets created to submit. Please create yearly budgets or set budget values in the table first.', 'error');
+        setIsSubmittingForApproval(false);
         return;
       }
 
-      const workflowId = submitForApproval(userBudgets);
+      const workflowId = submitForApproval(allBudgets);
 
       showNotification(
-        `Successfully submitted ${userBudgets.length} budget(s) for manager approval. Workflow ID: ${workflowId.slice(-6)}`,
+        `Successfully submitted ${allBudgets.length} budget(s) for manager approval. Workflow ID: ${workflowId.slice(-6)}`,
         'success'
       );
+
+      // Clear submitted budgets from table to prevent re-submission
+      setTableData(prev => prev.map(row => ({
+        ...row,
+        budget2026: 0,
+        budgetValue2026: 0
+      })));
+
     } catch (error) {
-      showNotification('Failed to submit budgets for approval', 'error');
+      console.error('Submission error:', error);
+      showNotification('Failed to submit budgets for approval. Please try again.', 'error');
     } finally {
       setIsSubmittingForApproval(false);
     }
@@ -604,33 +678,36 @@ const SalesBudget: React.FC = () => {
                 </div>
               </div>
 
-              {/* GIT Card */}
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3 relative">
-                <div className="bg-red-200 p-3 rounded-full">
-                  <Truck className="w-7 h-7 text-red-600" />
+              {/* Enhanced Stock Management Card */}
+              <div className="bg-gradient-to-br from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 flex items-center gap-3 relative">
+                <div className="bg-green-200 p-3 rounded-full">
+                  <TrendingUp className="w-7 h-7 text-green-600" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-600">GIT (Good In Transit)</p>
+                    <p className="text-sm text-gray-600 font-medium">Total Stock</p>
                     <button
-                      onClick={() => setShowGitExplanation(!showGitExplanation)}
-                      className="text-red-600 hover:text-red-800 transition-colors"
+                      onClick={() => setIsStockManagementModalOpen(true)}
+                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                      title="Open Stock Management Dashboard"
                     >
                       <InfoIcon className="w-4 h-4" />
                     </button>
                   </div>
-                  <p className="text-xl font-bold text-red-600">
-                    {tableData.reduce((sum, item) => sum + item.git, 0).toLocaleString()} units
+                  <p className="text-xl font-bold text-green-600">
+                    {tableData.reduce((sum, item) => sum + item.stock, 0).toLocaleString()} units
                   </p>
-                  {showGitExplanation && (
-                    <div className="absolute top-full left-0 right-0 mt-2 p-3 bg-white border border-red-200 rounded-lg shadow-lg z-10">
-                      <p className="text-xs text-gray-700">
-                        <strong>GIT (Good In Transit):</strong> Items that have been shipped from suppliers
-                        but haven't yet arrived at our warehouse. These are considered inventory assets
-                        but are not available for immediate sale.
-                      </p>
+                  <div className="flex items-center gap-4 mt-1">
+                    <div className="text-xs text-gray-600">
+                      <span className="font-medium">GIT:</span> {tableData.reduce((sum, item) => sum + item.git, 0).toLocaleString()}
                     </div>
-                  )}
+                    <button
+                      onClick={() => setIsStockManagementModalOpen(true)}
+                      className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                    >
+                      📦 Manage Stock
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -649,13 +726,23 @@ const SalesBudget: React.FC = () => {
 
             {/* Info Alert and View Toggle */}
             <div className="flex justify-between items-center mb-4">
-              <div className="bg-blue-50 border-l-4 border-blue-600 text-blue-800 p-4 rounded-r-lg flex items-center gap-2">
-                <InfoIcon className="w-5 h-5" />
-                <div>
-                  <p className="font-bold">Instructions: Select a customer row to open monthly budget forms</p>
-                  <p className="text-xs text-blue-700 mt-1">💡 Simplified 2-row layout shows months and budget values for easy entry and budget growth tracking</p>
+              {user?.role === 'salesman' ? (
+                <div className="bg-blue-50 border-l-4 border-blue-600 text-blue-800 p-4 rounded-r-lg flex items-center gap-2">
+                  <InfoIcon className="w-5 h-5" />
+                  <div>
+                    <p className="font-bold">Instructions: Select a customer row to open monthly budget forms</p>
+                    <p className="text-xs text-blue-700 mt-1">💡 Simplified 2-row layout shows months and budget values for easy entry and budget growth tracking</p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-purple-50 border-l-4 border-purple-600 text-purple-800 p-4 rounded-r-lg flex items-center gap-2">
+                  <InfoIcon className="w-5 h-5" />
+                  <div>
+                    <p className="font-bold">Manager View: Sales Budget Overview (Read-Only)</p>
+                    <p className="text-xs text-purple-700 mt-1">👑 View salesman-created budgets and customer details. Use Customer Dashboard for detailed customer-salesman management.</p>
+                  </div>
+                </div>
+              )}
               <div className="flex shadow-sm rounded-md overflow-hidden">
                 <button
                   onClick={() => {
@@ -890,6 +977,34 @@ const SalesBudget: React.FC = () => {
                     <PieChart className="w-4 h-4" />
                     <span>Distribution</span>
                   </button>
+
+                  {user?.role === 'salesman' && (
+                    <button
+                      onClick={() => {
+                        console.log('Stock Management button clicked');
+                        setIsStockManagementModalOpen(true);
+                      }}
+                      className="bg-green-100 text-green-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-green-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                      title="Open comprehensive stock management dashboard (Salesmen only)"
+                    >
+                      <Package className="w-4 h-4" />
+                      <span>Stock Manager</span>
+                    </button>
+                  )}
+
+                  {user?.role === 'manager' && (
+                    <button
+                      onClick={() => {
+                        console.log('Manager Dashboard button clicked');
+                        setIsManagerDashboardOpen(true);
+                      }}
+                      className="bg-purple-100 text-purple-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-purple-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                      title="Open customer-salesman management dashboard (Managers only)"
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>Customer Dashboard</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1174,17 +1289,68 @@ const SalesBudget: React.FC = () => {
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               {row.rate}
                             </td>
-                            <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              {row.stock}
+                            <td className="p-2 border-b border-gray-200 text-xs">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className={`font-medium ${
+                                  row.stock < 20 ? 'text-red-600' : row.stock < 50 ? 'text-yellow-600' : 'text-green-600'
+                                }`}>
+                                  {row.stock}
+                                </span>
+                                {user?.role === 'salesman' ? (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedStockItem(row);
+                                      setIsStockManagementModalOpen(true);
+                                    }}
+                                    className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                                    title="Manage stock for this item"
+                                  >
+                                    📦 Manage
+                                  </button>
+                                ) : (
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    📊 View Only
+                                  </span>
+                                )}
+                              </div>
                             </td>
-                            <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              {row.git}
+                            <td className="p-2 border-b border-gray-200 text-xs">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className={`font-medium ${
+                                  row.git > 0 ? 'text-blue-600' : 'text-gray-500'
+                                }`}>
+                                  {row.git}
+                                </span>
+                                {row.git > 0 && (
+                                  <span className="text-xs text-blue-600">In Transit</span>
+                                )}
+                              </div>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               ${(row.budgetValue2026/1000).toFixed(0)}k
                             </td>
-                            <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              ${(row.discount/1000).toFixed(0)}k
+                            <td className="p-2 border-b border-gray-200 text-xs">
+                              <div className="flex flex-col gap-1">
+                                <input
+                                  type="number"
+                                  className="w-full p-1 text-center border border-gray-300 rounded text-xs"
+                                  value={Math.round(row.discount)}
+                                  onChange={(e) => {
+                                    const value = parseInt(e.target.value) || 0;
+                                    setTableData(prev => prev.map(item =>
+                                      item.id === row.id ? {
+                                        ...item,
+                                        discount: value,
+                                        budgetValue2026: (item.budget2026 * item.rate) - value
+                                      } : item
+                                    ));
+                                  }}
+                                  placeholder="0"
+                                />
+                                <div className="text-xs text-gray-500">
+                                  {((row.discount / (row.budget2026 * row.rate || 1)) * 100).toFixed(1)}%
+                                </div>
+                              </div>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               <div className="flex gap-1">
@@ -1430,6 +1596,17 @@ const SalesBudget: React.FC = () => {
           onSave={handleYearlyBudgetSave}
           selectedCustomer={selectedCustomer}
           year={selectedYear2026}
+        />
+
+        <StockManagementModal
+          isOpen={isStockManagementModalOpen}
+          onClose={() => setIsStockManagementModalOpen(false)}
+          selectedItem={selectedStockItem}
+        />
+
+        <ManagerDashboard
+          isOpen={isManagerDashboardOpen}
+          onClose={() => setIsManagerDashboardOpen(false)}
         />
       </div>
     </Layout>

@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { ChevronRight, Eye, CheckCircle, Plus, ChevronUp, ChevronDown, Minus, X, List, UserPlus, Target } from 'lucide-react';
+import { ChevronRight, Eye, CheckCircle, Plus, ChevronUp, ChevronDown, Minus, X, List, UserPlus, Target, Send, Download as DownloadIcon } from 'lucide-react';
 import { Customer } from '../types/forecast';
 import { useBudget } from '../contexts/BudgetContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useWorkflow } from '../contexts/WorkflowContext';
+import {
+  getCurrentMonth,
+  getCurrentYear,
+  getShortMonthNames,
+  isFutureMonth,
+  getFutureMonthsForYear,
+  formatDateTimeForDisplay,
+  getTimeAgo
+} from '../utils/timeUtils';
 
 const RollingForecast: React.FC = () => {
+  const { user } = useAuth();
   const { yearlyBudgets, getBudgetsByCustomer } = useBudget();
+  const { submitForApproval } = useWorkflow();
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
@@ -103,45 +116,61 @@ const RollingForecast: React.FC = () => {
       id: '1',
       customer: 'Action Aid International (Tz)',
       item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
-      bud25: 0,
-      ytd25: 0,
+      bud25: 120,
+      ytd25: 45,
       forecast: 0,
       stock: 86,
       git: 0,
-      eta: ''
+      eta: '',
+      budgetDistribution: { JAN: 10, FEB: 8, MAR: 12, APR: 15, MAY: 10, JUN: 8, JUL: 12, AUG: 15, SEP: 10, OCT: 8, NOV: 6, DEC: 6 }
     },
     {
       id: '2',
       customer: 'Action Aid International (Tz)',
       item: 'BF GOODRICH TYRE 265/65R17 120/117S TL ATT/A KO2 LRERWLGO',
-      bud25: 0,
-      ytd25: 0,
+      bud25: 80,
+      ytd25: 25,
       forecast: 0,
       stock: 7,
       git: 0,
-      eta: ''
+      eta: '',
+      budgetDistribution: { JAN: 8, FEB: 6, MAR: 10, APR: 12, MAY: 8, JUN: 6, JUL: 10, AUG: 12, SEP: 8, OCT: 0, NOV: 0, DEC: 0 }
     },
     {
       id: '3',
       customer: 'Action Aid International (Tz)',
       item: 'MICHELIN TYRE 265/65R17 112T TL LTX TRAIL',
-      bud25: 0,
-      ytd25: 0,
+      bud25: 150,
+      ytd25: 60,
       forecast: 0,
       stock: 22,
       git: 100,
-      eta: '2025-08-24'
+      eta: '2025-08-24',
+      budgetDistribution: { JAN: 15, FEB: 12, MAR: 18, APR: 20, MAY: 15, JUN: 12, JUL: 18, AUG: 20, SEP: 15, OCT: 5, NOV: 0, DEC: 0 }
     },
     {
       id: '4',
       customer: 'ADVENT CONSTRUCTION LTD.',
       item: 'WHEEL BALANCE ALLOYD RIMS',
-      bud25: 0,
-      ytd25: 5,
+      bud25: 200,
+      ytd25: 85,
       forecast: 0,
       stock: 0,
       git: 0,
-      eta: ''
+      eta: '',
+      budgetDistribution: { JAN: 20, FEB: 15, MAR: 25, APR: 30, MAY: 20, JUN: 15, JUL: 25, AUG: 30, SEP: 20, OCT: 0, NOV: 0, DEC: 0 }
+    },
+    {
+      id: '5',
+      customer: 'ADVENT CONSTRUCTION LTD.',
+      item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
+      bud25: 90,
+      ytd25: 30,
+      forecast: 0,
+      stock: 15,
+      git: 50,
+      eta: '2025-09-15',
+      budgetDistribution: { JAN: 10, FEB: 8, MAR: 12, APR: 15, MAY: 10, JUN: 8, JUL: 12, AUG: 15, SEP: 0, OCT: 0, NOV: 0, DEC: 0 }
     }
   ]);
 
@@ -189,8 +218,46 @@ const RollingForecast: React.FC = () => {
 
 
   const handleSubmit = () => {
-    // Handle submit action
-    console.log('Submit clicked');
+    if (user?.role === 'salesman') {
+      // Submit for manager approval
+      try {
+        // Convert current forecast data to workflow format
+        const forecastData = Object.entries(monthlyForecastData).map(([rowId, monthlyData]) => {
+          const row = tableData.find(r => r.id === rowId);
+          const totalForecast = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+
+          return {
+            id: `forecast_${rowId}_${Date.now()}`,
+            customer: row?.customer || 'Unknown',
+            item: row?.item || 'Unknown',
+            category: 'Forecast',
+            brand: 'Various',
+            year: new Date().getFullYear().toString(),
+            forecastUnits: totalForecast,
+            forecastValue: totalForecast * 100, // Assuming $100 per unit
+            createdBy: user.name,
+            createdAt: new Date().toISOString()
+          };
+        }).filter(f => f.forecastUnits > 0);
+
+        if (forecastData.length === 0) {
+          alert('Please enter forecast data before submitting');
+          return;
+        }
+
+        // Submit to workflow context
+        const workflowId = submitForApproval([], forecastData);
+        alert(`Forecast submitted successfully! Workflow ID: ${workflowId.slice(-6)}`);
+
+        // Clear submitted data
+        setMonthlyForecastData({});
+      } catch (error) {
+        console.error('Submission error:', error);
+        alert('Failed to submit forecast. Please try again.');
+      }
+    } else {
+      console.log('Submit clicked - Manager view');
+    }
   };
 
   const handleSaveNewAddition = () => {
@@ -290,6 +357,21 @@ const RollingForecast: React.FC = () => {
         [month]: value
       }
     }));
+
+    // Update the main table forecast value for this row
+    setTableData(prevData =>
+      prevData.map(row => {
+        if (row.id === rowId) {
+          const updatedMonthlyData = {
+            ...monthlyForecastData[rowId],
+            [month]: value
+          };
+          const newForecastTotal = Object.values(updatedMonthlyData).reduce((sum, val) => sum + (val || 0), 0);
+          return { ...row, forecast: newForecastTotal };
+        }
+        return row;
+      })
+    );
   };
 
   const getMonthlyData = (rowId: string) => {
@@ -310,19 +392,19 @@ const RollingForecast: React.FC = () => {
 
     // Calculate from table data
     tableData.forEach(row => {
-      // Budget 2025 (existing budget)
-      totalBudget2025 += row.bud25;
-      totalUnitsBudget += Math.floor(row.bud25 / 100); // Assuming average rate of 100 per unit
-      
-      // Sales 2025 (YTD actuals)
-      totalSales2025 += row.ytd25;
-      totalUnitsSales += Math.floor(row.ytd25 / 100);
-      
-      // Forecast 2025 (user input forecasts)
+      // Budget 2025 (existing budget units)
+      totalBudget2025 += row.bud25 * 100; // Convert units to currency
+      totalUnitsBudget += row.bud25;
+
+      // Sales 2025 (YTD actuals units)
+      totalSales2025 += row.ytd25 * 100; // Convert units to currency
+      totalUnitsSales += row.ytd25;
+
+      // Forecast 2025 (user input forecasts units)
       const monthlyData = getMonthlyData(row.id);
-      const forecastTotal = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
-      totalForecast2025 += forecastTotal;
-      totalUnitsForecast += Math.floor(forecastTotal / 100);
+      const forecastTotalUnits = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+      totalForecast2025 += forecastTotalUnits * 100; // Convert units to currency
+      totalUnitsForecast += forecastTotalUnits;
     });
 
     return {
@@ -636,23 +718,97 @@ const RollingForecast: React.FC = () => {
 
         {/* Summary Statistics */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-3 gap-4 text-center mb-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Budget 2025</div>
               <div className="text-2xl font-bold text-gray-900">${summaryStats.budget.toLocaleString()}</div>
               <div className="text-sm text-gray-500">{summaryStats.unitsBudget.toLocaleString()} Units</div>
             </div>
-            
+
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Sales 2025</div>
               <div className="text-2xl font-bold text-gray-900">${summaryStats.sales.toLocaleString()}</div>
               <div className="text-sm text-gray-500">{summaryStats.unitsSales.toLocaleString()} Units</div>
             </div>
-            
+
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Forecast 2025</div>
               <div className="text-2xl font-bold text-gray-900">${summaryStats.forecast.toLocaleString()}</div>
               <div className="text-sm text-gray-500">{summaryStats.unitsForecast.toLocaleString()} Units</div>
+            </div>
+          </div>
+
+          {/* Customer-Specific Forecast Totals */}
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+              <span>📊</span>
+              Forecast Breakdown by Customer
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(() => {
+                // Calculate customer-specific totals
+                const customerTotals = tableData.reduce((acc, row) => {
+                  const monthlyData = getMonthlyData(row.id);
+                  const customerForecast = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+
+                  if (!acc[row.customer]) {
+                    acc[row.customer] = {
+                      budget: 0,
+                      sales: 0,
+                      forecast: 0,
+                      items: 0
+                    };
+                  }
+
+                  acc[row.customer].budget += row.bud25;
+                  acc[row.customer].sales += row.ytd25;
+                  acc[row.customer].forecast += customerForecast;
+                  acc[row.customer].items += 1;
+
+                  return acc;
+                }, {} as Record<string, {budget: number, sales: number, forecast: number, items: number}>);
+
+                return Object.entries(customerTotals).map(([customer, totals]) => (
+                  <div key={customer} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-blue-900 truncate" title={customer}>
+                        {customer.length > 20 ? customer.substring(0, 20) + '...' : customer}
+                      </h4>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        {totals.items} items
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-blue-700">Budget Units:</span>
+                        <span className="font-medium text-blue-900">{totals.budget.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-700">Sales Units:</span>
+                        <span className="font-medium text-blue-900">{totals.sales.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-700">Forecast Units:</span>
+                        <span className="font-bold text-green-600">{totals.forecast.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t border-blue-200">
+                        <span className="text-blue-700">Forecast vs Budget:</span>
+                        <span className={`font-medium ${
+                          totals.forecast > totals.budget ? 'text-green-600' :
+                          totals.forecast < totals.budget ? 'text-red-600' : 'text-gray-600'
+                        }`}>
+                          {totals.budget > 0 ?
+                            `${((totals.forecast - totals.budget) / totals.budget * 100).toFixed(1)}%` :
+                            'N/A'
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
           
@@ -890,30 +1046,46 @@ const RollingForecast: React.FC = () => {
                                     </tr>
                                     <tr className="border-b border-gray-200 bg-orange-100">
                                       <td className="px-2 py-2 font-medium text-gray-700">BUD 2025'</td>
-                                      {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(month => (
-                                        <td key={month} className="px-2 py-2 text-center text-gray-600">0</td>
-                                      ))}
+                                      {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(month => {
+                                        const budgetValue = tableData.find(item => item.id === row.id)?.budgetDistribution?.[month] || 0;
+                                        return (
+                                          <td key={month} className="px-2 py-2 text-center text-gray-600 font-medium">
+                                            {budgetValue}
+                                          </td>
+                                        );
+                                      })}
                                     </tr>
                                     <tr className="bg-purple-100">
                                       <td className="px-2 py-2 font-medium text-gray-700">ACT 2025'</td>
-                                      {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(month => {
-                                        const currentDate = new Date();
-                                        const currentMonth = currentDate.getMonth(); // 0-11
-                                        const monthIndex = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].indexOf(month);
-                                        const isEditable = monthIndex > currentMonth;
-                                        
+                                      {getShortMonthNames().map(month => {
+                                        const currentMonth = getCurrentMonth();
+                                        const monthIndex = getShortMonthNames().indexOf(month);
+                                        const isEditable = monthIndex > currentMonth; // Only allow editing future months
+                                        const currentForecastValue = getMonthlyData(row.id)[month] || 0;
+                                        const rowData = tableData.find(item => item.id === row.id);
+                                        const isPastOrCurrent = monthIndex <= currentMonth;
+
                                         return (
                                           <td key={month} className="px-2 py-2 text-center">
                                             {isEditable ? (
-                                              <input
-                                                type="number"
-                                                className="w-12 px-1 py-1 text-center border border-gray-300 rounded text-xs bg-white"
-                                                value={getMonthlyData(row.id)[month] || 0}
-                                                onChange={(e) => handleMonthlyForecastChange(row.id, month, parseInt(e.target.value) || 0)}
-                                                min="0"
-                                              />
+                                              <div className="relative">
+                                                <input
+                                                  type="number"
+                                                  className="w-12 px-1 py-1 text-center border border-gray-300 rounded text-xs bg-white focus:bg-yellow-50 focus:border-blue-500"
+                                                  value={currentForecastValue}
+                                                  onChange={(e) => handleMonthlyForecastChange(row.id, month, parseInt(e.target.value) || 0)}
+                                                  min="0"
+                                                  placeholder="0"
+                                                />
+                                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" title="Future month - editable"></div>
+                                              </div>
                                             ) : (
-                                              <span className="text-gray-500">0</span>
+                                              <div className="relative">
+                                                <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs">
+                                                  {isPastOrCurrent ? (rowData?.ytd25 > 0 ? Math.floor(rowData.ytd25 / (currentMonth + 1)) : 0) : '0'}
+                                                </span>
+                                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" title="Past/current month - read only"></div>
+                                              </div>
                                             )}
                                           </td>
                                         );
@@ -941,14 +1113,34 @@ const RollingForecast: React.FC = () => {
           )}
         </div>
 
-        {/* Submit Button */}
+        {/* Submit Button - Role Based */}
         <div className="flex justify-end">
-          <button
-            onClick={handleSubmit}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition-colors font-medium"
-          >
-            Submit
-          </button>
+          {user?.role === 'salesman' ? (
+            <button
+              onClick={handleSubmit}
+              className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition-colors font-medium flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              Submit for Approval
+            </button>
+          ) : user?.role === 'manager' ? (
+            <div className="flex gap-3">
+              <button
+                onClick={() => alert('Forecast data exported for analysis')}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors font-medium flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Export Analysis
+              </button>
+              <button
+                onClick={() => alert('Manager view - Use Approval Center for approving forecasts')}
+                className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors font-medium flex items-center gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                Review Mode
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
 
