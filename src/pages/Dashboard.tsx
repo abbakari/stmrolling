@@ -490,6 +490,12 @@ const Dashboard: React.FC = () => {
           onExport={handleExport}
           title="Export Dashboard Report"
         />
+
+        {/* GIT ETA Management Modal */}
+        <GitEtaManagement
+          isOpen={isGitEtaModalOpen}
+          onClose={() => setIsGitEtaModalOpen(false)}
+        />
       </div>
     </Layout>
   );
