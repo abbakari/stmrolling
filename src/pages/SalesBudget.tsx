@@ -973,8 +973,8 @@ const SalesBudget: React.FC = () => {
                 <div className="bg-purple-50 border-l-4 border-purple-600 text-purple-800 p-4 rounded-r-lg flex items-center gap-2">
                   <InfoIcon className="w-5 h-5" />
                   <div>
-                    <p className="font-bold">Manager View: Sales Budget Overview (Read-Only)</p>
-                    <p className="text-xs text-purple-700 mt-1">👑 View salesman-created budgets and customer details. Use Customer Dashboard for detailed customer-salesman management.</p>
+                    <p className="font-bold">Manager View: Sales Budget Overview (View-Only)</p>
+                    <p className="text-xs text-purple-700 mt-1">👑 View salesman-created budgets and send to supply chain when ready. Stock management available for oversight.</p>
                   </div>
                 </div>
               )}
@@ -1213,19 +1213,17 @@ const SalesBudget: React.FC = () => {
                     <span>Distribution</span>
                   </button>
 
-                  {user?.role === 'salesman' && (
-                    <button
-                      onClick={() => {
-                        console.log('Stock Management button clicked');
-                        setIsStockManagementModalOpen(true);
-                      }}
-                      className="bg-green-100 text-green-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-green-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                      title="Open comprehensive stock management dashboard (Salesmen only)"
-                    >
-                      <Package className="w-4 h-4" />
-                      <span>Stock Manager</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      console.log('Stock Management button clicked');
+                      setIsStockManagementModalOpen(true);
+                    }}
+                    className="bg-green-100 text-green-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-green-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                    title={user?.role === 'manager' ? "View stock overview dashboard" : "Open comprehensive stock management dashboard"}
+                  >
+                    <Package className="w-4 h-4" />
+                    <span>Stock {user?.role === 'manager' ? 'Overview' : 'Manager'}</span>
+                  </button>
 
                   {user?.role === 'manager' && (
                     <button
@@ -1569,17 +1567,23 @@ const SalesBudget: React.FC = () => {
                               ${selectedYear2025 === '2025' ? (row.actual2025/1000).toFixed(0) : '0'}k
                             </td>
                             <td className="p-2 border-b border-gray-200 bg-blue-50 text-xs">
-                              <input
-                                type="number"
-                                className="w-full p-1 text-center border border-gray-300 rounded text-xs"
-                                value={row.budget2026}
-                                onChange={(e) => {
-                                  const value = parseInt(e.target.value) || 0;
-                                  setTableData(prev => prev.map(item =>
-                                    item.id === row.id ? { ...item, budget2026: value } : item
-                                  ));
-                                }}
-                              />
+                              {user?.role === 'manager' ? (
+                                <div className="text-center p-1 bg-gray-100 rounded text-gray-600">
+                                  {row.budget2026}
+                                </div>
+                              ) : (
+                                <input
+                                  type="number"
+                                  className="w-full p-1 text-center border border-gray-300 rounded text-xs"
+                                  value={row.budget2026}
+                                  onChange={(e) => {
+                                    const value = parseInt(e.target.value) || 0;
+                                    setTableData(prev => prev.map(item =>
+                                      item.id === row.id ? { ...item, budget2026: value } : item
+                                    ));
+                                  }}
+                                />
+                              )}
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               {row.rate}
@@ -1591,22 +1595,16 @@ const SalesBudget: React.FC = () => {
                                 }`}>
                                   {row.stock}
                                 </span>
-                                {user?.role === 'salesman' ? (
-                                  <button
-                                    onClick={() => {
-                                      setSelectedStockItem(row);
-                                      setIsStockManagementModalOpen(true);
-                                    }}
-                                    className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
-                                    title="Manage stock for this item"
-                                  >
-                                    📦 Manage
-                                  </button>
-                                ) : (
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                    📊 View Only
-                                  </span>
-                                )}
+                                <button
+                                  onClick={() => {
+                                    setSelectedStockItem(row);
+                                    setIsStockManagementModalOpen(true);
+                                  }}
+                                  className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                                  title={user?.role === 'manager' ? "View stock details" : "Manage stock for this item"}
+                                >
+                                  📦 {user?.role === 'manager' ? 'View' : 'Manage'}
+                                </button>
                               </div>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs">
@@ -1658,22 +1656,28 @@ const SalesBudget: React.FC = () => {
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs">
                               <div className="flex flex-col gap-1">
-                                <input
-                                  type="number"
-                                  className="w-full p-1 text-center border border-gray-300 rounded text-xs"
-                                  value={Math.round(row.discount)}
-                                  onChange={(e) => {
-                                    const value = parseInt(e.target.value) || 0;
-                                    setTableData(prev => prev.map(item =>
-                                      item.id === row.id ? {
-                                        ...item,
-                                        discount: value,
-                                        budgetValue2026: (item.budget2026 * item.rate) - value
-                                      } : item
-                                    ));
-                                  }}
-                                  placeholder="0"
-                                />
+                                {user?.role === 'manager' ? (
+                                  <div className="text-center p-1 bg-gray-100 rounded text-gray-600">
+                                    {Math.round(row.discount)}
+                                  </div>
+                                ) : (
+                                  <input
+                                    type="number"
+                                    className="w-full p-1 text-center border border-gray-300 rounded text-xs"
+                                    value={Math.round(row.discount)}
+                                    onChange={(e) => {
+                                      const value = parseInt(e.target.value) || 0;
+                                      setTableData(prev => prev.map(item =>
+                                        item.id === row.id ? {
+                                          ...item,
+                                          discount: value,
+                                          budgetValue2026: (item.budget2026 * item.rate) - value
+                                        } : item
+                                      ));
+                                    }}
+                                    placeholder="0"
+                                  />
+                                )}
                                 <div className="text-xs text-gray-500">
                                   {((row.discount / (row.budget2026 * row.rate || 1)) * 100).toFixed(1)}%
                                 </div>
@@ -1681,31 +1685,37 @@ const SalesBudget: React.FC = () => {
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               <div className="flex gap-1">
-                                {editingRowId === row.id ? (
-                                  <>
-                                    <button
-                                      onClick={() => handleSaveMonthlyData(row.id)}
-                                      className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition-colors"
-                                      title="Save monthly data"
-                                    >
-                                      <Save className="w-3 h-3" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleCancelMonthlyEdit(row.id)}
-                                      className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 transition-colors"
-                                      title="Cancel edit"
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </button>
-                                  </>
+                                {user?.role === 'manager' ? (
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    View Only
+                                  </span>
                                 ) : (
-                                  <button
-                                    onClick={() => handleEditMonthlyData(row.id)}
-                                    className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
-                                    title="Edit monthly budget"
-                                  >
-                                    <Calendar className="w-3 h-3" />
-                                  </button>
+                                  editingRowId === row.id ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleSaveMonthlyData(row.id)}
+                                        className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition-colors"
+                                        title="Save monthly data"
+                                      >
+                                        <Save className="w-3 h-3" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleCancelMonthlyEdit(row.id)}
+                                        className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 transition-colors"
+                                        title="Cancel edit"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleEditMonthlyData(row.id)}
+                                      className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
+                                      title="Edit monthly budget"
+                                    >
+                                      <Calendar className="w-3 h-3" />
+                                    </button>
+                                  )
                                 )}
                               </div>
                             </td>
