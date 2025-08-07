@@ -1269,16 +1269,22 @@ const SalesBudget: React.FC = () => {
                                 }`}>
                                   {row.stock}
                                 </span>
-                                <button
-                                  onClick={() => {
-                                    setSelectedStockItem(row);
-                                    setIsStockManagementModalOpen(true);
-                                  }}
-                                  className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
-                                  title="Manage stock for this item"
-                                >
-                                  📦 Manage
-                                </button>
+                                {user?.role === 'salesman' ? (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedStockItem(row);
+                                      setIsStockManagementModalOpen(true);
+                                    }}
+                                    className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                                    title="Manage stock for this item"
+                                  >
+                                    📦 Manage
+                                  </button>
+                                ) : (
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    �� View Only
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs">
