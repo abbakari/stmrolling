@@ -6,6 +6,7 @@ import { useBudget } from '../contexts/BudgetContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useWorkflow } from '../contexts/WorkflowContext';
 import CustomerForecastModal from '../components/CustomerForecastModal';
+import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import {
   getCurrentMonth,
   getCurrentYear,
