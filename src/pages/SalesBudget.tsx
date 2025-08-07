@@ -726,13 +726,23 @@ const SalesBudget: React.FC = () => {
 
             {/* Info Alert and View Toggle */}
             <div className="flex justify-between items-center mb-4">
-              <div className="bg-blue-50 border-l-4 border-blue-600 text-blue-800 p-4 rounded-r-lg flex items-center gap-2">
-                <InfoIcon className="w-5 h-5" />
-                <div>
-                  <p className="font-bold">Instructions: Select a customer row to open monthly budget forms</p>
-                  <p className="text-xs text-blue-700 mt-1">💡 Simplified 2-row layout shows months and budget values for easy entry and budget growth tracking</p>
+              {user?.role === 'salesman' ? (
+                <div className="bg-blue-50 border-l-4 border-blue-600 text-blue-800 p-4 rounded-r-lg flex items-center gap-2">
+                  <InfoIcon className="w-5 h-5" />
+                  <div>
+                    <p className="font-bold">Instructions: Select a customer row to open monthly budget forms</p>
+                    <p className="text-xs text-blue-700 mt-1">💡 Simplified 2-row layout shows months and budget values for easy entry and budget growth tracking</p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-purple-50 border-l-4 border-purple-600 text-purple-800 p-4 rounded-r-lg flex items-center gap-2">
+                  <InfoIcon className="w-5 h-5" />
+                  <div>
+                    <p className="font-bold">Manager View: Sales Budget Overview (Read-Only)</p>
+                    <p className="text-xs text-purple-700 mt-1">👑 View salesman-created budgets and customer details. Use Customer Dashboard for detailed customer-salesman management.</p>
+                  </div>
+                </div>
+              )}
               <div className="flex shadow-sm rounded-md overflow-hidden">
                 <button
                   onClick={() => {
@@ -1421,7 +1431,7 @@ const SalesBudget: React.FC = () => {
                                           }}
                                           className="bg-green-100 text-green-800 px-3 py-1 rounded text-xs hover:bg-green-200 transition-colors"
                                         >
-                                          ���� Seasonal Growth
+                                          📈 Seasonal Growth
                                         </button>
                                         <button
                                           onClick={() => {
