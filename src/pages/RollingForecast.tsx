@@ -639,6 +639,8 @@ const RollingForecast: React.FC = () => {
     let totalUnitsBudget = 0;
     let totalUnitsSales = 0;
     let totalUnitsForecast = 0;
+    let totalStock = 0;
+    let totalGit = 0;
 
     // Calculate from table data
     tableData.forEach(row => {
@@ -650,11 +652,13 @@ const RollingForecast: React.FC = () => {
       totalSales2025 += row.ytd25 * 100; // Convert units to currency
       totalUnitsSales += row.ytd25;
 
-      // Forecast 2025 (user input forecasts units)
-      const monthlyData = getMonthlyData(row.id);
-      const forecastTotalUnits = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
-      totalForecast2025 += forecastTotalUnits * 100; // Convert units to currency
-      totalUnitsForecast += forecastTotalUnits;
+      // Forecast 2025 (user input forecasts units) - use row.forecast which is already calculated
+      totalForecast2025 += row.forecast * 100; // Convert units to currency
+      totalUnitsForecast += row.forecast;
+
+      // Stock and GIT totals
+      totalStock += row.stock;
+      totalGit += row.git;
     });
 
     return {
@@ -663,7 +667,9 @@ const RollingForecast: React.FC = () => {
       forecast: totalForecast2025,
       unitsBudget: totalUnitsBudget,
       unitsSales: totalUnitsSales,
-      unitsForecast: totalUnitsForecast
+      unitsForecast: totalUnitsForecast,
+      totalStock,
+      totalGit
     };
   };
 
