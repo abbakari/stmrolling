@@ -55,7 +55,7 @@ const CustomerForecastModal: React.FC<CustomerForecastModalProps> = ({
   viewType
 }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'monthly' | 'items'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'monthly' | 'items' | 'git'>('overview');
 
   if (!isOpen || !customerData) return null;
 
