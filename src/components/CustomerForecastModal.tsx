@@ -157,7 +157,7 @@ const CustomerForecastModal: React.FC<CustomerForecastModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(95vh - 160px)' }}>
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Summary Cards */}
