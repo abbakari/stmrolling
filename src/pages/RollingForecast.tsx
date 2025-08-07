@@ -1504,6 +1504,14 @@ const RollingForecast: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Customer Forecast Modal */}
+      <CustomerForecastModal
+        isOpen={isCustomerForecastModalOpen}
+        onClose={() => setIsCustomerForecastModalOpen(false)}
+        customerData={selectedCustomerForBreakdown ? generateCustomerForecastData(selectedCustomerForBreakdown) : null}
+        viewType="rolling_forecast"
+      />
     </Layout>
   );
 };
