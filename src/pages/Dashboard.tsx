@@ -4,6 +4,7 @@ import StatsCard from '../components/StatsCard';
 import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building, Truck } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import GitEtaManagement from '../components/GitEtaManagement';
+import ManagerDataView from '../components/ManagerDataView';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 
 
