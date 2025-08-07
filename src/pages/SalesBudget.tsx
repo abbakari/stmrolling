@@ -1356,8 +1356,19 @@ const SalesBudget: React.FC = () => {
                                   </div>
                                 </td>
                                 <td className="p-2 border-b border-r border-gray-200 text-xs">
-                                  <div className="truncate" title={row.customer}>
+                                  <div
+                                    className={`truncate ${
+                                      user?.role === 'manager'
+                                        ? 'cursor-pointer hover:text-blue-600 hover:underline'
+                                        : ''
+                                    }`}
+                                    title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
+                                    onClick={() => handleCustomerClick(row.customer)}
+                                  >
                                     {row.customer}
+                                    {user?.role === 'manager' && (
+                                      <span className="ml-1 text-blue-500">👑</span>
+                                    )}
                                   </div>
                                 </td>
                               </>
@@ -1404,7 +1415,7 @@ const SalesBudget: React.FC = () => {
                                   </button>
                                 ) : (
                                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                    ��� View Only
+                                    📊 View Only
                                   </span>
                                 )}
                               </div>
