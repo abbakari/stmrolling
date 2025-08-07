@@ -758,17 +758,17 @@ const RollingForecast: React.FC = () => {
             </div>
             <div>
               <div className="text-sm text-gray-600">Stock</div>
-              <div className="text-xl font-bold text-green-600">{inventoryInsights.totalStock.toLocaleString()} units</div>
+              <div className="text-xl font-bold text-green-600">{summaryStats.totalStock.toLocaleString()} units</div>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-red-600" />
+            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <Package className="w-5 h-5 text-blue-600" />
             </div>
             <div>
               <div className="text-sm text-gray-600">GIT</div>
-              <div className="text-xl font-bold text-red-600">{inventoryInsights.totalGit.toLocaleString()} units</div>
+              <div className="text-xl font-bold text-blue-600">{summaryStats.totalGit.toLocaleString()} units</div>
             </div>
           </div>
 
