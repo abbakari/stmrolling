@@ -26,6 +26,7 @@ import StockManagementModal from '../components/StockManagementModal';
 import ManagerDashboard from '../components/ManagerDashboard';
 import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
+import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 
@@ -83,6 +84,8 @@ const SalesBudget: React.FC = () => {
   const [isManagerDashboardOpen, setIsManagerDashboardOpen] = useState(false);
   const [isCustomerForecastModalOpen, setIsCustomerForecastModalOpen] = useState(false);
   const [selectedCustomerForBreakdown, setSelectedCustomerForBreakdown] = useState<string>('');
+  const [isViewOnlyModalOpen, setIsViewOnlyModalOpen] = useState(false);
+  const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<SalesBudgetItem | null>(null);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
