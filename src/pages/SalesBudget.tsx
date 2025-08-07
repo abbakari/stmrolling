@@ -335,7 +335,35 @@ const SalesBudget: React.FC = () => {
         return newData;
       });
 
-      showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount)`, 'success');
+      // Save to persistence manager for cross-user visibility
+      if (user) {
+        const savedData: SavedBudgetData = {
+          id: `sales_budget_${rowId}_${Date.now()}`,
+          customer: row?.customer || 'Unknown',
+          item: row?.item || 'Unknown',
+          category: row?.category || 'Unknown',
+          brand: row?.brand || 'Unknown',
+          type: 'sales_budget',
+          createdBy: user.name,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budget2025: row?.budget2025 || 0,
+          actual2025: row?.actual2025 || 0,
+          budget2026: budgetValue2026,
+          rate: defaultRate,
+          stock: row?.stock || 0,
+          git: row?.git || 0,
+          budgetValue2026: netBudgetValue,
+          discount: totalDiscount,
+          monthlyData: updatedMonthlyData,
+          status: 'saved'
+        };
+
+        DataPersistenceManager.saveSalesBudgetData([savedData]);
+        console.log('Budget data saved for manager visibility:', savedData);
+      }
+
+      showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount). Data is now visible to managers.`, 'success');
     }
   };
 
