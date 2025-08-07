@@ -696,13 +696,29 @@ const GitEtaManagement: React.FC<GitEtaManagementProps> = ({ isOpen, onClose }) 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Supplier</label>
-                    <input
-                      type="text"
-                      value={formData.supplier || ''}
-                      onChange={(e) => setFormData({...formData, supplier: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Supplier name"
-                    />
+                    <div className="relative">
+                      <select
+                        value={formData.supplier || ''}
+                        onChange={(e) => setFormData({...formData, supplier: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                      >
+                        <option value="">Select supplier...</option>
+                        {existingData.suppliers.map(supplier => (
+                          <option key={supplier} value={supplier}>{supplier}</option>
+                        ))}
+                        <option value="__custom__">⚡ Add New Supplier</option>
+                      </select>
+                      {formData.supplier === '__custom__' && (
+                        <input
+                          type="text"
+                          value=""
+                          onChange={(e) => setFormData({...formData, supplier: e.target.value})}
+                          className="w-full mt-2 px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter new supplier name"
+                          autoFocus
+                        />
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">PO Number</label>
