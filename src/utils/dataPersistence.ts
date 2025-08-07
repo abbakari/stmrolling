@@ -294,11 +294,22 @@ export class DataPersistenceManager {
 
   // Get GIT data for a specific customer and item
   static getGitDataForItem(customer: string, item: string) {
-    const gitData = this.getGitData();
-    return gitData.filter((gitItem: any) =>
-      gitItem.customer.toLowerCase().includes(customer.toLowerCase()) &&
-      gitItem.item.toLowerCase().includes(item.toLowerCase())
-    );
+    try {
+      const gitData = this.getGitData();
+      console.log('Getting GIT data for:', customer, item, 'Total GIT items:', gitData.length);
+
+      const filtered = gitData.filter((gitItem: any) =>
+        gitItem.customer && gitItem.item &&
+        gitItem.customer.toLowerCase().includes(customer.toLowerCase()) &&
+        gitItem.item.toLowerCase().includes(item.toLowerCase())
+      );
+
+      console.log('Filtered GIT items:', filtered.length, filtered);
+      return filtered;
+    } catch (error) {
+      console.error('Error getting GIT data for item:', error);
+      return [];
+    }
   }
 
   // Get aggregated GIT quantity and ETA for customer/item combination
