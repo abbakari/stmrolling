@@ -1109,14 +1109,34 @@ const RollingForecast: React.FC = () => {
           )}
         </div>
 
-        {/* Submit Button */}
+        {/* Submit Button - Role Based */}
         <div className="flex justify-end">
-          <button
-            onClick={handleSubmit}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition-colors font-medium"
-          >
-            Submit
-          </button>
+          {user?.role === 'salesman' ? (
+            <button
+              onClick={handleSubmit}
+              className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition-colors font-medium flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              Submit for Approval
+            </button>
+          ) : user?.role === 'manager' ? (
+            <div className="flex gap-3">
+              <button
+                onClick={() => alert('Forecast data exported for analysis')}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors font-medium flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Export Analysis
+              </button>
+              <button
+                onClick={() => alert('Manager view - Use Approval Center for approving forecasts')}
+                className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors font-medium flex items-center gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                Review Mode
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
 
