@@ -483,9 +483,51 @@ const SalesBudget: React.FC = () => {
   };
 
   const handleApplyDistribution = (distribution: DistributionConfig) => {
-    // Implementation for distribution logic
+    // Create new distribution tracking entry
+    const newDistribution = {
+      id: `dist_${Date.now()}`,
+      type: distribution.type,
+      name: `${distribution.type.charAt(0).toUpperCase() + distribution.type.slice(1)} Distribution`,
+      appliedAt: new Date(),
+      segments: Object.keys(distribution.distributions).length,
+      totalAmount: distribution.totalBudget,
+      totalUnits: distribution.totalUnits,
+      isActive: true,
+      segments_detail: Object.entries(distribution.distributions).map(([name, data], index) => ({
+        name,
+        percentage: data.percentage,
+        amount: data.amount,
+        units: data.units,
+        color: `hsl(${(index * 360) / Object.keys(distribution.distributions).length}, 70%, 50%)`
+      }))
+    };
+
+    // Add to applied distributions
+    setAppliedDistributions(prev => [...prev, newDistribution]);
+
+    // Apply distribution to table data based on distribution type
+    setTableData(prev => prev.map(item => {
+      const totalBudget = item.budget2026 || 100; // Use current budget or default
+      const distributionEntry = Object.entries(distribution.distributions)[0]; // Use first distribution as example
+      const percentage = distributionEntry[1].percentage / 100;
+
+      // Update budget value based on distribution
+      const newBudget = Math.round(totalBudget * percentage);
+
+      return {
+        ...item,
+        budget2026: newBudget,
+        budgetValue2026: newBudget * item.rate,
+        // Update monthly data if exists
+        monthlyData: item.monthlyData.map(month => ({
+          ...month,
+          budgetValue: Math.round(month.budgetValue * percentage)
+        }))
+      };
+    }));
+
     showNotification(
-      `Distribution applied: ${Object.keys(distribution.distributions).length} segments created`,
+      `Distribution applied: ${Object.keys(distribution.distributions).length} segments created for ${distribution.type}`,
       'success'
     );
   };
