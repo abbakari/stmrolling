@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import { ChevronRight, Eye, CheckCircle, Plus, ChevronUp, ChevronDown, Minus, X, List, UserPlus, Target, Send, Download as DownloadIcon } from 'lucide-react';
 import { Customer } from '../types/forecast';
 import { useBudget } from '../contexts/BudgetContext';
+import { useAuth } from '../contexts/AuthContext';
 import {
   getCurrentMonth,
   getCurrentYear,
