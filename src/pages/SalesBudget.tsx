@@ -14,7 +14,8 @@ import {
   X,
   Calendar,
   Send,
-  Package
+  Package,
+  Users
 } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
@@ -1104,7 +1105,7 @@ const SalesBudget: React.FC = () => {
                         : 'text-gray-500'
                   }`}>
                     {budgetGrowth > 0 && '📈'}
-                    {budgetGrowth < 0 && '📉'}
+                    {budgetGrowth < 0 && '���'}
                     {budgetGrowth === 0 && '➡️'}
                     {budgetGrowth.toFixed(1)}%
                   </p>
