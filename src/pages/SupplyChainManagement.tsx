@@ -38,11 +38,19 @@ interface ProcessedSubmission {
   items: number;
   totalValue: number;
   totalUnits: number;
+  salesUnits?: number; // For sales budget submissions
   status: 'pending' | 'reviewed' | 'processed' | 'completed';
   priority: 'low' | 'medium' | 'high';
   processingNotes: string;
   supplierRequests: number;
   estimatedDelivery: string;
+  itemDetails?: {
+    item: string;
+    category: string;
+    brand: string;
+    rate: number;
+    salesUnits: number;
+  };
 }
 
 interface SupplyChainMetrics {
@@ -282,11 +290,19 @@ const SupplyChainManagement: React.FC = () => {
                     items: 1,
                     totalValue: item.budgetValue2026,
                     totalUnits: item.budget2026,
+                    salesUnits: Math.floor(item.budgetValue2026 / (item.rate || 100)), // Calculate sales units from value and rate
                     status: 'pending' as const,
                     priority: item.budgetValue2026 > 100000 ? 'high' : 'medium' as const,
-                    processingNotes: `Budget submission for ${item.item}`,
+                    processingNotes: `Budget submission for ${item.item} - Sales Units: ${Math.floor(item.budgetValue2026 / (item.rate || 100))} units`,
                     supplierRequests: Math.floor(Math.random() * 3) + 1,
-                    estimatedDelivery: new Date(Date.now() + Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                    estimatedDelivery: new Date(Date.now() + Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    itemDetails: {
+                      item: item.item,
+                      category: item.category,
+                      brand: item.brand,
+                      rate: item.rate,
+                      salesUnits: Math.floor(item.budgetValue2026 / (item.rate || 100))
+                    }
                   }));
 
                 const forecastSubmissions = forecastData
@@ -495,6 +511,9 @@ const SupplyChainManagement: React.FC = () => {
                         <div>{submission.items} items</div>
                         <div className="font-medium">${submission.totalValue.toLocaleString()}</div>
                         <div className="text-xs text-gray-500">{submission.totalUnits} units</div>
+                        {submission.type === 'sales_budget' && submission.salesUnits && (
+                          <div className="text-xs text-blue-600">Sales: {submission.salesUnits} units</div>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -606,6 +625,9 @@ const SupplyChainManagement: React.FC = () => {
                   <div>
                     <label className="text-sm font-medium text-gray-600">Total Units</label>
                     <p className="text-lg font-semibold">{selectedSubmission.totalUnits.toLocaleString()}</p>
+                    {selectedSubmission.type === 'sales_budget' && selectedSubmission.salesUnits && (
+                      <p className="text-sm text-blue-600">Sales Units: {selectedSubmission.salesUnits.toLocaleString()}</p>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Items Count</label>
@@ -626,6 +648,39 @@ const SupplyChainManagement: React.FC = () => {
                     <p className="text-lg font-semibold">{selectedSubmission.estimatedDelivery}</p>
                   </div>
                 </div>
+
+                {/* Item Details for Sales Budget */}
+                {selectedSubmission.type === 'sales_budget' && selectedSubmission.itemDetails && (
+                  <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-900 mb-3">Sales Budget Item Details</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <label className="text-sm font-medium text-blue-700">Item</label>
+                        <p className="text-blue-900">{selectedSubmission.itemDetails.item}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-blue-700">Category</label>
+                        <p className="text-blue-900">{selectedSubmission.itemDetails.category}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-blue-700">Brand</label>
+                        <p className="text-blue-900">{selectedSubmission.itemDetails.brand}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-blue-700">Unit Rate</label>
+                        <p className="text-blue-900">${selectedSubmission.itemDetails.rate}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-blue-700">Sales Units</label>
+                        <p className="text-blue-900 font-semibold">{selectedSubmission.itemDetails.salesUnits} units</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-blue-700">Unit Value</label>
+                        <p className="text-blue-900">${(selectedSubmission.totalValue / selectedSubmission.itemDetails.salesUnits).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mb-4">
                   <label className="text-sm font-medium text-gray-600">Processing Notes</label>
