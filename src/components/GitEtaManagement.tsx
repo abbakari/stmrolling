@@ -240,6 +240,9 @@ const GitEtaManagement: React.FC<GitEtaManagementProps> = ({ isOpen, onClose }) 
     saveData(updatedItems);
     setIsAddModalOpen(false);
     resetForm();
+
+    // Show success notification
+    alert(`GIT item added successfully!\n\nThis information is now visible to all users in their Sales Budget and Rolling Forecast tables:\n• Customer: ${newItem.customer}\n• Item: ${newItem.item}\n• Quantity: ${newItem.gitQuantity.toLocaleString()} units\n• ETA: ${new Date(newItem.eta).toLocaleDateString()}\n• Status: ${newItem.status.toUpperCase()}`);
   };
 
   const handleEditItem = (item: GitEtaItem) => {
