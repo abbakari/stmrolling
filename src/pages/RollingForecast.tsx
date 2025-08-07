@@ -1020,7 +1020,7 @@ const RollingForecast: React.FC = () => {
 
                   acc[row.customer].budget += row.bud25;
                   acc[row.customer].sales += row.ytd25;
-                  acc[row.customer].forecast += customerForecast;
+                  acc[row.customer].forecast += customerForecast; // Use calculated forecast
                   acc[row.customer].items += 1;
 
                   return acc;
