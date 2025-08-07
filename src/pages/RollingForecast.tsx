@@ -1206,39 +1206,41 @@ const RollingForecast: React.FC = () => {
                         {row.stock}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
-                        {(() => {
-                          const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
-                          const hasGitData = gitSummary.gitQuantity > 0;
+                        <GitDetailsTooltip customer={row.customer} item={row.item}>
+                          {(() => {
+                            const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+                            const hasGitData = gitSummary.gitQuantity > 0;
 
-                          return (
-                            <div className="text-center">
-                              <span className={`font-medium ${
-                                hasGitData ? 'text-blue-600' : 'text-gray-500'
-                              }`}>
-                                {hasGitData ? gitSummary.gitQuantity.toLocaleString() : '0'}
-                              </span>
-                              {hasGitData && (
-                                <div className="space-y-1 mt-1">
-                                  <div className={`text-xs px-1 py-0.5 rounded ${
-                                    gitSummary.status === 'delayed' ? 'bg-red-100 text-red-600' :
-                                    gitSummary.status === 'in_transit' ? 'bg-purple-100 text-purple-600' :
-                                    gitSummary.status === 'shipped' ? 'bg-yellow-100 text-yellow-600' :
-                                    gitSummary.status === 'ordered' ? 'bg-blue-100 text-blue-600' :
-                                    gitSummary.status === 'arrived' ? 'bg-green-100 text-green-600' :
-                                    'bg-gray-100 text-gray-600'
-                                  }`}>
-                                    {gitSummary.status.replace('_', ' ').toUpperCase()}
-                                  </div>
-                                  {gitSummary.itemCount > 1 && (
-                                    <div className="text-xs text-gray-500">
-                                      {gitSummary.itemCount} shipments
+                            return (
+                              <div className="text-center">
+                                <span className={`font-medium ${
+                                  hasGitData ? 'text-blue-600' : 'text-gray-500'
+                                }`}>
+                                  {hasGitData ? gitSummary.gitQuantity.toLocaleString() : '0'}
+                                </span>
+                                {hasGitData && (
+                                  <div className="space-y-1 mt-1">
+                                    <div className={`text-xs px-1 py-0.5 rounded ${
+                                      gitSummary.status === 'delayed' ? 'bg-red-100 text-red-600' :
+                                      gitSummary.status === 'in_transit' ? 'bg-purple-100 text-purple-600' :
+                                      gitSummary.status === 'shipped' ? 'bg-yellow-100 text-yellow-600' :
+                                      gitSummary.status === 'ordered' ? 'bg-blue-100 text-blue-600' :
+                                      gitSummary.status === 'arrived' ? 'bg-green-100 text-green-600' :
+                                      'bg-gray-100 text-gray-600'
+                                    }`}>
+                                      {gitSummary.status.replace('_', ' ').toUpperCase()}
                                     </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
+                                    {gitSummary.itemCount > 1 && (
+                                      <div className="text-xs text-gray-500">
+                                        {gitSummary.itemCount} shipments
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </GitDetailsTooltip>
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
                         {(() => {
