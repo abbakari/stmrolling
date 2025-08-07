@@ -1508,14 +1508,44 @@ const SalesBudget: React.FC = () => {
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs">
                               <div className="flex flex-col items-center gap-1">
-                                <span className={`font-medium ${
-                                  row.git > 0 ? 'text-blue-600' : 'text-gray-500'
-                                }`}>
-                                  {row.git}
-                                </span>
-                                {row.git > 0 && (
-                                  <span className="text-xs text-blue-600">In Transit</span>
-                                )}
+                                {(() => {
+                                  const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+                                  const hasGitData = gitSummary.gitQuantity > 0;
+
+                                  return (
+                                    <div className="text-center">
+                                      <span className={`font-medium ${
+                                        hasGitData ? 'text-blue-600' : 'text-gray-500'
+                                      }`}>
+                                        {hasGitData ? gitSummary.gitQuantity.toLocaleString() : '0'}
+                                      </span>
+                                      {hasGitData && (
+                                        <div className="space-y-1">
+                                          <div className={`text-xs px-1 py-0.5 rounded ${
+                                            gitSummary.status === 'delayed' ? 'bg-red-100 text-red-600' :
+                                            gitSummary.status === 'in_transit' ? 'bg-purple-100 text-purple-600' :
+                                            gitSummary.status === 'shipped' ? 'bg-yellow-100 text-yellow-600' :
+                                            gitSummary.status === 'ordered' ? 'bg-blue-100 text-blue-600' :
+                                            gitSummary.status === 'arrived' ? 'bg-green-100 text-green-600' :
+                                            'bg-gray-100 text-gray-600'
+                                          }`}>
+                                            {gitSummary.status.replace('_', ' ').toUpperCase()}
+                                          </div>
+                                          {gitSummary.eta && (
+                                            <div className="text-xs text-gray-600">
+                                              ETA: {new Date(gitSummary.eta).toLocaleDateString()}
+                                            </div>
+                                          )}
+                                          {gitSummary.itemCount > 1 && (
+                                            <div className="text-xs text-gray-500">
+                                              {gitSummary.itemCount} shipments
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
