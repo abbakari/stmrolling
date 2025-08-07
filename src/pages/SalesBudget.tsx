@@ -689,7 +689,36 @@ const SalesBudget: React.FC = () => {
     };
 
     setOriginalTableData(prev => [...prev, newRow]);
-    showNotification(`Yearly budget for "${budgetData.item}" created successfully and shared with Rolling Forecast`, 'success');
+
+    // Save to persistence manager for cross-user visibility
+    if (user) {
+      const savedData: SavedBudgetData = {
+        id: `yearly_budget_${newId}_${Date.now()}`,
+        customer: budgetData.customer,
+        item: budgetData.item,
+        category: budgetData.category,
+        brand: budgetData.brand,
+        type: 'sales_budget',
+        createdBy: user.name,
+        createdAt: new Date().toISOString(),
+        lastModified: new Date().toISOString(),
+        budget2025: 0,
+        actual2025: 0,
+        budget2026: budgetData.totalBudget,
+        rate: budgetData.monthlyData[0]?.rate || 0,
+        stock: budgetData.monthlyData.reduce((sum: number, month: any) => sum + month.stock, 0),
+        git: budgetData.monthlyData.reduce((sum: number, month: any) => sum + month.git, 0),
+        budgetValue2026: budgetData.totalBudget,
+        discount: budgetData.monthlyData.reduce((sum: number, month: any) => sum + month.discount, 0),
+        monthlyData: budgetData.monthlyData,
+        status: 'saved'
+      };
+
+      DataPersistenceManager.saveSalesBudgetData([savedData]);
+      console.log('Yearly budget data saved for manager visibility:', savedData);
+    }
+
+    showNotification(`Yearly budget for "${budgetData.item}" created successfully and shared with Rolling Forecast. Data is now visible to managers.`, 'success');
   };
 
   // Submit budgets for manager approval
