@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, User, Calendar, Package, TrendingUp, TrendingDown, BarChart } from 'lucide-react';
+import { X, User, Calendar, Package, TrendingUp, TrendingDown, BarChart, Truck, Info } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import DataPersistenceManager from '../utils/dataPersistence';
 
 interface MonthlyForecastData {
   month: string;
