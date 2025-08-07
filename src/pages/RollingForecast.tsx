@@ -1139,13 +1139,16 @@ const RollingForecast: React.FC = () => {
                       {getSortIcon('stock')}
                     </div>
                   </th>
-                  <th 
+                  <th
                     className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-20"
                     onClick={() => handleSort('git')}
                   >
-                    <div className="flex items-center justify-center gap-1">
-                      GIT
-                      {getSortIcon('git')}
+                    <div className="flex items-center justify-center gap-1 flex-col">
+                      <div className="flex items-center gap-1">
+                        GIT
+                        {getSortIcon('git')}
+                      </div>
+                      <span className="text-xs text-blue-500 normal-case">👑 Admin</span>
                     </div>
                   </th>
                   <th 
