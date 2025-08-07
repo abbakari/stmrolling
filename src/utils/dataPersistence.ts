@@ -252,8 +252,8 @@ export class DataPersistenceManager {
 
     // Update forecast data with latest budget information
     const updatedForecastData = forecastData.map(forecastItem => {
-      const matchingBudget = budgetData.find(budgetItem => 
-        budgetItem.customer === forecastItem.customer && 
+      const matchingBudget = budgetData.find(budgetItem =>
+        budgetItem.customer === forecastItem.customer &&
         budgetItem.item === forecastItem.item
       );
 
@@ -279,6 +279,67 @@ export class DataPersistenceManager {
     });
 
     this.saveRollingForecastData(updatedForecastData);
+  }
+
+  // Get GIT data uploaded by admin
+  static getGitData() {
+    try {
+      const data = localStorage.getItem('git_eta_data');
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('Error loading GIT data:', error);
+      return [];
+    }
+  }
+
+  // Get GIT data for a specific customer and item
+  static getGitDataForItem(customer: string, item: string) {
+    const gitData = this.getGitData();
+    return gitData.filter((gitItem: any) =>
+      gitItem.customer.toLowerCase().includes(customer.toLowerCase()) &&
+      gitItem.item.toLowerCase().includes(item.toLowerCase())
+    );
+  }
+
+  // Get aggregated GIT quantity and ETA for customer/item combination
+  static getGitSummaryForItem(customer: string, item: string) {
+    const gitItems = this.getGitDataForItem(customer, item);
+
+    if (gitItems.length === 0) {
+      return { gitQuantity: 0, eta: '', status: 'none' };
+    }
+
+    const totalGitQuantity = gitItems.reduce((sum: number, gitItem: any) => sum + gitItem.gitQuantity, 0);
+
+    // Get the earliest ETA that's not yet arrived
+    const futureEtas = gitItems
+      .filter((item: any) => item.status !== 'arrived' && new Date(item.eta) >= new Date())
+      .sort((a: any, b: any) => new Date(a.eta).getTime() - new Date(b.eta).getTime());
+
+    const earliestEta = futureEtas.length > 0 ? futureEtas[0].eta : '';
+    const overallStatus = this.determineOverallGitStatus(gitItems);
+
+    return {
+      gitQuantity: totalGitQuantity,
+      eta: earliestEta,
+      status: overallStatus,
+      itemCount: gitItems.length
+    };
+  }
+
+  // Determine overall status from multiple GIT items
+  private static determineOverallGitStatus(gitItems: any[]) {
+    if (gitItems.length === 0) return 'none';
+
+    const statuses = gitItems.map(item => item.status);
+
+    if (statuses.includes('delayed')) return 'delayed';
+    if (statuses.includes('in_transit')) return 'in_transit';
+    if (statuses.includes('shipped')) return 'shipped';
+    if (statuses.includes('ordered')) return 'ordered';
+    if (statuses.every(status => status === 'arrived')) return 'arrived';
+
+    return 'mixed';
   }
 }
 
