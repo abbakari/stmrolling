@@ -799,6 +799,20 @@ const GitEtaManagement: React.FC<GitEtaManagementProps> = ({ isOpen, onClose }) 
                     placeholder="Additional notes (optional)"
                   />
                 </div>
+
+                {/* User Visibility Notice */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 text-sm">ℹ️</span>
+                    </div>
+                    <h4 className="text-sm font-medium text-blue-800">Visibility Notice</h4>
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    Once saved, this GIT information will be automatically visible to all users in their Sales Budget and Rolling Forecast tables.
+                    Users can hover over GIT values to see detailed information including supplier, tracking, and notes.
+                  </p>
+                </div>
               </div>
 
               <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
