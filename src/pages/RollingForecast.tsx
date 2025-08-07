@@ -4,6 +4,7 @@ import { ChevronRight, Eye, CheckCircle, Plus, ChevronUp, ChevronDown, Minus, X,
 import { Customer } from '../types/forecast';
 import { useBudget } from '../contexts/BudgetContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useWorkflow } from '../contexts/WorkflowContext';
 import {
   getCurrentMonth,
   getCurrentYear,
