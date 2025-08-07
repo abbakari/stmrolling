@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Package, Truck, Clock, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
 import DataPersistenceManager from '../utils/dataPersistence';
+import { initializeSampleGitData } from '../utils/sampleGitData';
 
 interface GitSummaryWidgetProps {
   userRole?: string;
@@ -8,8 +9,33 @@ interface GitSummaryWidgetProps {
 }
 
 const GitSummaryWidget: React.FC<GitSummaryWidgetProps> = ({ userRole, compact = false }) => {
-  // Get all GIT data
-  const allGitData = DataPersistenceManager.getGitData();
+  const [allGitData, setAllGitData] = useState<any[]>([]);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
+
+  // Initialize and load GIT data
+  useEffect(() => {
+    const loadGitData = () => {
+      // Initialize sample GIT data if none exists
+      const initialized = initializeSampleGitData();
+      if (initialized) {
+        console.log('Sample GIT data initialized for GitSummaryWidget');
+      }
+
+      // Load GIT data
+      const gitData = DataPersistenceManager.getGitData();
+      console.log('Loaded GIT data in GitSummaryWidget:', gitData.length, 'items');
+      setAllGitData(gitData);
+      setLastUpdate(new Date());
+    };
+
+    // Load data initially
+    loadGitData();
+
+    // Set up interval to refresh GIT data every 30 seconds
+    const interval = setInterval(loadGitData, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
   
   // Calculate summary metrics
   const totalGitItems = allGitData.length;
