@@ -980,6 +980,20 @@ const SalesBudget: React.FC = () => {
                       <span>Stock Manager</span>
                     </button>
                   )}
+
+                  {user?.role === 'manager' && (
+                    <button
+                      onClick={() => {
+                        console.log('Manager Dashboard button clicked');
+                        setIsManagerDashboardOpen(true);
+                      }}
+                      className="bg-purple-100 text-purple-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-purple-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                      title="Open customer-salesman management dashboard (Managers only)"
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>Customer Dashboard</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
