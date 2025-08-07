@@ -667,23 +667,97 @@ const RollingForecast: React.FC = () => {
 
         {/* Summary Statistics */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-3 gap-4 text-center mb-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Budget 2025</div>
               <div className="text-2xl font-bold text-gray-900">${summaryStats.budget.toLocaleString()}</div>
               <div className="text-sm text-gray-500">{summaryStats.unitsBudget.toLocaleString()} Units</div>
             </div>
-            
+
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Sales 2025</div>
               <div className="text-2xl font-bold text-gray-900">${summaryStats.sales.toLocaleString()}</div>
               <div className="text-sm text-gray-500">{summaryStats.unitsSales.toLocaleString()} Units</div>
             </div>
-            
+
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Forecast 2025</div>
               <div className="text-2xl font-bold text-gray-900">${summaryStats.forecast.toLocaleString()}</div>
               <div className="text-sm text-gray-500">{summaryStats.unitsForecast.toLocaleString()} Units</div>
+            </div>
+          </div>
+
+          {/* Customer-Specific Forecast Totals */}
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+              <span>📊</span>
+              Forecast Breakdown by Customer
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(() => {
+                // Calculate customer-specific totals
+                const customerTotals = tableData.reduce((acc, row) => {
+                  const monthlyData = getMonthlyData(row.id);
+                  const customerForecast = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+
+                  if (!acc[row.customer]) {
+                    acc[row.customer] = {
+                      budget: 0,
+                      sales: 0,
+                      forecast: 0,
+                      items: 0
+                    };
+                  }
+
+                  acc[row.customer].budget += row.bud25;
+                  acc[row.customer].sales += row.ytd25;
+                  acc[row.customer].forecast += customerForecast;
+                  acc[row.customer].items += 1;
+
+                  return acc;
+                }, {} as Record<string, {budget: number, sales: number, forecast: number, items: number}>);
+
+                return Object.entries(customerTotals).map(([customer, totals]) => (
+                  <div key={customer} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-blue-900 truncate" title={customer}>
+                        {customer.length > 20 ? customer.substring(0, 20) + '...' : customer}
+                      </h4>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        {totals.items} items
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-blue-700">Budget Units:</span>
+                        <span className="font-medium text-blue-900">{totals.budget.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-700">Sales Units:</span>
+                        <span className="font-medium text-blue-900">{totals.sales.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-700">Forecast Units:</span>
+                        <span className="font-bold text-green-600">{totals.forecast.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t border-blue-200">
+                        <span className="text-blue-700">Forecast vs Budget:</span>
+                        <span className={`font-medium ${
+                          totals.forecast > totals.budget ? 'text-green-600' :
+                          totals.forecast < totals.budget ? 'text-red-600' : 'text-gray-600'
+                        }`}>
+                          {totals.budget > 0 ?
+                            `${((totals.forecast - totals.budget) / totals.budget * 100).toFixed(1)}%` :
+                            'N/A'
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
           
