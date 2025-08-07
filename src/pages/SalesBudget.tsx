@@ -27,6 +27,7 @@ import ManagerDashboard from '../components/ManagerDashboard';
 import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
+import FollowBacksButton from '../components/FollowBacksButton';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 
