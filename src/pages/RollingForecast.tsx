@@ -412,6 +412,48 @@ const RollingForecast: React.FC = () => {
         return row;
       })
     );
+
+    // Auto-save to persistence manager when forecast data changes (for managers to see)
+    if (user && value > 0) {
+      const row = tableData.find(r => r.id === rowId);
+      if (row) {
+        const updatedMonthlyData = {
+          ...monthlyForecastData[rowId],
+          [month]: value
+        };
+        const totalForecast = Object.values(updatedMonthlyData).reduce((sum, val) => sum + (val || 0), 0);
+
+        const savedData: SavedForecastData = {
+          id: `forecast_auto_${rowId}_${Date.now()}`,
+          customer: row.customer,
+          item: row.item,
+          category: 'TYRE SERVICE',
+          brand: 'Various',
+          type: 'rolling_forecast',
+          createdBy: user.name,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budgetData: {
+            bud25: row.bud25,
+            ytd25: row.ytd25,
+            budget2026: 0,
+            rate: 100,
+            stock: row.stock,
+            git: row.git,
+            eta: row.eta,
+            budgetValue2026: 0,
+            discount: 0,
+            monthlyData: []
+          },
+          forecastData: updatedMonthlyData,
+          forecastTotal: totalForecast,
+          status: 'draft'
+        };
+
+        DataPersistenceManager.saveRollingForecastData([savedData]);
+        console.log('Auto-saved forecast data for manager visibility:', savedData);
+      }
+    }
   };
 
   const getMonthlyData = (rowId: string) => {
