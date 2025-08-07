@@ -1,457 +1,374 @@
-import React, { useState, useEffect } from 'react';
-import { X, Plus, Save, TrendingUp, Calendar, DollarSign, AlertCircle } from 'lucide-react';
-import { Customer, Item, ForecastFormData, MonthlyForecast } from '../types/forecast';
+import React, { useState } from 'react';
+import { X, User, Calendar, Package, TrendingUp, TrendingDown, BarChart } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+
+interface MonthlyForecastData {
+  month: string;
+  budgetUnits: number;
+  actualUnits: number;
+  forecastUnits: number;
+  budgetValue: number;
+  actualValue: number;
+  forecastValue: number;
+  rate: number;
+  variance: number;
+  variancePercentage: number;
+}
+
+interface CustomerForecastData {
+  customer: string;
+  totalBudgetUnits: number;
+  totalActualUnits: number;
+  totalForecastUnits: number;
+  totalBudgetValue: number;
+  totalActualValue: number;
+  totalForecastValue: number;
+  monthlyData: MonthlyForecastData[];
+  items: Array<{
+    item: string;
+    category: string;
+    brand: string;
+    budgetUnits: number;
+    actualUnits: number;
+    forecastUnits: number;
+    budgetValue: number;
+    actualValue: number;
+    forecastValue: number;
+    rate: number;
+  }>;
+  salesmanName: string;
+  lastUpdated: string;
+}
 
 interface CustomerForecastModalProps {
   isOpen: boolean;
   onClose: () => void;
-  customer: Customer | null;
-  items: Item[];
-  onSaveForecast: (forecast: ForecastFormData) => void;
-  existingForecast?: ForecastFormData | null;
+  customerData: CustomerForecastData | null;
+  viewType: 'sales_budget' | 'rolling_forecast';
 }
 
 const CustomerForecastModal: React.FC<CustomerForecastModalProps> = ({
   isOpen,
   onClose,
-  customer,
-  items,
-  onSaveForecast,
-  existingForecast
+  customerData,
+  viewType
 }) => {
-  const [selectedItemId, setSelectedItemId] = useState<string>('');
-  const [confidence, setConfidence] = useState<'low' | 'medium' | 'high'>('medium');
-  const [notes, setNotes] = useState<string>('');
-  const [monthlyData, setMonthlyData] = useState<{ [month: string]: { quantity: number; unitPrice: number; notes?: string } }>({});
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'overview' | 'monthly' | 'items'>('overview');
 
-  // Get remaining months of the current year
-  const getCurrentYearRemainingMonths = () => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
-    
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    
-    return months.slice(currentMonth).map((month, index) => ({
-      name: month,
-      index: currentMonth + index,
-      year: currentYear
-    }));
+  if (!isOpen || !customerData) return null;
+
+  const getVarianceColor = (variance: number) => {
+    if (variance > 0) return 'text-green-600';
+    if (variance < 0) return 'text-red-600';
+    return 'text-gray-600';
   };
 
-  const remainingMonths = getCurrentYearRemainingMonths();
-
-  // Initialize monthly data for remaining months
-  useEffect(() => {
-    if (isOpen) {
-      const initialData: { [month: string]: { quantity: number; unitPrice: number; notes?: string } } = {};
-      remainingMonths.forEach(month => {
-        initialData[month.name] = {
-          quantity: 0,
-          unitPrice: 0,
-          notes: ''
-        };
-      });
-      setMonthlyData(initialData);
-    }
-  }, [isOpen]);
-
-  // Load existing forecast if provided
-  useEffect(() => {
-    if (existingForecast) {
-      setSelectedItemId(existingForecast.itemId);
-      setConfidence(existingForecast.confidence);
-      setNotes(existingForecast.notes || '');
-      setMonthlyData(existingForecast.forecasts);
-    }
-  }, [existingForecast]);
-
-  const handleMonthlyDataChange = (month: string, field: 'quantity' | 'unitPrice' | 'notes', value: number | string) => {
-    setMonthlyData(prev => ({
-      ...prev,
-      [month]: {
-        ...prev[month],
-        [field]: field === 'notes' ? value : Number(value)
-      }
-    }));
+  const getVarianceIcon = (variance: number) => {
+    if (variance > 0) return <TrendingUp className="w-4 h-4" />;
+    if (variance < 0) return <TrendingDown className="w-4 h-4" />;
+    return <BarChart className="w-4 h-4" />;
   };
 
-  const calculateMonthlyTotal = (month: string) => {
-    const data = monthlyData[month];
-    if (!data) return 0;
-    return data.quantity * data.unitPrice;
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
-  const calculateYearlyTotal = () => {
-    return Object.keys(monthlyData).reduce((total, month) => {
-      return total + calculateMonthlyTotal(month);
-    }, 0);
+  const calculateTotalVariance = () => {
+    const budgetTotal = viewType === 'sales_budget' ? customerData.totalBudgetValue : customerData.totalBudgetUnits;
+    const forecastTotal = viewType === 'sales_budget' ? customerData.totalForecastValue : customerData.totalForecastUnits;
+    return budgetTotal > 0 ? ((forecastTotal - budgetTotal) / budgetTotal) * 100 : 0;
   };
 
-  const getSelectedItem = () => {
-    return items.find(item => item.id === selectedItemId);
-  };
-
-  const handleSave = () => {
-    if (!customer || !selectedItemId) {
-      alert('Please select a customer and item');
-      return;
-    }
-
-    const forecastData: ForecastFormData = {
-      customerId: customer.id,
-      itemId: selectedItemId,
-      forecasts: monthlyData,
-      confidence,
-      notes
-    };
-
-    onSaveForecast(forecastData);
-    onClose();
-  };
-
-  const handleClose = () => {
-    setSelectedItemId('');
-    setConfidence('medium');
-    setNotes('');
-    setMonthlyData({});
-    onClose();
-  };
-
-  if (!isOpen) return null;
+  const totalVariance = calculateTotalVariance();
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Create Forecast for {customer?.name}
-            </h2>
-            <p className="text-sm text-gray-600">
-              Enter monthly forecast data for remaining months of {new Date().getFullYear()}
-            </p>
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <User className="w-6 h-6 text-blue-600" />
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {viewType === 'sales_budget' ? 'Sales Budget' : 'Rolling Forecast'} - Customer Analysis
+                </h2>
+                <p className="text-sm text-gray-600">{customerData.customer}</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
           </div>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
+
+          {/* Tab Navigation */}
+          <div className="flex gap-4 mt-4">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'overview'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('monthly')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'monthly'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Monthly Breakdown
+            </button>
+            <button
+              onClick={() => setActiveTab('items')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'items'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Items Details
+            </button>
+          </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Customer Info */}
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm font-medium text-blue-900">Customer</p>
-                <p className="text-lg font-semibold text-blue-800">{customer?.name}</p>
-                <p className="text-sm text-blue-600">{customer?.code}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-blue-900">Region</p>
-                <p className="text-blue-800">{customer?.region}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-blue-900">Segment</p>
-                <p className="text-blue-800">{customer?.segment}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Item Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Item to Forecast
-              </label>
-              <select
-                value={selectedItemId}
-                onChange={(e) => setSelectedItemId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Choose an item...</option>
-                {items.map(item => (
-                  <option key={item.id} value={item.id}>
-                    {item.sku} - {item.name} ({item.category})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Forecast Confidence
-              </label>
-              <select
-                value={confidence}
-                onChange={(e) => setConfidence(e.target.value as 'low' | 'medium' | 'high')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="low">Low Confidence</option>
-                <option value="medium">Medium Confidence</option>
-                <option value="high">High Confidence</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Selected Item Details */}
-          {selectedItemId && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-medium text-gray-900 mb-3">Selected Item Details</h3>
-              {(() => {
-                const item = getSelectedItem();
-                if (!item) return null;
-                return (
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-600">SKU</p>
-                      <p className="text-gray-900">{item.sku}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-600">Name</p>
-                      <p className="text-gray-900">{item.name}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-600">Unit Price</p>
-                      <p className="text-gray-900">${item.unitPrice.toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-600">Category</p>
-                      <p className="text-gray-900">{item.category}</p>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-
-          {/* Monthly Forecast Input */}
-          {selectedItemId && (
-            <div>
-              <div className="mb-4">
-                <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                  <Calendar className="w-5 h-5 mr-2" />
-                  Monthly Forecast Data
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">Enter forecast quantities for each month using the simplified 2-row layout</p>
-              </div>
-              
-              {/* Simplified 2-row horizontal layout - Month and Quantity only */}
-              <div className="space-y-4">
-                  {/* Quick Distribution Tools */}
-                  <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                    <h5 className="text-sm font-medium text-yellow-800 mb-2">Quick Forecast Distribution</h5>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => {
-                          const totalQuantity = Object.values(monthlyData).reduce((sum, data) => sum + data.quantity, 0);
-                          const monthlyAverage = Math.round(totalQuantity / remainingMonths.length);
-                          const selectedItem = getSelectedItem();
-                          const defaultPrice = selectedItem?.unitPrice || 0;
-                          setMonthlyData(prev => {
-                            const newData = { ...prev };
-                            remainingMonths.forEach(month => {
-                              newData[month.name] = {
-                                ...newData[month.name],
-                                quantity: monthlyAverage,
-                                unitPrice: defaultPrice
-                              };
-                            });
-                            return newData;
-                          });
-                        }}
-                        className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-xs hover:bg-blue-200 transition-colors"
-                      >
-                        📊 Equal Distribution
-                      </button>
-                      <button
-                        onClick={() => {
-                          const seasonalMultipliers = remainingMonths.map((_, index) => {
-                            const monthIndex = new Date().getMonth() + index;
-                            // Q4 gets higher multipliers
-                            if (monthIndex >= 9) return 1.3; // Oct, Nov, Dec
-                            if (monthIndex >= 6) return 1.1; // Jul, Aug, Sep
-                            return 0.9; // Earlier months
-                          });
-                          const totalQuantity = Object.values(monthlyData).reduce((sum, data) => sum + data.quantity, 0);
-                          const baseValue = totalQuantity / remainingMonths.length;
-                          const selectedItem = getSelectedItem();
-                          const defaultPrice = selectedItem?.unitPrice || 0;
-                          setMonthlyData(prev => {
-                            const newData = { ...prev };
-                            remainingMonths.forEach((month, index) => {
-                              newData[month.name] = {
-                                ...newData[month.name],
-                                quantity: Math.round(baseValue * seasonalMultipliers[index]),
-                                unitPrice: defaultPrice
-                              };
-                            });
-                            return newData;
-                          });
-                        }}
-                        className="bg-green-100 text-green-800 px-3 py-1 rounded text-xs hover:bg-green-200 transition-colors"
-                      >
-                        📈 Seasonal Growth
-                      </button>
-                      <button
-                        onClick={() => {
-                          setMonthlyData(prev => {
-                            const newData = { ...prev };
-                            remainingMonths.forEach(month => {
-                              newData[month.name] = {
-                                ...newData[month.name],
-                                quantity: 0
-                              };
-                            });
-                            return newData;
-                          });
-                        }}
-                        className="bg-red-100 text-red-800 px-3 py-1 rounded text-xs hover:bg-red-200 transition-colors"
-                      >
-                        🗑️ Clear All
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 2-Row Horizontal Table */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[800px] border border-gray-300 rounded-lg">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="p-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300 min-w-[80px]">Month</th>
-                          {remainingMonths.map((month) => (
-                            <th key={month.name} className="p-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-300 min-w-[80px]">
-                              {month.name}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="bg-white">
-                          <td className="p-3 font-medium text-gray-800 border-r border-gray-300 bg-gray-50">Forecast Quantity</td>
-                          {remainingMonths.map((month) => (
-                            <td key={month.name} className="p-2 border-r border-gray-300">
-                              <input
-                                type="number"
-                                min="0"
-                                className="w-full p-2 text-center border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                value={monthlyData[month.name]?.quantity || 0}
-                                onChange={(e) => {
-                                  const selectedItem = getSelectedItem();
-                                  const defaultPrice = selectedItem?.unitPrice || 0;
-                                  handleMonthlyDataChange(month.name, 'quantity', e.target.value);
-                                  // Auto-set unit price in simplified mode
-                                  if (defaultPrice > 0) {
-                                    handleMonthlyDataChange(month.name, 'unitPrice', defaultPrice);
-                                  }
-                                }}
-                                placeholder="0"
-                              />
-                            </td>
-                          ))}
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Summary Stats */}
-                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                      <div>
-                        <div className="text-sm text-blue-600 font-medium">Total Quantity</div>
-                        <div className="text-lg font-bold text-blue-800">
-                          {Object.values(monthlyData).reduce((sum, data) => sum + data.quantity, 0).toLocaleString()}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-green-600 font-medium">Total Value</div>
-                        <div className="text-lg font-bold text-green-800">
-                          ${calculateYearlyTotal().toFixed(2)}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-purple-600 font-medium">Avg/Month</div>
-                        <div className="text-lg font-bold text-purple-800">
-                          {Math.round(Object.values(monthlyData).reduce((sum, data) => sum + data.quantity, 0) / remainingMonths.length).toLocaleString()}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-orange-600 font-medium">Forecast Growth</div>
-                        <div className="text-lg font-bold text-orange-800">
-                          {(() => {
-                            const quantities = remainingMonths.map(month => monthlyData[month.name]?.quantity || 0);
-                            if (quantities.length < 2) return '0%';
-                            const firstHalf = quantities.slice(0, Math.floor(quantities.length / 2));
-                            const secondHalf = quantities.slice(Math.floor(quantities.length / 2));
-                            const firstAvg = firstHalf.reduce((sum, q) => sum + q, 0) / firstHalf.length;
-                            const secondAvg = secondHalf.reduce((sum, q) => sum + q, 0) / secondHalf.length;
-                            const growth = firstAvg > 0 ? ((secondAvg - firstAvg) / firstAvg * 100) : 0;
-                            return `${growth > 0 ? '+' : ''}${growth.toFixed(1)}%`;
-                          })()
+                      <p className="text-sm font-medium text-blue-800">Total Budget</p>
+                      <p className="text-2xl font-bold text-blue-900">
+                        {viewType === 'sales_budget' 
+                          ? formatCurrency(customerData.totalBudgetValue)
+                          : `${customerData.totalBudgetUnits.toLocaleString()} units`
                         }
-                        </div>
-                      </div>
+                      </p>
                     </div>
+                    <Package className="w-8 h-8 text-blue-600" />
                   </div>
-              </div>
+                </div>
 
-              {/* Summary */}
-              <div className="mt-4 bg-green-50 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <DollarSign className="w-5 h-5 text-green-600 mr-2" />
-                    <span className="font-medium text-green-900">Yearly Total Forecast</span>
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-purple-800">Total Actual</p>
+                      <p className="text-2xl font-bold text-purple-900">
+                        {viewType === 'sales_budget' 
+                          ? formatCurrency(customerData.totalActualValue)
+                          : `${customerData.totalActualUnits.toLocaleString()} units`
+                        }
+                      </p>
+                    </div>
+                    <BarChart className="w-8 h-8 text-purple-600" />
                   </div>
-                  <span className="text-xl font-bold text-green-800">
-                    ${calculateYearlyTotal().toFixed(2)}
-                  </span>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-green-800">Total Forecast</p>
+                      <p className="text-2xl font-bold text-green-900">
+                        {viewType === 'sales_budget' 
+                          ? formatCurrency(customerData.totalForecastValue)
+                          : `${customerData.totalForecastUnits.toLocaleString()} units`
+                        }
+                      </p>
+                    </div>
+                    <TrendingUp className="w-8 h-8 text-green-600" />
+                  </div>
                 </div>
               </div>
+
+              {/* Performance Analysis */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Analysis</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Forecast vs Budget Variance</h4>
+                    <div className={`flex items-center gap-2 ${getVarianceColor(totalVariance)}`}>
+                      {getVarianceIcon(totalVariance)}
+                      <span className="text-2xl font-bold">
+                        {totalVariance > 0 ? '+' : ''}{totalVariance.toFixed(1)}%
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {totalVariance > 0 
+                        ? 'Forecast exceeds budget target' 
+                        : totalVariance < 0 
+                          ? 'Forecast below budget target'
+                          : 'Forecast matches budget target'
+                      }
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Data Source</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Created by:</span>
+                        <span className="text-sm font-medium">{customerData.salesmanName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Last updated:</span>
+                        <span className="text-sm font-medium">{customerData.lastUpdated}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Total items:</span>
+                        <span className="text-sm font-medium">{customerData.items.length}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Manager Access Notice */}
+              {user?.role === 'manager' && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center">
+                      <span className="text-amber-600 text-sm">👑</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-amber-800">Manager View</p>
+                      <p className="text-xs text-amber-700">
+                        This detailed breakdown is available only to managers. Salesman users see aggregate data without customer-specific breakdowns.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* General Notes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              General Notes
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Add any additional notes about this forecast..."
-            />
-          </div>
+          {activeTab === 'monthly' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Monthly Breakdown</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full border border-gray-200 rounded-lg">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Month</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Budget</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actual</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Forecast</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Variance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {customerData.monthlyData.map((month, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{month.month}</td>
+                        <td className="px-4 py-3 text-sm text-center">
+                          {viewType === 'sales_budget' 
+                            ? formatCurrency(month.budgetValue)
+                            : `${month.budgetUnits.toLocaleString()} units`
+                          }
+                        </td>
+                        <td className="px-4 py-3 text-sm text-center">
+                          {viewType === 'sales_budget' 
+                            ? formatCurrency(month.actualValue)
+                            : `${month.actualUnits.toLocaleString()} units`
+                          }
+                        </td>
+                        <td className="px-4 py-3 text-sm text-center">
+                          {viewType === 'sales_budget' 
+                            ? formatCurrency(month.forecastValue)
+                            : `${month.forecastUnits.toLocaleString()} units`
+                          }
+                        </td>
+                        <td className={`px-4 py-3 text-sm text-center font-medium ${getVarianceColor(month.variancePercentage)}`}>
+                          {month.variancePercentage > 0 ? '+' : ''}{month.variancePercentage.toFixed(1)}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'items' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Items Details</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full border border-gray-200 rounded-lg">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Brand</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Budget</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actual</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Forecast</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {customerData.items.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={item.item}>
+                          {item.item}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{item.category}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{item.brand}</td>
+                        <td className="px-4 py-3 text-sm text-center">
+                          {viewType === 'sales_budget' 
+                            ? formatCurrency(item.budgetValue)
+                            : `${item.budgetUnits.toLocaleString()} units`
+                          }
+                        </td>
+                        <td className="px-4 py-3 text-sm text-center">
+                          {viewType === 'sales_budget' 
+                            ? formatCurrency(item.actualValue)
+                            : `${item.actualUnits.toLocaleString()} units`
+                          }
+                        </td>
+                        <td className="px-4 py-3 text-sm text-center">
+                          {viewType === 'sales_budget' 
+                            ? formatCurrency(item.forecastValue)
+                            : `${item.forecastUnits.toLocaleString()} units`
+                          }
+                        </td>
+                        <td className="px-4 py-3 text-sm text-center">${item.rate}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center text-sm text-gray-600">
-            <AlertCircle className="w-4 h-4 mr-2" />
-            <span>Forecast will be saved as draft and can be edited later</span>
-          </div>
-          <div className="flex space-x-3">
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">Note:</span> This detailed view shows data saved by {customerData.salesmanName} 
+              and is visible to managers for analysis and decision making.
+            </div>
             <button
-              onClick={handleClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={onClose}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
             >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={!selectedItemId}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              <Save className="w-4 h-4" />
-              <span>Save Forecast</span>
+              Close
             </button>
           </div>
         </div>
