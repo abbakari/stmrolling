@@ -449,7 +449,7 @@ const ApprovalCenter: React.FC = () => {
                   Forecast Analysis ({item.forecastData.length} items)
                 </h4>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="bg-white rounded-lg p-3 border border-green-200">
                     <div className="text-sm text-green-700">Total Forecast Value</div>
                     <div className="text-lg font-bold text-green-800">
@@ -460,6 +460,14 @@ const ApprovalCenter: React.FC = () => {
                     <div className="text-sm text-green-700">Total Forecast Units</div>
                     <div className="text-lg font-bold text-green-800">
                       {item.forecastData.reduce((sum, f) => sum + f.forecastUnits, 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-green-200">
+                    <div className="text-sm text-green-700">Avg Unit Rate</div>
+                    <div className="text-lg font-bold text-green-800">
+                      ${(item.forecastData.reduce((sum, f) => sum + f.forecastValue, 0) /
+                       Math.max(item.forecastData.reduce((sum, f) => sum + f.forecastUnits, 0), 1)
+                      ).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -485,6 +493,7 @@ const ApprovalCenter: React.FC = () => {
                       <div className="text-right">
                         <div className="text-sm font-medium text-green-700">{totals.units.toLocaleString()} units</div>
                         <div className="text-xs text-green-600">${totals.value.toLocaleString()}</div>
+                        <div className="text-xs text-purple-600">Rate: ${(totals.value / Math.max(totals.units, 1)).toFixed(2)}/unit</div>
                       </div>
                     </div>
                   ))}
@@ -500,7 +509,7 @@ const ApprovalCenter: React.FC = () => {
                   Budget Analysis ({item.budgetData.length} items)
                 </h4>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="bg-white rounded-lg p-3 border border-blue-200">
                     <div className="text-sm text-blue-700">Total Budget Value</div>
                     <div className="text-lg font-bold text-blue-800">
@@ -513,6 +522,14 @@ const ApprovalCenter: React.FC = () => {
                       {item.budgetData.reduce((sum, b) =>
                         sum + b.monthlyData.reduce((mSum, m) => mSum + m.budgetValue, 0), 0
                       ).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-blue-200">
+                    <div className="text-sm text-blue-700">Avg Unit Rate</div>
+                    <div className="text-lg font-bold text-blue-800">
+                      ${(item.budgetData.reduce((sum, b) => sum + b.totalBudget, 0) /
+                       Math.max(item.budgetData.reduce((sum, b) => sum + b.monthlyData.reduce((mSum, m) => mSum + m.budgetValue, 0), 0), 1)
+                      ).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -538,6 +555,7 @@ const ApprovalCenter: React.FC = () => {
                       <div className="text-right">
                         <div className="text-sm font-medium text-blue-700">{totals.units.toLocaleString()} units</div>
                         <div className="text-xs text-blue-600">${totals.budget.toLocaleString()}</div>
+                        <div className="text-xs text-purple-600">Rate: ${(totals.budget / Math.max(totals.units, 1)).toFixed(2)}/unit</div>
                       </div>
                     </div>
                   ))}
