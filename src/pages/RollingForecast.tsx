@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useWorkflow } from '../contexts/WorkflowContext';
 import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
+import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 import {
@@ -49,6 +50,8 @@ const RollingForecast: React.FC = () => {
   const [showBudgetData, setShowBudgetData] = useState(true);
   const [isCustomerForecastModalOpen, setIsCustomerForecastModalOpen] = useState(false);
   const [selectedCustomerForBreakdown, setSelectedCustomerForBreakdown] = useState<string>('');
+  const [isViewOnlyModalOpen, setIsViewOnlyModalOpen] = useState(false);
+  const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<any>(null);
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
@@ -1244,10 +1247,31 @@ const RollingForecast: React.FC = () => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleExpandRow(row.id);
+                                if (user?.role === 'manager') {
+                                  // Convert row data to monthly format for view-only modal
+                                  const monthlyData = getShortMonthNames().map(month => ({
+                                    month,
+                                    budgetValue: getMonthlyData(row.id)[month] || 0,
+                                    actualValue: 0,
+                                    rate: 100,
+                                    stock: row.stock,
+                                    git: row.git,
+                                    discount: 0
+                                  }));
+
+                                  setSelectedRowForViewOnly({
+                                    ...row,
+                                    monthlyData,
+                                    category: 'TYRE SERVICE',
+                                    brand: 'Various'
+                                  });
+                                  setIsViewOnlyModalOpen(true);
+                                } else {
+                                  handleExpandRow(row.id);
+                                }
                               }}
                               className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                              title="View monthly forecast distribution"
+                              title={user?.role === 'manager' ? "View monthly forecast distribution" : "Edit monthly forecast"}
                             >
                               +
                             </button>
@@ -1740,6 +1764,28 @@ const RollingForecast: React.FC = () => {
         onClose={() => setIsCustomerForecastModalOpen(false)}
         customerData={selectedCustomerForBreakdown ? generateCustomerForecastData(selectedCustomerForBreakdown) : null}
         viewType="rolling_forecast"
+      />
+
+      {/* View Only Monthly Distribution Modal */}
+      <ViewOnlyMonthlyDistributionModal
+        isOpen={isViewOnlyModalOpen}
+        onClose={() => {
+          setIsViewOnlyModalOpen(false);
+          setSelectedRowForViewOnly(null);
+        }}
+        data={selectedRowForViewOnly ? {
+          customer: selectedRowForViewOnly.customer,
+          item: selectedRowForViewOnly.item,
+          category: selectedRowForViewOnly.category || 'TYRE SERVICE',
+          brand: selectedRowForViewOnly.brand || 'Various',
+          monthlyData: selectedRowForViewOnly.monthlyData || [],
+          totalBudget: Object.values(getMonthlyData(selectedRowForViewOnly.id) || {}).reduce((sum: number, val: any) => sum + (val || 0), 0),
+          totalActual: selectedRowForViewOnly.ytd25 || 0,
+          totalUnits: Object.values(getMonthlyData(selectedRowForViewOnly.id) || {}).reduce((sum: number, val: any) => sum + (val || 0), 0),
+          createdBy: 'Salesman',
+          lastModified: new Date().toISOString()
+        } : null}
+        type="rolling_forecast"
       />
     </Layout>
   );
