@@ -178,6 +178,30 @@ const RollingForecast: React.FC = () => {
     }
   ]);
 
+  // Load GIT data from admin system and update table data
+  useEffect(() => {
+    const updateGitDataInTable = () => {
+      setTableData(prevData =>
+        prevData.map(row => {
+          const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+          return {
+            ...row,
+            git: gitSummary.gitQuantity,
+            eta: gitSummary.eta ? new Date(gitSummary.eta).toLocaleDateString() : ''
+          };
+        })
+      );
+    };
+
+    // Update GIT data on component mount
+    updateGitDataInTable();
+
+    // Set up interval to check for GIT data updates every 30 seconds
+    const interval = setInterval(updateGitDataInTable, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const categories = ['TYRE SERVICE'];
   const brands = ['TYRE SERVICE'];
 
