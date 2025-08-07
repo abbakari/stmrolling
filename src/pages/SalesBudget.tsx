@@ -20,6 +20,7 @@ import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
 import DistributionModal, { DistributionConfig } from '../components/DistributionModal';
 import DistributionManager from '../components/DistributionManager';
 import YearlyBudgetModal from '../components/YearlyBudgetModal';
+import StockManagementModal from '../components/StockManagementModal';
 
 interface MonthlyBudget {
   month: string;
