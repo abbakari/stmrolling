@@ -249,9 +249,45 @@ const RollingForecast: React.FC = () => {
           return;
         }
 
+        // Save to persistence manager for cross-user visibility
+        const savedForecastData: SavedForecastData[] = Object.entries(monthlyForecastData).map(([rowId, monthlyData]) => {
+          const row = tableData.find(r => r.id === rowId);
+          const totalForecast = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+
+          return {
+            id: `rolling_forecast_${rowId}_${Date.now()}`,
+            customer: row?.customer || 'Unknown',
+            item: row?.item || 'Unknown',
+            category: 'TYRE SERVICE',
+            brand: 'Various',
+            type: 'rolling_forecast',
+            createdBy: user.name,
+            createdAt: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            budgetData: {
+              bud25: row?.bud25 || 0,
+              ytd25: row?.ytd25 || 0,
+              budget2026: 0,
+              rate: 100,
+              stock: row?.stock || 0,
+              git: row?.git || 0,
+              eta: row?.eta,
+              budgetValue2026: 0,
+              discount: 0,
+              monthlyData: []
+            },
+            forecastData: monthlyData,
+            forecastTotal: totalForecast,
+            status: 'submitted'
+          };
+        }).filter(f => f.forecastTotal > 0);
+
+        DataPersistenceManager.saveRollingForecastData(savedForecastData);
+        console.log('Rolling forecast data saved for manager visibility:', savedForecastData);
+
         // Submit to workflow context
         const workflowId = submitForApproval([], forecastData);
-        alert(`Forecast submitted successfully! Workflow ID: ${workflowId.slice(-6)}`);
+        alert(`Forecast submitted successfully! Workflow ID: ${workflowId.slice(-6)}. Data is now visible to managers.`);
 
         // Clear submitted data
         setMonthlyForecastData({});
