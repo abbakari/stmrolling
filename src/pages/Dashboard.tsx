@@ -505,6 +505,12 @@ const Dashboard: React.FC = () => {
           isOpen={isGitEtaModalOpen}
           onClose={() => setIsGitEtaModalOpen(false)}
         />
+
+        {/* Manager Data View Modal */}
+        <ManagerDataView
+          isOpen={isManagerDataViewOpen}
+          onClose={() => setIsManagerDataViewOpen(false)}
+        />
       </div>
     </Layout>
   );
