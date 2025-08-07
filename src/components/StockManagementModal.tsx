@@ -25,9 +25,11 @@ import {
   Bell,
   ShoppingCart,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import DataPersistenceManager from '../utils/dataPersistence';
 
 interface StockItem {
   id: string;
@@ -314,22 +316,27 @@ const StockManagementModal: React.FC<StockManagementModalProps> = ({
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
               📦 Stock Management System
               <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                Salesman Dashboard
+                {user?.role === 'manager' ? 'Manager Overview' : 'Salesman Dashboard'}
               </span>
             </h2>
             <p className="text-gray-600 text-sm sm:text-base mt-1">
-              Manage inventory, track stock levels, and handle customer reservations
+              {user?.role === 'manager'
+                ? 'Monitor inventory levels, review stock requests, and oversee stock management'
+                : 'Manage inventory, track stock levels, and handle customer reservations'
+              }
             </p>
           </div>
           
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowNewRequestModal(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              New Request
-            </button>
+            {user?.role === 'salesman' && (
+              <button
+                onClick={() => setShowNewRequestModal(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                New Request
+              </button>
+            )}
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
@@ -521,37 +528,70 @@ const StockManagementModal: React.FC<StockManagementModalProps> = ({
 
                     {/* Action Buttons */}
                     <div className="flex gap-2">
+                      {user?.role === 'salesman' ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              setNewRequest({
+                                ...newRequest,
+                                itemId: item.id,
+                                requestType: 'reservation'
+                              });
+                              setShowNewRequestModal(true);
+                            }}
+                            className="flex-1 bg-blue-100 text-blue-800 px-3 py-2 rounded text-xs hover:bg-blue-200 transition-colors flex items-center justify-center gap-1"
+                          >
+                            <Clock className="w-3 h-3" />
+                            Reserve
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setNewRequest({
+                                ...newRequest,
+                                itemId: item.id,
+                                requestType: 'reorder'
+                              });
+                              setShowNewRequestModal(true);
+                            }}
+                            className="flex-1 bg-green-100 text-green-800 px-3 py-2 rounded text-xs hover:bg-green-200 transition-colors flex items-center justify-center gap-1"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            Reorder
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="flex-1 bg-blue-100 text-blue-800 px-3 py-2 rounded text-xs hover:bg-blue-200 transition-colors flex items-center justify-center gap-1"
+                            onClick={() => {
+                              alert(`Stock Details for ${item.name}:\n\nCurrent Stock: ${item.currentStock}\nReserved: ${item.reservedStock}\nAvailable: ${item.availableStock}\nGIT: ${item.git}\nLocation: ${item.location}\nSupplier: ${item.supplierName}\nLast Updated: ${new Date(item.lastUpdated).toLocaleDateString()}`);
+                            }}
+                          >
+                            <Eye className="w-3 h-3" />
+                            View Details
+                          </button>
+
+                          <button
+                            className="flex-1 bg-green-100 text-green-800 px-3 py-2 rounded text-xs hover:bg-green-200 transition-colors flex items-center justify-center gap-1"
+                            onClick={() => {
+                              const requestingAction = item.currentStock < item.minimumLevel ? 'reorder request' : 'stock inquiry';
+                              alert(`Contact initiated for ${item.name}:\n\nAction: ${requestingAction}\nCurrent Status: ${item.status.replace('_', ' ')}\n\nThis would normally send a notification to the assigned salesman or supply chain team.`);
+                            }}
+                          >
+                            <MessageSquare className="w-3 h-3" />
+                            Contact Team
+                          </button>
+                        </>
+                      )}
+
                       <button
+                        className="flex-1 bg-gray-100 text-gray-800 px-3 py-2 rounded text-xs hover:bg-gray-200 transition-colors flex items-center justify-center gap-1"
                         onClick={() => {
-                          setNewRequest({
-                            ...newRequest,
-                            itemId: item.id,
-                            requestType: 'reservation'
-                          });
-                          setShowNewRequestModal(true);
+                          const gitSummary = DataPersistenceManager.getGitSummaryForItem(item.name.split(' ')[0], item.name);
+                          alert(`Extended Details for ${item.name}:\n\nStock Analysis:\n- Current: ${item.currentStock} units\n- Monthly Demand: ${item.monthlyDemand} units\n- Days of Supply: ${Math.floor(item.availableStock / (item.monthlyDemand / 30))} days\n- Reorder Point: ${item.reorderPoint} units\n\nGIT Information:\n- GIT Quantity: ${gitSummary.gitQuantity} units\n- Status: ${gitSummary.status}\n- ETA: ${gitSummary.eta ? new Date(gitSummary.eta).toLocaleDateString() : 'N/A'}`);
                         }}
-                        className="flex-1 bg-blue-100 text-blue-800 px-3 py-2 rounded text-xs hover:bg-blue-200 transition-colors flex items-center justify-center gap-1"
                       >
-                        <Clock className="w-3 h-3" />
-                        Reserve
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setNewRequest({
-                            ...newRequest,
-                            itemId: item.id,
-                            requestType: 'reorder'
-                          });
-                          setShowNewRequestModal(true);
-                        }}
-                        className="flex-1 bg-green-100 text-green-800 px-3 py-2 rounded text-xs hover:bg-green-200 transition-colors flex items-center justify-center gap-1"
-                      >
-                        <RefreshCw className="w-3 h-3" />
-                        Reorder
-                      </button>
-                      
-                      <button className="flex-1 bg-gray-100 text-gray-800 px-3 py-2 rounded text-xs hover:bg-gray-200 transition-colors flex items-center justify-center gap-1">
                         <Eye className="w-3 h-3" />
                         Details
                       </button>

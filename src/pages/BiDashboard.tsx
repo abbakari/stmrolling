@@ -30,6 +30,7 @@ import SalesTrendChart from '../components/charts/SalesTrendChart';
 import BudgetComparisonChart from '../components/charts/BudgetComparisonChart';
 import BudgetAllocationChart from '../components/charts/BudgetAllocationChart';
 import GaugeChart from '../components/charts/GaugeChart';
+import GitSummaryWidget from '../components/GitSummaryWidget';
 
 interface DashboardWidget {
   id: string;
@@ -957,6 +958,9 @@ const BiDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* GIT Overview */}
+        <GitSummaryWidget userRole={user?.role} compact={true} />
 
         {/* Data Quality & Status */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

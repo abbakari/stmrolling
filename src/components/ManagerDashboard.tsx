@@ -411,11 +411,56 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ isOpen, onClose }) 
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
-                  <button className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                  <button
+                    className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                    onClick={() => {
+                      const details = [
+                        `Customer: ${item.customer.name}`,
+                        `Code: ${item.customer.code}`,
+                        `Region: ${item.customer.region}`,
+                        `Segment: ${item.customer.segment}`,
+                        `Credit Limit: $${item.customer.creditLimit.toLocaleString()}`,
+                        `Outstanding: $${item.customer.outstandingBalance.toLocaleString()}`,
+                        `Credit Rating: ${item.customer.creditRating}`,
+                        `Recent Orders: ${item.customer.recentOrders}`,
+                        `Avg Order Value: $${item.customer.avgOrderValue.toLocaleString()}`,
+                        `\nAssigned Salesman: ${item.salesman.name}`,
+                        `Department: ${item.salesman.department}`,
+                        `Email: ${item.salesman.email}`,
+                        `Approval Rate: ${item.salesman.performance.approvalRate}%`,
+                        `Avg Response Time: ${item.salesman.performance.avgResponseTime}h`,
+                        `\nBusiness Metrics:`,
+                        `Total Budgets: ${item.salesman.performance.totalBudgets}`,
+                        `Total Forecasts: ${item.salesman.performance.totalForecasts}`,
+                        `Total Value: $${item.totalValue.toLocaleString()}`,
+                        `Status: ${item.status.replace('_', ' ').toUpperCase()}`
+                      ];
+                      alert(`Detailed Information:\n\n${details.join('\n')}`);
+                    }}
+                  >
                     <Eye className="w-4 h-4" />
                     View Details
                   </button>
-                  <button className="flex-1 bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                  <button
+                    className="flex-1 bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                    onClick={() => {
+                      const contactInfo = [
+                        `Contacting: ${item.salesman.name}`,
+                        `Email: ${item.salesman.email}`,
+                        `Department: ${item.salesman.department}`,
+                        `\nRegarding Customer: ${item.customer.name}`,
+                        `Customer Email: ${item.customer.email}`,
+                        `Customer Phone: ${item.customer.phone}`,
+                        `\nCurrent Status: ${item.status.replace('_', ' ').toUpperCase()}`,
+                        `\nThis would normally:`,
+                        `- Send email notification to ${item.salesman.name}`,
+                        `- Create follow-up task`,
+                        `- Log interaction in CRM`,
+                        `- Schedule follow-up reminder`
+                      ];
+                      alert(contactInfo.join('\n'));
+                    }}
+                  >
                     <MessageSquare className="w-4 h-4" />
                     Contact
                   </button>

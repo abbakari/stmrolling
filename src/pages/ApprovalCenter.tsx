@@ -40,6 +40,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useWorkflow, WorkflowState, WorkflowItem } from '../contexts/WorkflowContext';
 import { useBudget } from '../contexts/BudgetContext';
 import WorkflowItemDetailModal from '../components/WorkflowItemDetailModal';
+import ManagerApprovalWorkflow from '../components/ManagerApprovalWorkflow';
+import GitSummaryWidget from '../components/GitSummaryWidget';
 
 // Department and Manager Mappings
 const DEPARTMENT_MANAGERS = {
@@ -449,7 +451,7 @@ const ApprovalCenter: React.FC = () => {
                   Forecast Analysis ({item.forecastData.length} items)
                 </h4>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="bg-white rounded-lg p-3 border border-green-200">
                     <div className="text-sm text-green-700">Total Forecast Value</div>
                     <div className="text-lg font-bold text-green-800">
@@ -460,6 +462,14 @@ const ApprovalCenter: React.FC = () => {
                     <div className="text-sm text-green-700">Total Forecast Units</div>
                     <div className="text-lg font-bold text-green-800">
                       {item.forecastData.reduce((sum, f) => sum + f.forecastUnits, 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-green-200">
+                    <div className="text-sm text-green-700">Avg Unit Rate</div>
+                    <div className="text-lg font-bold text-green-800">
+                      ${(item.forecastData.reduce((sum, f) => sum + f.forecastValue, 0) /
+                       Math.max(item.forecastData.reduce((sum, f) => sum + f.forecastUnits, 0), 1)
+                      ).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -485,6 +495,7 @@ const ApprovalCenter: React.FC = () => {
                       <div className="text-right">
                         <div className="text-sm font-medium text-green-700">{totals.units.toLocaleString()} units</div>
                         <div className="text-xs text-green-600">${totals.value.toLocaleString()}</div>
+                        <div className="text-xs text-purple-600">Rate: ${(totals.value / Math.max(totals.units, 1)).toFixed(2)}/unit</div>
                       </div>
                     </div>
                   ))}
@@ -500,7 +511,7 @@ const ApprovalCenter: React.FC = () => {
                   Budget Analysis ({item.budgetData.length} items)
                 </h4>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="bg-white rounded-lg p-3 border border-blue-200">
                     <div className="text-sm text-blue-700">Total Budget Value</div>
                     <div className="text-lg font-bold text-blue-800">
@@ -513,6 +524,14 @@ const ApprovalCenter: React.FC = () => {
                       {item.budgetData.reduce((sum, b) =>
                         sum + b.monthlyData.reduce((mSum, m) => mSum + m.budgetValue, 0), 0
                       ).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-blue-200">
+                    <div className="text-sm text-blue-700">Avg Unit Rate</div>
+                    <div className="text-lg font-bold text-blue-800">
+                      ${(item.budgetData.reduce((sum, b) => sum + b.totalBudget, 0) /
+                       Math.max(item.budgetData.reduce((sum, b) => sum + b.monthlyData.reduce((mSum, m) => mSum + m.budgetValue, 0), 0), 1)
+                      ).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -538,6 +557,7 @@ const ApprovalCenter: React.FC = () => {
                       <div className="text-right">
                         <div className="text-sm font-medium text-blue-700">{totals.units.toLocaleString()} units</div>
                         <div className="text-xs text-blue-600">${totals.budget.toLocaleString()}</div>
+                        <div className="text-xs text-purple-600">Rate: ${(totals.budget / Math.max(totals.units, 1)).toFixed(2)}/unit</div>
                       </div>
                     </div>
                   ))}
@@ -807,38 +827,73 @@ const ApprovalCenter: React.FC = () => {
           </div>
         </div>
 
-        {/* Workflow Items - Separated by Type */}
-        {selectedType === 'all' || selectedType === 'sales_budget' ? (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Target className="w-6 h-6 text-blue-600" />
-              <h2 className="text-xl font-bold text-gray-900">Sales Budget Submissions</h2>
-              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                {salesBudgetItems.length} items
-              </span>
-            </div>
-            
-            <div className="space-y-4">
-              {salesBudgetItems.map(renderItemCard)}
-            </div>
-          </div>
-        ) : null}
+        {/* GIT Overview for Managers */}
+        <GitSummaryWidget userRole={user?.role} compact={true} />
 
-        {selectedType === 'all' || selectedType === 'rolling_forecast' ? (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-6 h-6 text-green-600" />
-              <h2 className="text-xl font-bold text-gray-900">Rolling Forecast Submissions</h2>
-              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                {forecastItems.length} items
-              </span>
-            </div>
-            
-            <div className="space-y-4">
-              {forecastItems.map(renderItemCard)}
-            </div>
+        {/* Enhanced Manager Workflow */}
+        <ManagerApprovalWorkflow
+          items={filteredItems}
+          onApprove={(item) => handleQuickAction(item, 'approve')}
+          onReject={(item) => handleQuickAction(item, 'reject')}
+          onSendToSupply={(item) => handleQuickAction(item, 'send_to_supply')}
+          onViewDetails={(item) => {
+            setSelectedItem(item);
+            setShowDetailModal(true);
+          }}
+        />
+
+        {/* Fallback: Original detailed view for complex analysis */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Detailed Analysis View</h3>
+            <button
+              onClick={() => {
+                const detailedSection = document.getElementById('detailed-analysis');
+                if (detailedSection) {
+                  detailedSection.style.display = detailedSection.style.display === 'none' ? 'block' : 'none';
+                }
+              }}
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              Toggle Detailed View
+            </button>
           </div>
-        ) : null}
+
+          <div id="detailed-analysis" style={{display: 'none'}}>
+            {/* Workflow Items - Separated by Type */}
+            {selectedType === 'all' || selectedType === 'sales_budget' ? (
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center gap-3">
+                  <Target className="w-6 h-6 text-blue-600" />
+                  <h2 className="text-xl font-bold text-gray-900">Sales Budget Submissions</h2>
+                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                    {salesBudgetItems.length} items
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  {salesBudgetItems.map(renderItemCard)}
+                </div>
+              </div>
+            ) : null}
+
+            {selectedType === 'all' || selectedType === 'rolling_forecast' ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="w-6 h-6 text-green-600" />
+                  <h2 className="text-xl font-bold text-gray-900">Rolling Forecast Submissions</h2>
+                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                    {forecastItems.length} items
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  {forecastItems.map(renderItemCard)}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
 
         {/* Empty State */}
         {filteredItems.length === 0 && (

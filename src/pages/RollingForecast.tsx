@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { ChevronRight, Eye, CheckCircle, Plus, ChevronUp, ChevronDown, Minus, X, List, UserPlus, Target, Send, Download as DownloadIcon } from 'lucide-react';
+import { ChevronRight, Eye, CheckCircle, Plus, ChevronUp, ChevronDown, Minus, X, List, UserPlus, Target, Send, Download as DownloadIcon, Package } from 'lucide-react';
 import { Customer } from '../types/forecast';
 import { useBudget } from '../contexts/BudgetContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useWorkflow } from '../contexts/WorkflowContext';
+import CustomerForecastModal from '../components/CustomerForecastModal';
+import GitDetailsTooltip from '../components/GitDetailsTooltip';
+import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
+import FollowBacksButton from '../components/FollowBacksButton';
+import ManagerRollingForecastInterface from '../components/ManagerRollingForecastInterface';
+import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
+import { initializeSampleGitData } from '../utils/sampleGitData';
 import {
   getCurrentMonth,
   getCurrentYear,
@@ -43,6 +50,10 @@ const RollingForecast: React.FC = () => {
   const [selectedExistingCustomer, setSelectedExistingCustomer] = useState('');
   const [selectedExistingItem, setSelectedExistingItem] = useState('');
   const [showBudgetData, setShowBudgetData] = useState(true);
+  const [isCustomerForecastModalOpen, setIsCustomerForecastModalOpen] = useState(false);
+  const [selectedCustomerForBreakdown, setSelectedCustomerForBreakdown] = useState<string>('');
+  const [isViewOnlyModalOpen, setIsViewOnlyModalOpen] = useState(false);
+  const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<any>(null);
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
@@ -174,6 +185,73 @@ const RollingForecast: React.FC = () => {
     }
   ]);
 
+  // Load saved forecast data for current user
+  useEffect(() => {
+    if (user) {
+      const savedForecastData = DataPersistenceManager.getRollingForecastDataByUser(user.name);
+      if (savedForecastData.length > 0) {
+        console.log('Loading saved forecast data for', user.name, ':', savedForecastData.length, 'items');
+
+        // Update monthly forecast data from saved data
+        const updatedMonthlyData: {[key: string]: {[month: string]: number}} = {};
+
+        savedForecastData.forEach(savedItem => {
+          const matchingRow = tableData.find(row =>
+            row.customer === savedItem.customer && row.item === savedItem.item
+          );
+
+          if (matchingRow && savedItem.forecastData) {
+            updatedMonthlyData[matchingRow.id] = savedItem.forecastData;
+          }
+        });
+
+        setMonthlyForecastData(updatedMonthlyData);
+
+        // Update table data with forecast totals
+        setTableData(prevData =>
+          prevData.map(row => {
+            const rowData = updatedMonthlyData[row.id];
+            if (rowData) {
+              const forecastTotal = Object.values(rowData).reduce((sum, value) => sum + (value || 0), 0);
+              return { ...row, forecast: forecastTotal };
+            }
+            return row;
+          })
+        );
+      }
+    }
+  }, [user]);
+
+  // Load GIT data from admin system and update table data
+  useEffect(() => {
+    // Initialize sample GIT data if none exists
+    const initialized = initializeSampleGitData();
+    if (initialized) {
+      console.log('Sample GIT data initialized for development/testing');
+    }
+
+    const updateGitDataInTable = () => {
+      setTableData(prevData =>
+        prevData.map(row => {
+          const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+          return {
+            ...row,
+            git: gitSummary.gitQuantity,
+            eta: gitSummary.eta ? new Date(gitSummary.eta).toLocaleDateString() : ''
+          };
+        })
+      );
+    };
+
+    // Update GIT data on component mount
+    updateGitDataInTable();
+
+    // Set up interval to check for GIT data updates every 30 seconds
+    const interval = setInterval(updateGitDataInTable, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const categories = ['TYRE SERVICE'];
   const brands = ['TYRE SERVICE'];
 
@@ -245,9 +323,45 @@ const RollingForecast: React.FC = () => {
           return;
         }
 
+        // Save to persistence manager for cross-user visibility
+        const savedForecastData: SavedForecastData[] = Object.entries(monthlyForecastData).map(([rowId, monthlyData]) => {
+          const row = tableData.find(r => r.id === rowId);
+          const totalForecast = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+
+          return {
+            id: `rolling_forecast_${rowId}_${Date.now()}`,
+            customer: row?.customer || 'Unknown',
+            item: row?.item || 'Unknown',
+            category: 'TYRE SERVICE',
+            brand: 'Various',
+            type: 'rolling_forecast',
+            createdBy: user.name,
+            createdAt: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            budgetData: {
+              bud25: row?.bud25 || 0,
+              ytd25: row?.ytd25 || 0,
+              budget2026: 0,
+              rate: 100,
+              stock: row?.stock || 0,
+              git: row?.git || 0,
+              eta: row?.eta,
+              budgetValue2026: 0,
+              discount: 0,
+              monthlyData: []
+            },
+            forecastData: monthlyData,
+            forecastTotal: totalForecast,
+            status: 'submitted'
+          };
+        }).filter(f => f.forecastTotal > 0);
+
+        DataPersistenceManager.saveRollingForecastData(savedForecastData);
+        console.log('Rolling forecast data saved for manager visibility:', savedForecastData);
+
         // Submit to workflow context
         const workflowId = submitForApproval([], forecastData);
-        alert(`Forecast submitted successfully! Workflow ID: ${workflowId.slice(-6)}`);
+        alert(`Forecast submitted successfully! Workflow ID: ${workflowId.slice(-6)}. Data is now visible to managers.`);
 
         // Clear submitted data
         setMonthlyForecastData({});
@@ -350,28 +464,65 @@ const RollingForecast: React.FC = () => {
   };
 
   const handleMonthlyForecastChange = (rowId: string, month: string, value: number) => {
+    // Update monthly forecast data first
+    const newMonthlyData = {
+      ...monthlyForecastData[rowId],
+      [month]: value
+    };
+
     setMonthlyForecastData(prev => ({
       ...prev,
-      [rowId]: {
-        ...prev[rowId],
-        [month]: value
-      }
+      [rowId]: newMonthlyData
     }));
+
+    // Calculate the new total forecast for this row
+    const newForecastTotal = Object.values(newMonthlyData).reduce((sum, val) => sum + (val || 0), 0);
 
     // Update the main table forecast value for this row
     setTableData(prevData =>
       prevData.map(row => {
         if (row.id === rowId) {
-          const updatedMonthlyData = {
-            ...monthlyForecastData[rowId],
-            [month]: value
-          };
-          const newForecastTotal = Object.values(updatedMonthlyData).reduce((sum, val) => sum + (val || 0), 0);
           return { ...row, forecast: newForecastTotal };
         }
         return row;
       })
     );
+
+    // Auto-save to persistence manager when forecast data changes (for managers to see)
+    if (user) {
+      const row = tableData.find(r => r.id === rowId);
+      if (row) {
+        const savedData: SavedForecastData = {
+          id: `forecast_auto_${rowId}_${Date.now()}`,
+          customer: row.customer,
+          item: row.item,
+          category: 'TYRE SERVICE',
+          brand: 'Various',
+          type: 'rolling_forecast',
+          createdBy: user.name,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budgetData: {
+            bud25: row.bud25,
+            ytd25: row.ytd25,
+            budget2026: 0,
+            rate: 100,
+            stock: row.stock,
+            git: row.git,
+            eta: row.eta,
+            budgetValue2026: 0,
+            discount: 0,
+            monthlyData: []
+          },
+          forecastData: newMonthlyData,
+          forecastTotal: newForecastTotal,
+          status: 'draft'
+        };
+
+        DataPersistenceManager.saveRollingForecastData([savedData]);
+        console.log('Auto-saved forecast data for manager visibility:', savedData);
+      }
+    }
   };
 
   const getMonthlyData = (rowId: string) => {
@@ -379,6 +530,101 @@ const RollingForecast: React.FC = () => {
       monthlyForecastData[rowId] = {};
     }
     return monthlyForecastData[rowId];
+  };
+
+  // Handle customer click for forecast breakdown (Manager only)
+  const handleCustomerClick = (customerName: string) => {
+    if (user?.role === 'manager') {
+      setSelectedCustomerForBreakdown(customerName);
+      setIsCustomerForecastModalOpen(true);
+    }
+  };
+
+  // Generate customer forecast data for the modal
+  const generateCustomerForecastData = (customerName: string) => {
+    const customerRows = tableData.filter(row => row.customer === customerName);
+    if (customerRows.length === 0) return null;
+
+    // Calculate totals based on forecast data
+    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + row.bud25, 0);
+    const totalActualUnits = customerRows.reduce((sum, row) => sum + row.ytd25, 0);
+    const totalForecastUnits = customerRows.reduce((sum, row) => {
+      const monthlyData = getMonthlyData(row.id);
+      return sum + Object.values(monthlyData).reduce((total, value) => total + (value || 0), 0);
+    }, 0);
+
+    const totalBudgetValue = totalBudgetUnits * 100; // Assuming average rate
+    const totalActualValue = totalActualUnits * 100;
+    const totalForecastValue = totalForecastUnits * 100;
+
+    // Generate monthly data for rolling forecast
+    const monthlyData = getShortMonthNames().map(month => {
+      const monthlyBudgetUnits = customerRows.reduce((sum, row) => {
+        return sum + (row.budgetDistribution?.[month] || 0);
+      }, 0);
+      const monthlyActualUnits = customerRows.reduce((sum, row) => {
+        // For past months, use YTD data; for future, use 0
+        const currentMonth = getCurrentMonth();
+        const monthIndex = getShortMonthNames().indexOf(month);
+        return sum + (monthIndex <= currentMonth ? Math.floor(row.ytd25 / (currentMonth + 1)) : 0);
+      }, 0);
+      const monthlyForecastUnits = customerRows.reduce((sum, row) => {
+        const monthlyData = getMonthlyData(row.id);
+        return sum + (monthlyData[month] || 0);
+      }, 0);
+
+      const monthlyBudgetValue = monthlyBudgetUnits * 100;
+      const monthlyActualValue = monthlyActualUnits * 100;
+      const monthlyForecastValue = monthlyForecastUnits * 100;
+      const variance = monthlyForecastValue - monthlyBudgetValue;
+      const variancePercentage = monthlyBudgetValue > 0 ? (variance / monthlyBudgetValue) * 100 : 0;
+
+      return {
+        month,
+        budgetUnits: monthlyBudgetUnits,
+        actualUnits: monthlyActualUnits,
+        forecastUnits: monthlyForecastUnits,
+        budgetValue: monthlyBudgetValue,
+        actualValue: monthlyActualValue,
+        forecastValue: monthlyForecastValue,
+        rate: 100,
+        variance,
+        variancePercentage
+      };
+    });
+
+    // Generate items data
+    const items = customerRows.map(row => {
+      const monthlyData = getMonthlyData(row.id);
+      const forecastUnits = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+
+      return {
+        item: row.item,
+        category: 'TYRE SERVICE', // From existing data
+        brand: 'Various',
+        budgetUnits: row.bud25,
+        actualUnits: row.ytd25,
+        forecastUnits,
+        budgetValue: row.bud25 * 100,
+        actualValue: row.ytd25 * 100,
+        forecastValue: forecastUnits * 100,
+        rate: 100
+      };
+    });
+
+    return {
+      customer: customerName,
+      totalBudgetUnits,
+      totalActualUnits,
+      totalForecastUnits,
+      totalBudgetValue,
+      totalActualValue,
+      totalForecastValue,
+      monthlyData,
+      items,
+      salesmanName: 'John Salesman', // This would come from the data
+      lastUpdated: new Date().toLocaleDateString()
+    };
   };
 
   // Calculate dynamic summary statistics based on forecasts
@@ -389,6 +635,8 @@ const RollingForecast: React.FC = () => {
     let totalUnitsBudget = 0;
     let totalUnitsSales = 0;
     let totalUnitsForecast = 0;
+    let totalStock = 0;
+    let totalGit = 0;
 
     // Calculate from table data
     tableData.forEach(row => {
@@ -400,11 +648,15 @@ const RollingForecast: React.FC = () => {
       totalSales2025 += row.ytd25 * 100; // Convert units to currency
       totalUnitsSales += row.ytd25;
 
-      // Forecast 2025 (user input forecasts units)
+      // Forecast 2025 (user input forecasts units) - calculate from monthly data
       const monthlyData = getMonthlyData(row.id);
-      const forecastTotalUnits = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
-      totalForecast2025 += forecastTotalUnits * 100; // Convert units to currency
-      totalUnitsForecast += forecastTotalUnits;
+      const forecastUnits = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+      totalForecast2025 += forecastUnits * 100; // Convert units to currency
+      totalUnitsForecast += forecastUnits;
+
+      // Stock and GIT totals
+      totalStock += row.stock;
+      totalGit += row.git;
     });
 
     return {
@@ -413,7 +665,9 @@ const RollingForecast: React.FC = () => {
       forecast: totalForecast2025,
       unitsBudget: totalUnitsBudget,
       unitsSales: totalUnitsSales,
-      unitsForecast: totalUnitsForecast
+      unitsForecast: totalUnitsForecast,
+      totalStock,
+      totalGit
     };
   };
 
@@ -466,6 +720,25 @@ const RollingForecast: React.FC = () => {
     return 0;
   });
 
+  // Manager view - show different interface
+  if (user?.role === 'manager') {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          {/* Breadcrumb */}
+          <div className="flex items-center text-sm text-gray-600">
+            <span className="cursor-pointer hover:text-blue-600">Dashboards</span>
+            <ChevronRight className="w-4 h-4 mx-2" />
+            <span className="text-blue-600 font-medium">Rolling Forecast - Manager</span>
+          </div>
+
+          {/* Manager-specific interface */}
+          <ManagerRollingForecastInterface />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -487,6 +760,10 @@ const RollingForecast: React.FC = () => {
             <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
               Customer-Item
             </button>
+            {/* Follow-backs button for salesman and manager */}
+            {(user?.role === 'salesman' || user?.role === 'manager') && (
+              <FollowBacksButton />
+            )}
           </div>
         </div>
 
@@ -498,17 +775,17 @@ const RollingForecast: React.FC = () => {
             </div>
             <div>
               <div className="text-sm text-gray-600">Stock</div>
-              <div className="text-xl font-bold text-green-600">{inventoryInsights.totalStock.toLocaleString()} units</div>
+              <div className="text-xl font-bold text-green-600">{summaryStats.totalStock.toLocaleString()} units</div>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-red-600" />
+            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <Package className="w-5 h-5 text-blue-600" />
             </div>
             <div>
               <div className="text-sm text-gray-600">GIT</div>
-              <div className="text-xl font-bold text-red-600">{inventoryInsights.totalGit.toLocaleString()} units</div>
+              <div className="text-xl font-bold text-blue-600">{summaryStats.totalGit.toLocaleString()} units</div>
             </div>
           </div>
 
@@ -731,10 +1008,25 @@ const RollingForecast: React.FC = () => {
               <div className="text-sm text-gray-500">{summaryStats.unitsSales.toLocaleString()} Units</div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className={`rounded-lg p-4 transition-all duration-300 ${
+              summaryStats.unitsForecast > 0
+                ? 'bg-gradient-to-br from-green-50 to-green-100 border border-green-200'
+                : 'bg-gray-50'
+            }`}>
               <div className="text-sm text-gray-600 mb-1">Forecast 2025</div>
-              <div className="text-2xl font-bold text-gray-900">${summaryStats.forecast.toLocaleString()}</div>
-              <div className="text-sm text-gray-500">{summaryStats.unitsForecast.toLocaleString()} Units</div>
+              <div className={`text-2xl font-bold ${
+                summaryStats.unitsForecast > 0 ? 'text-green-900' : 'text-gray-900'
+              }`}>${summaryStats.forecast.toLocaleString()}</div>
+              <div className={`text-sm ${
+                summaryStats.unitsForecast > 0 ? 'text-green-600' : 'text-gray-500'
+              }`}>{summaryStats.unitsForecast.toLocaleString()} Units</div>
+              {summaryStats.unitsForecast > 0 && (
+                <div className="mt-1">
+                  <span className="inline-block px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full font-medium">
+                    📈 Active
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -763,7 +1055,7 @@ const RollingForecast: React.FC = () => {
 
                   acc[row.customer].budget += row.bud25;
                   acc[row.customer].sales += row.ytd25;
-                  acc[row.customer].forecast += customerForecast;
+                  acc[row.customer].forecast += customerForecast; // Use calculated forecast
                   acc[row.customer].items += 1;
 
                   return acc;
@@ -937,22 +1229,28 @@ const RollingForecast: React.FC = () => {
                       {getSortIcon('stock')}
                     </div>
                   </th>
-                  <th 
+                  <th
                     className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-20"
                     onClick={() => handleSort('git')}
                   >
-                    <div className="flex items-center justify-center gap-1">
-                      GIT
-                      {getSortIcon('git')}
+                    <div className="flex items-center justify-center gap-1 flex-col">
+                      <div className="flex items-center gap-1">
+                        GIT
+                        {getSortIcon('git')}
+                      </div>
+                      <span className="text-xs text-blue-500 normal-case">👑 Admin</span>
                     </div>
                   </th>
-                  <th 
+                  <th
                     className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
                     onClick={() => handleSort('eta')}
                   >
-                    <div className="flex items-center justify-center gap-1">
-                      ETA
-                      {getSortIcon('eta')}
+                    <div className="flex items-center justify-center gap-1 flex-col">
+                      <div className="flex items-center gap-1">
+                        ETA
+                        {getSortIcon('eta')}
+                      </div>
+                      <span className="text-xs text-blue-500 normal-case">👑 Admin</span>
                     </div>
                   </th>
                   <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
@@ -973,7 +1271,55 @@ const RollingForecast: React.FC = () => {
                         />
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {row.customer}
+                        <div className="flex items-center justify-between">
+                          <div
+                            className={`${
+                              user?.role === 'manager'
+                                ? 'cursor-pointer hover:text-blue-600 hover:underline'
+                                : ''
+                            }`}
+                            title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
+                            onClick={() => handleCustomerClick(row.customer)}
+                          >
+                            {row.customer}
+                            {user?.role === 'manager' && (
+                              <span className="ml-1 text-blue-500">👑</span>
+                            )}
+                          </div>
+                          {user?.role === 'manager' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (user?.role === 'manager') {
+                                  // Convert row data to monthly format for view-only modal
+                                  const monthlyData = getShortMonthNames().map(month => ({
+                                    month,
+                                    budgetValue: getMonthlyData(row.id)[month] || 0,
+                                    actualValue: 0,
+                                    rate: 100,
+                                    stock: row.stock,
+                                    git: row.git,
+                                    discount: 0
+                                  }));
+
+                                  setSelectedRowForViewOnly({
+                                    ...row,
+                                    monthlyData,
+                                    category: 'TYRE SERVICE',
+                                    brand: 'Various'
+                                  });
+                                  setIsViewOnlyModalOpen(true);
+                                } else {
+                                  handleExpandRow(row.id);
+                                }
+                              }}
+                              className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                              title={user?.role === 'manager' ? "View monthly forecast distribution" : "Edit monthly forecast"}
+                            >
+                              +
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900">
                         {row.item}
@@ -991,10 +1337,71 @@ const RollingForecast: React.FC = () => {
                         {row.stock}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
-                        {row.git}
+                        <GitDetailsTooltip customer={row.customer} item={row.item}>
+                          {(() => {
+                            const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+                            const hasGitData = gitSummary.gitQuantity > 0;
+
+                            return (
+                              <div className="text-center">
+                                <span className={`font-medium ${
+                                  hasGitData ? 'text-blue-600' : 'text-gray-500'
+                                }`}>
+                                  {hasGitData ? gitSummary.gitQuantity.toLocaleString() : '0'}
+                                </span>
+                                {hasGitData && (
+                                  <div className="space-y-1 mt-1">
+                                    <div className={`text-xs px-1 py-0.5 rounded ${
+                                      gitSummary.status === 'delayed' ? 'bg-red-100 text-red-600' :
+                                      gitSummary.status === 'in_transit' ? 'bg-purple-100 text-purple-600' :
+                                      gitSummary.status === 'shipped' ? 'bg-yellow-100 text-yellow-600' :
+                                      gitSummary.status === 'ordered' ? 'bg-blue-100 text-blue-600' :
+                                      gitSummary.status === 'arrived' ? 'bg-green-100 text-green-600' :
+                                      'bg-gray-100 text-gray-600'
+                                    }`}>
+                                      {gitSummary.status.replace('_', ' ').toUpperCase()}
+                                    </div>
+                                    {gitSummary.itemCount > 1 && (
+                                      <div className="text-xs text-gray-500">
+                                        {gitSummary.itemCount} shipments
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </GitDetailsTooltip>
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
-                        {row.eta || ''}
+                        {(() => {
+                          const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+
+                          if (gitSummary.eta) {
+                            const etaDate = new Date(gitSummary.eta);
+                            const today = new Date();
+                            const daysUntilEta = Math.ceil((etaDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+                            return (
+                              <div className="text-center">
+                                <div className="font-medium text-gray-900">
+                                  {etaDate.toLocaleDateString()}
+                                </div>
+                                <div className={`text-xs ${
+                                  daysUntilEta < 0 ? 'text-red-600' :
+                                  daysUntilEta <= 7 ? 'text-orange-600' :
+                                  'text-green-600'
+                                }`}>
+                                  {daysUntilEta < 0 ? `${Math.abs(daysUntilEta)} days overdue` :
+                                   daysUntilEta === 0 ? 'Today' :
+                                   `${daysUntilEta} days`}
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return <span className="text-gray-400">-</span>;
+                        })()}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center">
                         <button
@@ -1393,6 +1800,36 @@ const RollingForecast: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Customer Forecast Modal */}
+      <CustomerForecastModal
+        isOpen={isCustomerForecastModalOpen}
+        onClose={() => setIsCustomerForecastModalOpen(false)}
+        customerData={selectedCustomerForBreakdown ? generateCustomerForecastData(selectedCustomerForBreakdown) : null}
+        viewType="rolling_forecast"
+      />
+
+      {/* View Only Monthly Distribution Modal */}
+      <ViewOnlyMonthlyDistributionModal
+        isOpen={isViewOnlyModalOpen}
+        onClose={() => {
+          setIsViewOnlyModalOpen(false);
+          setSelectedRowForViewOnly(null);
+        }}
+        data={selectedRowForViewOnly ? {
+          customer: selectedRowForViewOnly.customer,
+          item: selectedRowForViewOnly.item,
+          category: selectedRowForViewOnly.category || 'TYRE SERVICE',
+          brand: selectedRowForViewOnly.brand || 'Various',
+          monthlyData: selectedRowForViewOnly.monthlyData || [],
+          totalBudget: Object.values(getMonthlyData(selectedRowForViewOnly.id) || {}).reduce((sum: number, val: any) => sum + (val || 0), 0),
+          totalActual: selectedRowForViewOnly.ytd25 || 0,
+          totalUnits: Object.values(getMonthlyData(selectedRowForViewOnly.id) || {}).reduce((sum: number, val: any) => sum + (val || 0), 0),
+          createdBy: 'Salesman',
+          lastModified: new Date().toISOString()
+        } : null}
+        type="rolling_forecast"
+      />
     </Layout>
   );
 };

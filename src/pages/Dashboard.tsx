@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import StatsCard from '../components/StatsCard';
-import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building } from 'lucide-react';
+import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building, Truck, Eye } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
+import GitEtaManagement from '../components/GitEtaManagement';
+import ManagerDataView from '../components/ManagerDataView';
+import GitSummaryWidget from '../components/GitSummaryWidget';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 
 
@@ -10,6 +13,8 @@ const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [isGitEtaModalOpen, setIsGitEtaModalOpen] = useState(false);
+  const [isManagerDataViewOpen, setIsManagerDataViewOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
   const showNotification = (message: string, type: 'success' | 'error') => {
@@ -252,6 +257,13 @@ const Dashboard: React.FC = () => {
             description: 'Monitor system health',
             color: 'orange-600',
             onClick: () => showNotification('System alerts checked', 'success')
+          },
+          {
+            icon: Truck,
+            title: 'GIT & ETA Management',
+            description: 'Manage Goods in Transit',
+            color: 'indigo-600',
+            onClick: () => setIsGitEtaModalOpen(true)
           }
         ];
 
@@ -316,6 +328,13 @@ const Dashboard: React.FC = () => {
             description: 'Set team objectives',
             color: 'orange-600',
             onClick: () => showNotification('Team targets opened', 'success')
+          },
+          {
+            icon: Eye,
+            title: 'Salesman Data View',
+            description: 'View saved salesman data',
+            color: 'indigo-600',
+            onClick: () => setIsManagerDataViewOpen(true)
           }
         ];
 
@@ -440,6 +459,9 @@ const Dashboard: React.FC = () => {
           ))}
         </div>
 
+        {/* GIT Overview - Available to all users */}
+        <GitSummaryWidget userRole={user.role} compact={true} />
+
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
@@ -480,6 +502,18 @@ const Dashboard: React.FC = () => {
           onClose={() => setIsExportModalOpen(false)}
           onExport={handleExport}
           title="Export Dashboard Report"
+        />
+
+        {/* GIT ETA Management Modal */}
+        <GitEtaManagement
+          isOpen={isGitEtaModalOpen}
+          onClose={() => setIsGitEtaModalOpen(false)}
+        />
+
+        {/* Manager Data View Modal */}
+        <ManagerDataView
+          isOpen={isManagerDataViewOpen}
+          onClose={() => setIsManagerDataViewOpen(false)}
         />
       </div>
     </Layout>

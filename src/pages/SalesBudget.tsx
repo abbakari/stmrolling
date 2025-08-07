@@ -24,6 +24,12 @@ import DistributionManager from '../components/DistributionManager';
 import YearlyBudgetModal from '../components/YearlyBudgetModal';
 import StockManagementModal from '../components/StockManagementModal';
 import ManagerDashboard from '../components/ManagerDashboard';
+import CustomerForecastModal from '../components/CustomerForecastModal';
+import GitDetailsTooltip from '../components/GitDetailsTooltip';
+import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
+import FollowBacksButton from '../components/FollowBacksButton';
+import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
+import { initializeSampleGitData } from '../utils/sampleGitData';
 
 interface MonthlyBudget {
   month: string;
@@ -77,6 +83,10 @@ const SalesBudget: React.FC = () => {
   const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
   const [selectedStockItem, setSelectedStockItem] = useState<any>(null);
   const [isManagerDashboardOpen, setIsManagerDashboardOpen] = useState(false);
+  const [isCustomerForecastModalOpen, setIsCustomerForecastModalOpen] = useState(false);
+  const [selectedCustomerForBreakdown, setSelectedCustomerForBreakdown] = useState<string>('');
+  const [isViewOnlyModalOpen, setIsViewOnlyModalOpen] = useState(false);
+  const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<SalesBudgetItem | null>(null);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
@@ -240,6 +250,93 @@ const SalesBudget: React.FC = () => {
     localStorage.setItem('salesBudgetData', JSON.stringify(tableData));
   }, [tableData]);
 
+  // Load GIT data from admin system and update table data
+  useEffect(() => {
+    // Initialize sample GIT data if none exists
+    const initialized = initializeSampleGitData();
+    if (initialized) {
+      console.log('Sample GIT data initialized for development/testing');
+    }
+
+    const updateGitDataInTable = () => {
+      setOriginalTableData(prevData =>
+        prevData.map(row => {
+          const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+          return {
+            ...row,
+            git: gitSummary.gitQuantity,
+            // Update monthly data with GIT information if available
+            monthlyData: row.monthlyData.map(month => ({
+              ...month,
+              git: Math.floor(gitSummary.gitQuantity / 12) // Distribute evenly across months
+            }))
+          };
+        })
+      );
+    };
+
+    // Update GIT data on component mount
+    updateGitDataInTable();
+
+    // Set up interval to check for GIT data updates every 30 seconds
+    const interval = setInterval(updateGitDataInTable, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Load saved salesman data for current user
+  useEffect(() => {
+    if (user) {
+      const savedBudgetData = DataPersistenceManager.getSalesBudgetDataByUser(user.name);
+      if (savedBudgetData.length > 0) {
+        console.log('Loading saved budget data for', user.name, ':', savedBudgetData.length, 'items');
+
+        // Merge saved data with original table data
+        const mergedData = [...originalTableData];
+
+        savedBudgetData.forEach(savedItem => {
+          const existingIndex = mergedData.findIndex(item =>
+            item.customer === savedItem.customer && item.item === savedItem.item
+          );
+
+          if (existingIndex >= 0) {
+            // Update existing item with saved data
+            mergedData[existingIndex] = {
+              ...mergedData[existingIndex],
+              budget2026: savedItem.budget2026,
+              budgetValue2026: savedItem.budgetValue2026,
+              discount: savedItem.discount,
+              monthlyData: savedItem.monthlyData
+            };
+          } else {
+            // Add new item from saved data
+            const newItem = {
+              id: Math.max(...mergedData.map(item => item.id)) + 1,
+              selected: false,
+              customer: savedItem.customer,
+              item: savedItem.item,
+              category: savedItem.category,
+              brand: savedItem.brand,
+              itemCombined: `${savedItem.item} (${savedItem.category} - ${savedItem.brand})`,
+              budget2025: savedItem.budget2025,
+              actual2025: savedItem.actual2025,
+              budget2026: savedItem.budget2026,
+              rate: savedItem.rate,
+              stock: savedItem.stock,
+              git: savedItem.git,
+              budgetValue2026: savedItem.budgetValue2026,
+              discount: savedItem.discount,
+              monthlyData: savedItem.monthlyData
+            };
+            mergedData.push(newItem);
+          }
+        });
+
+        setOriginalTableData(mergedData);
+      }
+    }
+  }, [user]);
+
   // Add event listeners for filter changes
   useEffect(() => {
     // Apply filters whenever any filter changes
@@ -331,7 +428,35 @@ const SalesBudget: React.FC = () => {
         return newData;
       });
 
-      showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount)`, 'success');
+      // Save to persistence manager for cross-user visibility
+      if (user) {
+        const savedData: SavedBudgetData = {
+          id: `sales_budget_${rowId}_${Date.now()}`,
+          customer: row?.customer || 'Unknown',
+          item: row?.item || 'Unknown',
+          category: row?.category || 'Unknown',
+          brand: row?.brand || 'Unknown',
+          type: 'sales_budget',
+          createdBy: user.name,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budget2025: row?.budget2025 || 0,
+          actual2025: row?.actual2025 || 0,
+          budget2026: budgetValue2026,
+          rate: defaultRate,
+          stock: row?.stock || 0,
+          git: row?.git || 0,
+          budgetValue2026: netBudgetValue,
+          discount: totalDiscount,
+          monthlyData: updatedMonthlyData,
+          status: 'saved'
+        };
+
+        DataPersistenceManager.saveSalesBudgetData([savedData]);
+        console.log('Budget data saved for manager visibility:', savedData);
+      }
+
+      showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount). Data is now visible to managers.`, 'success');
     }
   };
 
@@ -347,6 +472,87 @@ const SalesBudget: React.FC = () => {
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
+  };
+
+  // Handle customer click for forecast breakdown (Manager only)
+  const handleCustomerClick = (customerName: string) => {
+    if (user?.role === 'manager') {
+      setSelectedCustomerForBreakdown(customerName);
+      setIsCustomerForecastModalOpen(true);
+    }
+  };
+
+  // Generate customer forecast data for the modal
+  const generateCustomerForecastData = (customerName: string) => {
+    const customerRows = originalTableData.filter(row => row.customer === customerName);
+    if (customerRows.length === 0) return null;
+
+    // Calculate totals
+    const totalBudgetValue = customerRows.reduce((sum, row) => sum + row.budget2025, 0);
+    const totalActualValue = customerRows.reduce((sum, row) => sum + row.actual2025, 0);
+    const totalForecastValue = customerRows.reduce((sum, row) => sum + row.budgetValue2026, 0);
+    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + Math.floor(row.budget2025 / (row.rate || 1)), 0);
+    const totalActualUnits = customerRows.reduce((sum, row) => sum + Math.floor(row.actual2025 / (row.rate || 1)), 0);
+    const totalForecastUnits = customerRows.reduce((sum, row) => sum + row.budget2026, 0);
+
+    // Generate monthly data
+    const monthlyData = months.map(month => {
+      const monthlyBudgetValue = customerRows.reduce((sum, row) => {
+        const monthData = row.monthlyData.find(m => m.month === month.short);
+        return sum + (monthData?.budgetValue || 0);
+      }, 0);
+      const monthlyActualValue = customerRows.reduce((sum, row) => {
+        const monthData = row.monthlyData.find(m => m.month === month.short);
+        return sum + (monthData?.actualValue || 0);
+      }, 0);
+      const monthlyForecastValue = monthlyBudgetValue; // Same as budget for now
+      const monthlyBudgetUnits = Math.floor(monthlyBudgetValue / 100); // Assuming average rate
+      const monthlyActualUnits = Math.floor(monthlyActualValue / 100);
+      const monthlyForecastUnits = monthlyBudgetUnits;
+      const variance = monthlyForecastValue - monthlyBudgetValue;
+      const variancePercentage = monthlyBudgetValue > 0 ? (variance / monthlyBudgetValue) * 100 : 0;
+
+      return {
+        month: month.short,
+        budgetUnits: monthlyBudgetUnits,
+        actualUnits: monthlyActualUnits,
+        forecastUnits: monthlyForecastUnits,
+        budgetValue: monthlyBudgetValue,
+        actualValue: monthlyActualValue,
+        forecastValue: monthlyForecastValue,
+        rate: 100, // Average rate
+        variance,
+        variancePercentage
+      };
+    });
+
+    // Generate items data
+    const items = customerRows.map(row => ({
+      item: row.item,
+      category: row.category,
+      brand: row.brand,
+      budgetUnits: Math.floor(row.budget2025 / (row.rate || 1)),
+      actualUnits: Math.floor(row.actual2025 / (row.rate || 1)),
+      forecastUnits: row.budget2026,
+      budgetValue: row.budget2025,
+      actualValue: row.actual2025,
+      forecastValue: row.budgetValue2026,
+      rate: row.rate
+    }));
+
+    return {
+      customer: customerName,
+      totalBudgetUnits,
+      totalActualUnits,
+      totalForecastUnits,
+      totalBudgetValue,
+      totalActualValue,
+      totalForecastValue,
+      monthlyData,
+      items,
+      salesmanName: 'John Salesman', // This would come from the data
+      lastUpdated: new Date().toLocaleDateString()
+    };
   };
 
   const handleDownloadBudget = () => {
@@ -576,7 +782,36 @@ const SalesBudget: React.FC = () => {
     };
 
     setOriginalTableData(prev => [...prev, newRow]);
-    showNotification(`Yearly budget for "${budgetData.item}" created successfully and shared with Rolling Forecast`, 'success');
+
+    // Save to persistence manager for cross-user visibility
+    if (user) {
+      const savedData: SavedBudgetData = {
+        id: `yearly_budget_${newId}_${Date.now()}`,
+        customer: budgetData.customer,
+        item: budgetData.item,
+        category: budgetData.category,
+        brand: budgetData.brand,
+        type: 'sales_budget',
+        createdBy: user.name,
+        createdAt: new Date().toISOString(),
+        lastModified: new Date().toISOString(),
+        budget2025: 0,
+        actual2025: 0,
+        budget2026: budgetData.totalBudget,
+        rate: budgetData.monthlyData[0]?.rate || 0,
+        stock: budgetData.monthlyData.reduce((sum: number, month: any) => sum + month.stock, 0),
+        git: budgetData.monthlyData.reduce((sum: number, month: any) => sum + month.git, 0),
+        budgetValue2026: budgetData.totalBudget,
+        discount: budgetData.monthlyData.reduce((sum: number, month: any) => sum + month.discount, 0),
+        monthlyData: budgetData.monthlyData,
+        status: 'saved'
+      };
+
+      DataPersistenceManager.saveSalesBudgetData([savedData]);
+      console.log('Yearly budget data saved for manager visibility:', savedData);
+    }
+
+    showNotification(`Yearly budget for "${budgetData.item}" created successfully and shared with Rolling Forecast. Data is now visible to managers.`, 'success');
   };
 
   // Submit budgets for manager approval
@@ -738,8 +973,8 @@ const SalesBudget: React.FC = () => {
                 <div className="bg-purple-50 border-l-4 border-purple-600 text-purple-800 p-4 rounded-r-lg flex items-center gap-2">
                   <InfoIcon className="w-5 h-5" />
                   <div>
-                    <p className="font-bold">Manager View: Sales Budget Overview (Read-Only)</p>
-                    <p className="text-xs text-purple-700 mt-1">👑 View salesman-created budgets and customer details. Use Customer Dashboard for detailed customer-salesman management.</p>
+                    <p className="font-bold">Manager View: Sales Budget Overview (View-Only)</p>
+                    <p className="text-xs text-purple-700 mt-1">👑 View salesman-created budgets and send to supply chain when ready. Stock management available for oversight.</p>
                   </div>
                 </div>
               )}
@@ -966,44 +1201,84 @@ const SalesBudget: React.FC = () => {
                       </button>
                     </>
                   )}
-                  <button
-                    onClick={() => {
-                      console.log('Distribution button clicked');
-                      setDistribution();
-                    }}
-                    className="bg-blue-100 text-blue-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-blue-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                    title="Open distribution management for budget allocation"
-                  >
-                    <PieChart className="w-4 h-4" />
-                    <span>Distribution</span>
-                  </button>
-
                   {user?.role === 'salesman' && (
                     <button
                       onClick={() => {
-                        console.log('Stock Management button clicked');
-                        setIsStockManagementModalOpen(true);
+                        console.log('Distribution button clicked');
+                        setDistribution();
                       }}
-                      className="bg-green-100 text-green-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-green-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                      title="Open comprehensive stock management dashboard (Salesmen only)"
+                      className="bg-blue-100 text-blue-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-blue-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                      title="Open distribution management for budget allocation"
                     >
-                      <Package className="w-4 h-4" />
-                      <span>Stock Manager</span>
+                      <PieChart className="w-4 h-4" />
+                      <span>Distribution</span>
                     </button>
                   )}
 
+                  <button
+                    onClick={() => {
+                      console.log('Stock Management button clicked');
+                      setIsStockManagementModalOpen(true);
+                    }}
+                    className="bg-green-100 text-green-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-green-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                    title={user?.role === 'manager' ? "View stock overview dashboard" : "Open comprehensive stock management dashboard"}
+                  >
+                    <Package className="w-4 h-4" />
+                    <span>Stock {user?.role === 'manager' ? 'Overview' : 'Manager'}</span>
+                  </button>
+
                   {user?.role === 'manager' && (
-                    <button
-                      onClick={() => {
-                        console.log('Manager Dashboard button clicked');
-                        setIsManagerDashboardOpen(true);
-                      }}
-                      className="bg-purple-100 text-purple-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-purple-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                      title="Open customer-salesman management dashboard (Managers only)"
-                    >
-                      <Users className="w-4 h-4" />
-                      <span>Customer Dashboard</span>
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          console.log('Manager Dashboard button clicked');
+                          setIsManagerDashboardOpen(true);
+                        }}
+                        className="bg-purple-100 text-purple-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-purple-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                        title="Open customer-salesman management dashboard (Managers only)"
+                      >
+                        <Users className="w-4 h-4" />
+                        <span>Customer Dashboard</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          const selectedBudgets = tableData.filter(row => row.selected && row.budgetValue2026 > 0);
+                          if (selectedBudgets.length === 0) {
+                            showNotification('Please select budget items with values to send to supply chain', 'error');
+                            return;
+                          }
+
+                          // Create supply chain submission
+                          const submissionData = {
+                            id: `manager_budget_${Date.now()}`,
+                            type: 'sales_budget_approval',
+                            customers: selectedBudgets.map(b => b.customer),
+                            submittedBy: user?.name || 'Manager',
+                            submittedAt: new Date().toISOString(),
+                            items: selectedBudgets.length,
+                            totalValue: selectedBudgets.reduce((sum, b) => sum + b.budgetValue2026, 0),
+                            totalUnits: selectedBudgets.reduce((sum, b) => sum + b.budget2026, 0),
+                            details: selectedBudgets
+                          };
+
+                          console.log('Sending budget to supply chain:', submissionData);
+                          showNotification(`${selectedBudgets.length} budget items sent to supply chain for processing`, 'success');
+
+                          // Deselect items
+                          setTableData(prev => prev.map(item => ({ ...item, selected: false })));
+                        }}
+                        className="bg-blue-100 text-blue-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-blue-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                        title="Send selected budgets to supply chain (Managers only)"
+                      >
+                        <Truck className="w-4 h-4" />
+                        <span>Send to Supply Chain</span>
+                      </button>
+                    </>
+                  )}
+
+                  {/* Follow-backs button for salesman and manager */}
+                  {(user?.role === 'salesman' || user?.role === 'manager') && (
+                    <FollowBacksButton />
                   )}
                 </div>
               </div>
@@ -1204,7 +1479,10 @@ const SalesBudget: React.FC = () => {
                           STK
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '70px'}}>
-                          GIT
+                          <div className="flex flex-col items-center">
+                            <span>GIT</span>
+                            <span className="text-xs text-blue-500 normal-case">👑 Admin</span>
+                          </div>
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '120px'}}>
                           BUD {selectedYear2026} Value
@@ -1233,8 +1511,34 @@ const SalesBudget: React.FC = () => {
                             {activeView === 'customer-item' ? (
                               <>
                                 <td className="p-2 border-b border-r border-gray-200 text-xs">
-                                  <div className="truncate" title={row.customer}>
-                                    {row.customer}
+                                  <div className="flex items-center justify-between">
+                                    <div
+                                      className={`truncate ${
+                                        user?.role === 'manager'
+                                          ? 'cursor-pointer hover:text-blue-600 hover:underline'
+                                          : ''
+                                      }`}
+                                      title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
+                                      onClick={() => handleCustomerClick(row.customer)}
+                                    >
+                                      {row.customer}
+                                      {user?.role === 'manager' && (
+                                        <span className="ml-1 text-blue-500">👑</span>
+                                      )}
+                                    </div>
+                                    {user?.role === 'manager' && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedRowForViewOnly(row);
+                                          setIsViewOnlyModalOpen(true);
+                                        }}
+                                        className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                                        title="View monthly distribution"
+                                      >
+                                        +
+                                      </button>
+                                    )}
                                   </div>
                                 </td>
                                 <td className="p-2 border-b border-r border-gray-200 text-xs">
@@ -1261,8 +1565,34 @@ const SalesBudget: React.FC = () => {
                                   </div>
                                 </td>
                                 <td className="p-2 border-b border-r border-gray-200 text-xs">
-                                  <div className="truncate" title={row.customer}>
-                                    {row.customer}
+                                  <div className="flex items-center justify-between">
+                                    <div
+                                      className={`truncate ${
+                                        user?.role === 'manager'
+                                          ? 'cursor-pointer hover:text-blue-600 hover:underline'
+                                          : ''
+                                      }`}
+                                      title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
+                                      onClick={() => handleCustomerClick(row.customer)}
+                                    >
+                                      {row.customer}
+                                      {user?.role === 'manager' && (
+                                        <span className="ml-1 text-blue-500">👑</span>
+                                      )}
+                                    </div>
+                                    {user?.role === 'manager' && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedRowForViewOnly(row);
+                                          setIsViewOnlyModalOpen(true);
+                                        }}
+                                        className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                                        title="View monthly distribution"
+                                      >
+                                        +
+                                      </button>
+                                    )}
                                   </div>
                                 </td>
                               </>
@@ -1274,17 +1604,23 @@ const SalesBudget: React.FC = () => {
                               ${selectedYear2025 === '2025' ? (row.actual2025/1000).toFixed(0) : '0'}k
                             </td>
                             <td className="p-2 border-b border-gray-200 bg-blue-50 text-xs">
-                              <input
-                                type="number"
-                                className="w-full p-1 text-center border border-gray-300 rounded text-xs"
-                                value={row.budget2026}
-                                onChange={(e) => {
-                                  const value = parseInt(e.target.value) || 0;
-                                  setTableData(prev => prev.map(item =>
-                                    item.id === row.id ? { ...item, budget2026: value } : item
-                                  ));
-                                }}
-                              />
+                              {user?.role === 'manager' ? (
+                                <div className="text-center p-1 bg-gray-100 rounded text-gray-600">
+                                  {row.budget2026}
+                                </div>
+                              ) : (
+                                <input
+                                  type="number"
+                                  className="w-full p-1 text-center border border-gray-300 rounded text-xs"
+                                  value={row.budget2026}
+                                  onChange={(e) => {
+                                    const value = parseInt(e.target.value) || 0;
+                                    setTableData(prev => prev.map(item =>
+                                      item.id === row.id ? { ...item, budget2026: value } : item
+                                    ));
+                                  }}
+                                />
+                              )}
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               {row.rate}
@@ -1296,57 +1632,89 @@ const SalesBudget: React.FC = () => {
                                 }`}>
                                   {row.stock}
                                 </span>
-                                {user?.role === 'salesman' ? (
-                                  <button
-                                    onClick={() => {
-                                      setSelectedStockItem(row);
-                                      setIsStockManagementModalOpen(true);
-                                    }}
-                                    className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
-                                    title="Manage stock for this item"
-                                  >
-                                    📦 Manage
-                                  </button>
-                                ) : (
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                    📊 View Only
-                                  </span>
-                                )}
+                                <button
+                                  onClick={() => {
+                                    setSelectedStockItem(row);
+                                    setIsStockManagementModalOpen(true);
+                                  }}
+                                  className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                                  title={user?.role === 'manager' ? "View stock details" : "Manage stock for this item"}
+                                >
+                                  📦 {user?.role === 'manager' ? 'View' : 'Manage'}
+                                </button>
                               </div>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs">
-                              <div className="flex flex-col items-center gap-1">
-                                <span className={`font-medium ${
-                                  row.git > 0 ? 'text-blue-600' : 'text-gray-500'
-                                }`}>
-                                  {row.git}
-                                </span>
-                                {row.git > 0 && (
-                                  <span className="text-xs text-blue-600">In Transit</span>
-                                )}
-                              </div>
+                              <GitDetailsTooltip customer={row.customer} item={row.item}>
+                                <div className="flex flex-col items-center gap-1">
+                                  {(() => {
+                                    const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+                                    const hasGitData = gitSummary.gitQuantity > 0;
+
+                                    return (
+                                      <div className="text-center">
+                                        <span className={`font-medium ${
+                                          hasGitData ? 'text-blue-600' : 'text-gray-500'
+                                        }`}>
+                                          {hasGitData ? gitSummary.gitQuantity.toLocaleString() : '0'}
+                                        </span>
+                                        {hasGitData && (
+                                          <div className="space-y-1">
+                                            <div className={`text-xs px-1 py-0.5 rounded ${
+                                              gitSummary.status === 'delayed' ? 'bg-red-100 text-red-600' :
+                                              gitSummary.status === 'in_transit' ? 'bg-purple-100 text-purple-600' :
+                                              gitSummary.status === 'shipped' ? 'bg-yellow-100 text-yellow-600' :
+                                              gitSummary.status === 'ordered' ? 'bg-blue-100 text-blue-600' :
+                                              gitSummary.status === 'arrived' ? 'bg-green-100 text-green-600' :
+                                              'bg-gray-100 text-gray-600'
+                                            }`}>
+                                              {gitSummary.status.replace('_', ' ').toUpperCase()}
+                                            </div>
+                                            {gitSummary.eta && (
+                                              <div className="text-xs text-gray-600">
+                                                ETA: {new Date(gitSummary.eta).toLocaleDateString()}
+                                              </div>
+                                            )}
+                                            {gitSummary.itemCount > 1 && (
+                                              <div className="text-xs text-gray-500">
+                                                {gitSummary.itemCount} shipments
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              </GitDetailsTooltip>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               ${(row.budgetValue2026/1000).toFixed(0)}k
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs">
                               <div className="flex flex-col gap-1">
-                                <input
-                                  type="number"
-                                  className="w-full p-1 text-center border border-gray-300 rounded text-xs"
-                                  value={Math.round(row.discount)}
-                                  onChange={(e) => {
-                                    const value = parseInt(e.target.value) || 0;
-                                    setTableData(prev => prev.map(item =>
-                                      item.id === row.id ? {
-                                        ...item,
-                                        discount: value,
-                                        budgetValue2026: (item.budget2026 * item.rate) - value
-                                      } : item
-                                    ));
-                                  }}
-                                  placeholder="0"
-                                />
+                                {user?.role === 'manager' ? (
+                                  <div className="text-center p-1 bg-gray-100 rounded text-gray-600">
+                                    {Math.round(row.discount)}
+                                  </div>
+                                ) : (
+                                  <input
+                                    type="number"
+                                    className="w-full p-1 text-center border border-gray-300 rounded text-xs"
+                                    value={Math.round(row.discount)}
+                                    onChange={(e) => {
+                                      const value = parseInt(e.target.value) || 0;
+                                      setTableData(prev => prev.map(item =>
+                                        item.id === row.id ? {
+                                          ...item,
+                                          discount: value,
+                                          budgetValue2026: (item.budget2026 * item.rate) - value
+                                        } : item
+                                      ));
+                                    }}
+                                    placeholder="0"
+                                  />
+                                )}
                                 <div className="text-xs text-gray-500">
                                   {((row.discount / (row.budget2026 * row.rate || 1)) * 100).toFixed(1)}%
                                 </div>
@@ -1354,31 +1722,37 @@ const SalesBudget: React.FC = () => {
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               <div className="flex gap-1">
-                                {editingRowId === row.id ? (
-                                  <>
-                                    <button
-                                      onClick={() => handleSaveMonthlyData(row.id)}
-                                      className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition-colors"
-                                      title="Save monthly data"
-                                    >
-                                      <Save className="w-3 h-3" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleCancelMonthlyEdit(row.id)}
-                                      className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 transition-colors"
-                                      title="Cancel edit"
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </button>
-                                  </>
+                                {user?.role === 'manager' ? (
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    View Only
+                                  </span>
                                 ) : (
-                                  <button
-                                    onClick={() => handleEditMonthlyData(row.id)}
-                                    className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
-                                    title="Edit monthly budget"
-                                  >
-                                    <Calendar className="w-3 h-3" />
-                                  </button>
+                                  editingRowId === row.id ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleSaveMonthlyData(row.id)}
+                                        className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition-colors"
+                                        title="Save monthly data"
+                                      >
+                                        <Save className="w-3 h-3" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleCancelMonthlyEdit(row.id)}
+                                        className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 transition-colors"
+                                        title="Cancel edit"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleEditMonthlyData(row.id)}
+                                      className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
+                                      title="Edit monthly budget"
+                                    >
+                                      <Calendar className="w-3 h-3" />
+                                    </button>
+                                  )
                                 )}
                               </div>
                             </td>
@@ -1607,6 +1981,34 @@ const SalesBudget: React.FC = () => {
         <ManagerDashboard
           isOpen={isManagerDashboardOpen}
           onClose={() => setIsManagerDashboardOpen(false)}
+        />
+
+        <CustomerForecastModal
+          isOpen={isCustomerForecastModalOpen}
+          onClose={() => setIsCustomerForecastModalOpen(false)}
+          customerData={selectedCustomerForBreakdown ? generateCustomerForecastData(selectedCustomerForBreakdown) : null}
+          viewType="sales_budget"
+        />
+
+        <ViewOnlyMonthlyDistributionModal
+          isOpen={isViewOnlyModalOpen}
+          onClose={() => {
+            setIsViewOnlyModalOpen(false);
+            setSelectedRowForViewOnly(null);
+          }}
+          data={selectedRowForViewOnly ? {
+            customer: selectedRowForViewOnly.customer,
+            item: selectedRowForViewOnly.item,
+            category: selectedRowForViewOnly.category,
+            brand: selectedRowForViewOnly.brand,
+            monthlyData: selectedRowForViewOnly.monthlyData,
+            totalBudget: selectedRowForViewOnly.budgetValue2026,
+            totalActual: selectedRowForViewOnly.actual2025,
+            totalUnits: selectedRowForViewOnly.budget2026,
+            createdBy: 'Salesman', // This would come from saved data
+            lastModified: new Date().toISOString()
+          } : null}
+          type="sales_budget"
         />
       </div>
     </Layout>

@@ -9,7 +9,7 @@ import SalesBudget from './pages/SalesBudget';
 import RollingForecast from './pages/RollingForecast';
 import UserManagement from './pages/UserManagement';
 import DataSources from './pages/DataSources';
-import InventoryManagement from './pages/InventoryManagement';
+import SupplyChainManagement from './pages/SupplyChainManagement';
 import DistributionManagement from './pages/DistributionManagement';
 import BiDashboard from './pages/BiDashboard';
 import ApprovalCenter from './pages/ApprovalCenter';
@@ -100,13 +100,13 @@ const AppRoutes: React.FC = () => {
       />
 
       {/* Supply Chain Routes */}
-      <Route 
-        path="/inventory-management" 
+      <Route
+        path="/inventory-management"
         element={
           <RoleBasedRoute allowedRoles={['supply_chain', 'admin']}>
-            <InventoryManagement />
+            <SupplyChainManagement />
           </RoleBasedRoute>
-        } 
+        }
       />
 
       <Route 
