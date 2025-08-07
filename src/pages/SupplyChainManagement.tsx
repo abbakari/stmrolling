@@ -87,11 +87,19 @@ const SupplyChainManagement: React.FC = () => {
       items: 4,
       totalValue: 2850000,
       totalUnits: 650,
+      salesUnits: 8350, // Sales units calculated from budget value
       status: 'pending',
       priority: 'high',
-      processingNotes: 'Large order requiring supplier coordination',
+      processingNotes: 'Large order requiring supplier coordination - Sales Units: 8,350 units',
       supplierRequests: 3,
-      estimatedDelivery: '2024-12-15'
+      estimatedDelivery: '2024-12-15',
+      itemDetails: {
+        item: 'BF GOODRICH TYRE 235/85R16',
+        category: 'Tyres',
+        brand: 'BF Goodrich',
+        rate: 341,
+        salesUnits: 8350
+      }
     },
     {
       id: 'sub_002',
@@ -117,11 +125,19 @@ const SupplyChainManagement: React.FC = () => {
       items: 3,
       totalValue: 980000,
       totalUnits: 220,
+      salesUnits: 3267, // Sales units calculated from budget value
       status: 'processed',
       priority: 'medium',
-      processingNotes: 'Processing complete, awaiting supplier confirmation',
+      processingNotes: 'Processing complete, awaiting supplier confirmation - Sales Units: 3,267 units',
       supplierRequests: 2,
-      estimatedDelivery: '2024-12-10'
+      estimatedDelivery: '2024-12-10',
+      itemDetails: {
+        item: 'MICHELIN TYRE 265/65R17',
+        category: 'Tyres',
+        brand: 'Michelin',
+        rate: 300,
+        salesUnits: 3267
+      }
     }
   ]);
 
