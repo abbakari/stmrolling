@@ -264,7 +264,58 @@ const SupplyChainManagement: React.FC = () => {
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                console.log('Refreshing data...');
+                // Reload data from persistence manager
+                const budgetData = DataPersistenceManager.getSalesBudgetData();
+                const forecastData = DataPersistenceManager.getRollingForecastData();
+
+                // Convert to processed submissions format
+                const budgetSubmissions = budgetData
+                  .filter(item => item.status === 'approved' || item.status === 'submitted')
+                  .map(item => ({
+                    id: `budget_${item.id}`,
+                    type: 'sales_budget' as const,
+                    customerName: item.customer,
+                    submittedBy: item.createdBy,
+                    submittedAt: item.createdAt,
+                    items: 1,
+                    totalValue: item.budgetValue2026,
+                    totalUnits: item.budget2026,
+                    status: 'pending' as const,
+                    priority: item.budgetValue2026 > 100000 ? 'high' : 'medium' as const,
+                    processingNotes: `Budget submission for ${item.item}`,
+                    supplierRequests: Math.floor(Math.random() * 3) + 1,
+                    estimatedDelivery: new Date(Date.now() + Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                  }));
+
+                const forecastSubmissions = forecastData
+                  .filter(item => item.status === 'submitted')
+                  .map(item => ({
+                    id: `forecast_${item.id}`,
+                    type: 'rolling_forecast' as const,
+                    customerName: item.customer,
+                    submittedBy: item.createdBy,
+                    submittedAt: item.createdAt,
+                    items: 1,
+                    totalValue: item.forecastTotal * 100,
+                    totalUnits: item.forecastTotal,
+                    status: 'pending' as const,
+                    priority: item.forecastTotal > 50 ? 'high' : 'medium' as const,
+                    processingNotes: `Forecast submission for ${item.item}`,
+                    supplierRequests: Math.floor(Math.random() * 2) + 1,
+                    estimatedDelivery: new Date(Date.now() + Math.random() * 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                  }));
+
+                // Update submissions with fresh data
+                setProcessedSubmissions(prev => [
+                  ...prev.filter(sub => !sub.id.startsWith('budget_') && !sub.id.startsWith('forecast_')),
+                  ...budgetSubmissions,
+                  ...forecastSubmissions
+                ]);
+
+                console.log('Data refreshed successfully');
+              }}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
@@ -469,11 +520,14 @@ const SupplyChainManagement: React.FC = () => {
                           <Eye className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleFollowBack(submission)}
+                          onClick={() => {
+                            setSelectedSubmission(submission);
+                            setShowFollowBackModal(true);
+                          }}
                           className="text-green-600 hover:text-green-900 p-1 rounded transition-colors"
                           title="Send follow-back"
                         >
-                          <ArrowLeft className="h-4 w-4" />
+                          <MessageSquare className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => {
