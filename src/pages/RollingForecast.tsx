@@ -214,8 +214,46 @@ const RollingForecast: React.FC = () => {
 
 
   const handleSubmit = () => {
-    // Handle submit action
-    console.log('Submit clicked');
+    if (user?.role === 'salesman') {
+      // Submit for manager approval
+      try {
+        // Convert current forecast data to workflow format
+        const forecastData = Object.entries(monthlyForecastData).map(([rowId, monthlyData]) => {
+          const row = tableData.find(r => r.id === rowId);
+          const totalForecast = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+
+          return {
+            id: `forecast_${rowId}_${Date.now()}`,
+            customer: row?.customer || 'Unknown',
+            item: row?.item || 'Unknown',
+            category: 'Forecast',
+            brand: 'Various',
+            year: new Date().getFullYear().toString(),
+            forecastUnits: totalForecast,
+            forecastValue: totalForecast * 100, // Assuming $100 per unit
+            createdBy: user.name,
+            createdAt: new Date().toISOString()
+          };
+        }).filter(f => f.forecastUnits > 0);
+
+        if (forecastData.length === 0) {
+          alert('Please enter forecast data before submitting');
+          return;
+        }
+
+        // Submit to workflow context
+        const workflowId = submitForApproval([], forecastData);
+        alert(`Forecast submitted successfully! Workflow ID: ${workflowId.slice(-6)}`);
+
+        // Clear submitted data
+        setMonthlyForecastData({});
+      } catch (error) {
+        console.error('Submission error:', error);
+        alert('Failed to submit forecast. Please try again.');
+      }
+    } else {
+      console.log('Submit clicked - Manager view');
+    }
   };
 
   const handleSaveNewAddition = () => {
