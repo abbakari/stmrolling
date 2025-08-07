@@ -219,6 +219,12 @@ const RollingForecast: React.FC = () => {
 
   // Load GIT data from admin system and update table data
   useEffect(() => {
+    // Initialize sample GIT data if none exists
+    const initialized = initializeSampleGitData();
+    if (initialized) {
+      console.log('Sample GIT data initialized for development/testing');
+    }
+
     const updateGitDataInTable = () => {
       setTableData(prevData =>
         prevData.map(row => {
