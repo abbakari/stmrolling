@@ -25,6 +25,7 @@ import YearlyBudgetModal from '../components/YearlyBudgetModal';
 import StockManagementModal from '../components/StockManagementModal';
 import ManagerDashboard from '../components/ManagerDashboard';
 import CustomerForecastModal from '../components/CustomerForecastModal';
+import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 
 interface MonthlyBudget {
