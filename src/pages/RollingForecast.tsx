@@ -15,6 +15,7 @@ import {
 } from '../utils/timeUtils';
 
 const RollingForecast: React.FC = () => {
+  const { user } = useAuth();
   const { yearlyBudgets, getBudgetsByCustomer } = useBudget();
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
