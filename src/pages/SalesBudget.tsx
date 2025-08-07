@@ -1224,11 +1224,36 @@ const SalesBudget: React.FC = () => {
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               {row.rate}
                             </td>
-                            <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              {row.stock}
+                            <td className="p-2 border-b border-gray-200 text-xs">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className={`font-medium ${
+                                  row.stock < 20 ? 'text-red-600' : row.stock < 50 ? 'text-yellow-600' : 'text-green-600'
+                                }`}>
+                                  {row.stock}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setSelectedStockItem(row);
+                                    setIsStockManagementModalOpen(true);
+                                  }}
+                                  className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                                  title="Manage stock for this item"
+                                >
+                                  📦 Manage
+                                </button>
+                              </div>
                             </td>
-                            <td className="p-2 border-b border-gray-200 text-xs text-center">
-                              {row.git}
+                            <td className="p-2 border-b border-gray-200 text-xs">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className={`font-medium ${
+                                  row.git > 0 ? 'text-blue-600' : 'text-gray-500'
+                                }`}>
+                                  {row.git}
+                                </span>
+                                {row.git > 0 && (
+                                  <span className="text-xs text-blue-600">In Transit</span>
+                                )}
+                              </div>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
                               ${(row.budgetValue2026/1000).toFixed(0)}k
