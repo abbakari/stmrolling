@@ -18,6 +18,7 @@ import {
 const RollingForecast: React.FC = () => {
   const { user } = useAuth();
   const { yearlyBudgets, getBudgetsByCustomer } = useBudget();
+  const { submitForApproval } = useWorkflow();
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
