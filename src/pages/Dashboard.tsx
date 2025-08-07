@@ -327,6 +327,13 @@ const Dashboard: React.FC = () => {
             description: 'Set team objectives',
             color: 'orange-600',
             onClick: () => showNotification('Team targets opened', 'success')
+          },
+          {
+            icon: Eye,
+            title: 'Salesman Data View',
+            description: 'View saved salesman data',
+            color: 'indigo-600',
+            onClick: () => setIsManagerDataViewOpen(true)
           }
         ];
 
