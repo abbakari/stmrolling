@@ -1285,7 +1285,7 @@ const SalesBudget: React.FC = () => {
                         ? 'text-red-900'
                         : 'text-gray-500'
                   }`}>
-                    {budgetGrowth > 0 && '���'}
+                    {budgetGrowth > 0 && '📈'}
                     {budgetGrowth < 0 && '📉'}
                     {budgetGrowth === 0 && '➡️'}
                     {budgetGrowth.toFixed(1)}%
@@ -1375,7 +1375,10 @@ const SalesBudget: React.FC = () => {
                           STK
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '70px'}}>
-                          GIT
+                          <div className="flex flex-col items-center">
+                            <span>GIT</span>
+                            <span className="text-xs text-blue-500 normal-case">👑 Admin</span>
+                          </div>
                         </th>
                         <th className="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" style={{width: '120px'}}>
                           BUD {selectedYear2026} Value
