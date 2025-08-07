@@ -27,6 +27,7 @@ import ManagerDashboard from '../components/ManagerDashboard';
 import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
+import { initializeSampleGitData } from '../utils/sampleGitData';
 
 interface MonthlyBudget {
   month: string;
