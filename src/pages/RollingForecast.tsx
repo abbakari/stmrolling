@@ -463,23 +463,24 @@ const RollingForecast: React.FC = () => {
   };
 
   const handleMonthlyForecastChange = (rowId: string, month: string, value: number) => {
+    // Update monthly forecast data first
+    const newMonthlyData = {
+      ...monthlyForecastData[rowId],
+      [month]: value
+    };
+
     setMonthlyForecastData(prev => ({
       ...prev,
-      [rowId]: {
-        ...prev[rowId],
-        [month]: value
-      }
+      [rowId]: newMonthlyData
     }));
+
+    // Calculate the new total forecast for this row
+    const newForecastTotal = Object.values(newMonthlyData).reduce((sum, val) => sum + (val || 0), 0);
 
     // Update the main table forecast value for this row
     setTableData(prevData =>
       prevData.map(row => {
         if (row.id === rowId) {
-          const updatedMonthlyData = {
-            ...monthlyForecastData[rowId],
-            [month]: value
-          };
-          const newForecastTotal = Object.values(updatedMonthlyData).reduce((sum, val) => sum + (val || 0), 0);
           return { ...row, forecast: newForecastTotal };
         }
         return row;
@@ -487,15 +488,9 @@ const RollingForecast: React.FC = () => {
     );
 
     // Auto-save to persistence manager when forecast data changes (for managers to see)
-    if (user && value > 0) {
+    if (user) {
       const row = tableData.find(r => r.id === rowId);
       if (row) {
-        const updatedMonthlyData = {
-          ...monthlyForecastData[rowId],
-          [month]: value
-        };
-        const totalForecast = Object.values(updatedMonthlyData).reduce((sum, val) => sum + (val || 0), 0);
-
         const savedData: SavedForecastData = {
           id: `forecast_auto_${rowId}_${Date.now()}`,
           customer: row.customer,
@@ -518,8 +513,8 @@ const RollingForecast: React.FC = () => {
             discount: 0,
             monthlyData: []
           },
-          forecastData: updatedMonthlyData,
-          forecastTotal: totalForecast,
+          forecastData: newMonthlyData,
+          forecastTotal: newForecastTotal,
           status: 'draft'
         };
 
