@@ -314,28 +314,38 @@ export class DataPersistenceManager {
 
   // Get aggregated GIT quantity and ETA for customer/item combination
   static getGitSummaryForItem(customer: string, item: string) {
-    const gitItems = this.getGitDataForItem(customer, item);
+    try {
+      const gitItems = this.getGitDataForItem(customer, item);
 
-    if (gitItems.length === 0) {
-      return { gitQuantity: 0, eta: '', status: 'none' };
+      console.log('GIT summary for', customer, item, '- found items:', gitItems.length);
+
+      if (gitItems.length === 0) {
+        return { gitQuantity: 0, eta: '', status: 'none', itemCount: 0 };
+      }
+
+      const totalGitQuantity = gitItems.reduce((sum: number, gitItem: any) => sum + (gitItem.gitQuantity || 0), 0);
+
+      // Get the earliest ETA that's not yet arrived
+      const futureEtas = gitItems
+        .filter((item: any) => item.eta && item.status !== 'arrived' && new Date(item.eta) >= new Date())
+        .sort((a: any, b: any) => new Date(a.eta).getTime() - new Date(b.eta).getTime());
+
+      const earliestEta = futureEtas.length > 0 ? futureEtas[0].eta : (gitItems[0]?.eta || '');
+      const overallStatus = this.determineOverallGitStatus(gitItems);
+
+      const summary = {
+        gitQuantity: totalGitQuantity,
+        eta: earliestEta,
+        status: overallStatus,
+        itemCount: gitItems.length
+      };
+
+      console.log('GIT summary result:', summary);
+      return summary;
+    } catch (error) {
+      console.error('Error calculating GIT summary:', error);
+      return { gitQuantity: 0, eta: '', status: 'none', itemCount: 0 };
     }
-
-    const totalGitQuantity = gitItems.reduce((sum: number, gitItem: any) => sum + gitItem.gitQuantity, 0);
-
-    // Get the earliest ETA that's not yet arrived
-    const futureEtas = gitItems
-      .filter((item: any) => item.status !== 'arrived' && new Date(item.eta) >= new Date())
-      .sort((a: any, b: any) => new Date(a.eta).getTime() - new Date(b.eta).getTime());
-
-    const earliestEta = futureEtas.length > 0 ? futureEtas[0].eta : '';
-    const overallStatus = this.determineOverallGitStatus(gitItems);
-
-    return {
-      gitQuantity: totalGitQuantity,
-      eta: earliestEta,
-      status: overallStatus,
-      itemCount: gitItems.length
-    };
   }
 
   // Determine overall status from multiple GIT items
