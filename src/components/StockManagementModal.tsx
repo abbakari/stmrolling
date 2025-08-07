@@ -28,6 +28,7 @@ import {
   ArrowDownRight
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import DataPersistenceManager from '../utils/dataPersistence';
 
 interface StockItem {
   id: string;
