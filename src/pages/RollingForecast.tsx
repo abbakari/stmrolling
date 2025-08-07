@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { ChevronRight, Eye, CheckCircle, Plus, ChevronUp, ChevronDown, Minus, X, List, UserPlus, Target } from 'lucide-react';
 import { Customer } from '../types/forecast';
 import { useBudget } from '../contexts/BudgetContext';
+import {
+  getCurrentMonth,
+  getCurrentYear,
+  getShortMonthNames,
+  isFutureMonth,
+  getFutureMonthsForYear,
+  formatDateTimeForDisplay,
+  getTimeAgo
+} from '../utils/timeUtils';
 
 const RollingForecast: React.FC = () => {
   const { yearlyBudgets, getBudgetsByCustomer } = useBudget();
