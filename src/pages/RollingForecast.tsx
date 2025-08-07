@@ -647,9 +647,11 @@ const RollingForecast: React.FC = () => {
       totalSales2025 += row.ytd25 * 100; // Convert units to currency
       totalUnitsSales += row.ytd25;
 
-      // Forecast 2025 (user input forecasts units) - use row.forecast which is already calculated
-      totalForecast2025 += row.forecast * 100; // Convert units to currency
-      totalUnitsForecast += row.forecast;
+      // Forecast 2025 (user input forecasts units) - calculate from monthly data
+      const monthlyData = getMonthlyData(row.id);
+      const forecastUnits = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+      totalForecast2025 += forecastUnits * 100; // Convert units to currency
+      totalUnitsForecast += forecastUnits;
 
       // Stock and GIT totals
       totalStock += row.stock;
