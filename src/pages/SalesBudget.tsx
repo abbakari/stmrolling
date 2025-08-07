@@ -940,6 +940,18 @@ const SalesBudget: React.FC = () => {
                     <PieChart className="w-4 h-4" />
                     <span>Distribution</span>
                   </button>
+
+                  <button
+                    onClick={() => {
+                      console.log('Stock Management button clicked');
+                      setIsStockManagementModalOpen(true);
+                    }}
+                    className="bg-green-100 text-green-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-green-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                    title="Open comprehensive stock management dashboard"
+                  >
+                    <Package className="w-4 h-4" />
+                    <span>Stock Manager</span>
+                  </button>
                 </div>
               </div>
             </div>
