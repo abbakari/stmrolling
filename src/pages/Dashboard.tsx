@@ -5,6 +5,7 @@ import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import GitEtaManagement from '../components/GitEtaManagement';
 import ManagerDataView from '../components/ManagerDataView';
+import GitSummaryWidget from '../components/GitSummaryWidget';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 
 
@@ -457,6 +458,9 @@ const Dashboard: React.FC = () => {
             </div>
           ))}
         </div>
+
+        {/* GIT Overview - Available to all users */}
+        <GitSummaryWidget userRole={user.role} compact={true} />
 
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
