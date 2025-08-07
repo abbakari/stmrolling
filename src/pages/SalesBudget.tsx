@@ -1714,6 +1714,13 @@ const SalesBudget: React.FC = () => {
           isOpen={isManagerDashboardOpen}
           onClose={() => setIsManagerDashboardOpen(false)}
         />
+
+        <CustomerForecastModal
+          isOpen={isCustomerForecastModalOpen}
+          onClose={() => setIsCustomerForecastModalOpen(false)}
+          customerData={selectedCustomerForBreakdown ? generateCustomerForecastData(selectedCustomerForBreakdown) : null}
+          viewType="sales_budget"
+        />
       </div>
     </Layout>
   );
