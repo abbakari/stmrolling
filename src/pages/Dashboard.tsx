@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import StatsCard from '../components/StatsCard';
-import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building } from 'lucide-react';
+import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building, Truck } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
+import GitEtaManagement from '../components/GitEtaManagement';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 
 
