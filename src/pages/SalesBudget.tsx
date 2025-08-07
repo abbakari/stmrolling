@@ -24,6 +24,7 @@ import DistributionManager from '../components/DistributionManager';
 import YearlyBudgetModal from '../components/YearlyBudgetModal';
 import StockManagementModal from '../components/StockManagementModal';
 import ManagerDashboard from '../components/ManagerDashboard';
+import CustomerForecastModal from '../components/CustomerForecastModal';
 
 interface MonthlyBudget {
   month: string;
@@ -77,6 +78,8 @@ const SalesBudget: React.FC = () => {
   const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
   const [selectedStockItem, setSelectedStockItem] = useState<any>(null);
   const [isManagerDashboardOpen, setIsManagerDashboardOpen] = useState(false);
+  const [isCustomerForecastModalOpen, setIsCustomerForecastModalOpen] = useState(false);
+  const [selectedCustomerForBreakdown, setSelectedCustomerForBreakdown] = useState<string>('');
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
