@@ -1543,7 +1543,8 @@ const SalesBudget: React.FC = () => {
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          handleEditMonthlyData(row.id);
+                                          setSelectedRowForViewOnly(row);
+                                          setIsViewOnlyModalOpen(true);
                                         }}
                                         className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
                                         title="View monthly distribution"
