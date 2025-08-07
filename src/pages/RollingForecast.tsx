@@ -1015,29 +1015,35 @@ const RollingForecast: React.FC = () => {
                                     </tr>
                                     <tr className="bg-purple-100">
                                       <td className="px-2 py-2 font-medium text-gray-700">ACT 2025'</td>
-                                      {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(month => {
-                                        const currentDate = new Date();
-                                        const currentMonth = currentDate.getMonth(); // 0-11 (Jan=0, Dec=11)
-                                        const monthIndex = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].indexOf(month);
+                                      {getShortMonthNames().map(month => {
+                                        const currentMonth = getCurrentMonth();
+                                        const monthIndex = getShortMonthNames().indexOf(month);
                                         const isEditable = monthIndex > currentMonth; // Only allow editing future months
                                         const currentForecastValue = getMonthlyData(row.id)[month] || 0;
                                         const rowData = tableData.find(item => item.id === row.id);
+                                        const isPastOrCurrent = monthIndex <= currentMonth;
 
                                         return (
                                           <td key={month} className="px-2 py-2 text-center">
                                             {isEditable ? (
-                                              <input
-                                                type="number"
-                                                className="w-12 px-1 py-1 text-center border border-gray-300 rounded text-xs bg-white focus:bg-yellow-50 focus:border-blue-500"
-                                                value={currentForecastValue}
-                                                onChange={(e) => handleMonthlyForecastChange(row.id, month, parseInt(e.target.value) || 0)}
-                                                min="0"
-                                                placeholder="0"
-                                              />
+                                              <div className="relative">
+                                                <input
+                                                  type="number"
+                                                  className="w-12 px-1 py-1 text-center border border-gray-300 rounded text-xs bg-white focus:bg-yellow-50 focus:border-blue-500"
+                                                  value={currentForecastValue}
+                                                  onChange={(e) => handleMonthlyForecastChange(row.id, month, parseInt(e.target.value) || 0)}
+                                                  min="0"
+                                                  placeholder="0"
+                                                />
+                                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" title="Future month - editable"></div>
+                                              </div>
                                             ) : (
-                                              <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs">
-                                                {monthIndex <= currentMonth ? (rowData?.ytd25 > 0 ? Math.floor(rowData.ytd25 / 12) : 0) : '0'}
-                                              </span>
+                                              <div className="relative">
+                                                <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs">
+                                                  {isPastOrCurrent ? (rowData?.ytd25 > 0 ? Math.floor(rowData.ytd25 / (currentMonth + 1)) : 0) : '0'}
+                                                </span>
+                                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" title="Past/current month - read only"></div>
+                                              </div>
                                             )}
                                           </td>
                                         );
