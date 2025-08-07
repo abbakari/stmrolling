@@ -9,6 +9,7 @@ import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
 import FollowBacksButton from '../components/FollowBacksButton';
+import ManagerRollingForecastInterface from '../components/ManagerRollingForecastInterface';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 import {
@@ -718,6 +719,25 @@ const RollingForecast: React.FC = () => {
     
     return 0;
   });
+
+  // Manager view - show different interface
+  if (user?.role === 'manager') {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          {/* Breadcrumb */}
+          <div className="flex items-center text-sm text-gray-600">
+            <span className="cursor-pointer hover:text-blue-600">Dashboards</span>
+            <ChevronRight className="w-4 h-4 mx-2" />
+            <span className="text-blue-600 font-medium">Rolling Forecast - Manager</span>
+          </div>
+
+          {/* Manager-specific interface */}
+          <ManagerRollingForecastInterface />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
