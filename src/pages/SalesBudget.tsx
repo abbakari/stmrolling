@@ -273,6 +273,59 @@ const SalesBudget: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Load saved salesman data for current user
+  useEffect(() => {
+    if (user) {
+      const savedBudgetData = DataPersistenceManager.getSalesBudgetDataByUser(user.name);
+      if (savedBudgetData.length > 0) {
+        console.log('Loading saved budget data for', user.name, ':', savedBudgetData.length, 'items');
+
+        // Merge saved data with original table data
+        const mergedData = [...originalTableData];
+
+        savedBudgetData.forEach(savedItem => {
+          const existingIndex = mergedData.findIndex(item =>
+            item.customer === savedItem.customer && item.item === savedItem.item
+          );
+
+          if (existingIndex >= 0) {
+            // Update existing item with saved data
+            mergedData[existingIndex] = {
+              ...mergedData[existingIndex],
+              budget2026: savedItem.budget2026,
+              budgetValue2026: savedItem.budgetValue2026,
+              discount: savedItem.discount,
+              monthlyData: savedItem.monthlyData
+            };
+          } else {
+            // Add new item from saved data
+            const newItem = {
+              id: Math.max(...mergedData.map(item => item.id)) + 1,
+              selected: false,
+              customer: savedItem.customer,
+              item: savedItem.item,
+              category: savedItem.category,
+              brand: savedItem.brand,
+              itemCombined: `${savedItem.item} (${savedItem.category} - ${savedItem.brand})`,
+              budget2025: savedItem.budget2025,
+              actual2025: savedItem.actual2025,
+              budget2026: savedItem.budget2026,
+              rate: savedItem.rate,
+              stock: savedItem.stock,
+              git: savedItem.git,
+              budgetValue2026: savedItem.budgetValue2026,
+              discount: savedItem.discount,
+              monthlyData: savedItem.monthlyData
+            };
+            mergedData.push(newItem);
+          }
+        });
+
+        setOriginalTableData(mergedData);
+      }
+    }
+  }, [user]);
+
   // Add event listeners for filter changes
   useEffect(() => {
     // Apply filters whenever any filter changes
