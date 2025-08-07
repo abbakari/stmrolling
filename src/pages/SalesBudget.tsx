@@ -1226,17 +1226,52 @@ const SalesBudget: React.FC = () => {
                   </button>
 
                   {user?.role === 'manager' && (
-                    <button
-                      onClick={() => {
-                        console.log('Manager Dashboard button clicked');
-                        setIsManagerDashboardOpen(true);
-                      }}
-                      className="bg-purple-100 text-purple-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-purple-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                      title="Open customer-salesman management dashboard (Managers only)"
-                    >
-                      <Users className="w-4 h-4" />
-                      <span>Customer Dashboard</span>
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          console.log('Manager Dashboard button clicked');
+                          setIsManagerDashboardOpen(true);
+                        }}
+                        className="bg-purple-100 text-purple-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-purple-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                        title="Open customer-salesman management dashboard (Managers only)"
+                      >
+                        <Users className="w-4 h-4" />
+                        <span>Customer Dashboard</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          const selectedBudgets = tableData.filter(row => row.selected && row.budgetValue2026 > 0);
+                          if (selectedBudgets.length === 0) {
+                            showNotification('Please select budget items with values to send to supply chain', 'error');
+                            return;
+                          }
+
+                          // Create supply chain submission
+                          const submissionData = {
+                            id: `manager_budget_${Date.now()}`,
+                            type: 'sales_budget_approval',
+                            customers: selectedBudgets.map(b => b.customer),
+                            submittedBy: user?.name || 'Manager',
+                            submittedAt: new Date().toISOString(),
+                            items: selectedBudgets.length,
+                            totalValue: selectedBudgets.reduce((sum, b) => sum + b.budgetValue2026, 0),
+                            totalUnits: selectedBudgets.reduce((sum, b) => sum + b.budget2026, 0),
+                            details: selectedBudgets
+                          };
+
+                          console.log('Sending budget to supply chain:', submissionData);
+                          showNotification(`${selectedBudgets.length} budget items sent to supply chain for processing`, 'success');
+
+                          // Deselect items
+                          setTableData(prev => prev.map(item => ({ ...item, selected: false })));
+                        }}
+                        className="bg-blue-100 text-blue-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-blue-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                        title="Send selected budgets to supply chain (Managers only)"
+                      >
+                        <Truck className="w-4 h-4" />
+                        <span>Send to Supply Chain</span>
+                      </button>
+                    </>
                   )}
 
                   {/* Follow-backs button for salesman and manager */}
