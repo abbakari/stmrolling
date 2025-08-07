@@ -619,23 +619,55 @@ const GitEtaManagement: React.FC<GitEtaManagementProps> = ({ isOpen, onClose }) 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                    <input
-                      type="text"
-                      value={formData.category || ''}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Category"
-                    />
+                    <div className="relative">
+                      <select
+                        value={formData.category || ''}
+                        onChange={(e) => setFormData({...formData, category: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                      >
+                        <option value="">Select category...</option>
+                        {existingData.categories.map(category => (
+                          <option key={category} value={category}>{category}</option>
+                        ))}
+                        <option value="__custom__">⚡ Add New Category</option>
+                      </select>
+                      {formData.category === '__custom__' && (
+                        <input
+                          type="text"
+                          value=""
+                          onChange={(e) => setFormData({...formData, category: e.target.value})}
+                          className="w-full mt-2 px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter new category"
+                          autoFocus
+                        />
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-                    <input
-                      type="text"
-                      value={formData.brand || ''}
-                      onChange={(e) => setFormData({...formData, brand: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Brand"
-                    />
+                    <div className="relative">
+                      <select
+                        value={formData.brand || ''}
+                        onChange={(e) => setFormData({...formData, brand: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                      >
+                        <option value="">Select brand...</option>
+                        {existingData.brands.map(brand => (
+                          <option key={brand} value={brand}>{brand}</option>
+                        ))}
+                        <option value="__custom__">⚡ Add New Brand</option>
+                      </select>
+                      {formData.brand === '__custom__' && (
+                        <input
+                          type="text"
+                          value=""
+                          onChange={(e) => setFormData({...formData, brand: e.target.value})}
+                          className="w-full mt-2 px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter new brand"
+                          autoFocus
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
 
