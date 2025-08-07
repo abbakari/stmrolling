@@ -578,30 +578,53 @@ const SalesBudget: React.FC = () => {
 
   // Submit budgets for manager approval
   const handleSubmitForApproval = () => {
-    if (yearlyBudgets.length === 0) {
-      showNotification('No budgets available to submit for approval', 'error');
-      return;
-    }
-
     setIsSubmittingForApproval(true);
 
     try {
-      // Submit all current user's budgets for approval
+      // Get budgets from both sources: yearlyBudgets and table data with budget2026 > 0
       const userBudgets = yearlyBudgets.filter(budget => budget.createdBy === user?.name);
 
-      if (userBudgets.length === 0) {
-        showNotification('No budgets created by you to submit', 'error');
+      // Convert table data entries with budget2026 > 0 to budget format
+      const tableBudgets = tableData
+        .filter(row => row.budget2026 > 0)
+        .map(row => ({
+          id: `table_budget_${row.id}`,
+          customer: row.customer,
+          item: row.item,
+          category: row.category,
+          brand: row.brand,
+          year: selectedYear2026,
+          totalBudget: row.budgetValue2026,
+          monthlyData: row.monthlyData,
+          createdBy: user?.name || 'Unknown',
+          createdAt: new Date().toISOString()
+        }));
+
+      const allBudgets = [...userBudgets, ...tableBudgets];
+
+      if (allBudgets.length === 0) {
+        showNotification('No budgets created to submit. Please create yearly budgets or set budget values in the table first.', 'error');
+        setIsSubmittingForApproval(false);
         return;
       }
 
-      const workflowId = submitForApproval(userBudgets);
+      const workflowId = submitForApproval(allBudgets);
 
       showNotification(
-        `Successfully submitted ${userBudgets.length} budget(s) for manager approval. Workflow ID: ${workflowId.slice(-6)}`,
+        `Successfully submitted ${allBudgets.length} budget(s) for manager approval. Workflow ID: ${workflowId.slice(-6)}`,
         'success'
       );
+
+      // Clear submitted budgets from table to prevent re-submission
+      setTableData(prev => prev.map(row => ({
+        ...row,
+        budget2026: 0,
+        budgetValue2026: 0
+      })));
+
     } catch (error) {
-      showNotification('Failed to submit budgets for approval', 'error');
+      console.error('Submission error:', error);
+      showNotification('Failed to submit budgets for approval. Please try again.', 'error');
     } finally {
       setIsSubmittingForApproval(false);
     }
