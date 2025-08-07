@@ -22,6 +22,7 @@ import DistributionModal, { DistributionConfig } from '../components/Distributio
 import DistributionManager from '../components/DistributionManager';
 import YearlyBudgetModal from '../components/YearlyBudgetModal';
 import StockManagementModal from '../components/StockManagementModal';
+import ManagerDashboard from '../components/ManagerDashboard';
 
 interface MonthlyBudget {
   month: string;
@@ -1282,7 +1283,7 @@ const SalesBudget: React.FC = () => {
                                   </button>
                                 ) : (
                                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                    �� View Only
+                                    📊 View Only
                                   </span>
                                 )}
                               </div>
