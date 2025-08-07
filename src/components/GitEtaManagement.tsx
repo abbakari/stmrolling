@@ -49,6 +49,19 @@ const GitEtaManagement: React.FC<GitEtaManagementProps> = ({ isOpen, onClose }) 
   const [editingItem, setEditingItem] = useState<GitEtaItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [existingData, setExistingData] = useState<{
+    customers: string[];
+    items: string[];
+    categories: string[];
+    brands: string[];
+    suppliers: string[];
+  }>({
+    customers: [],
+    items: [],
+    categories: [],
+    brands: [],
+    suppliers: []
+  });
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<keyof GitEtaItem>('eta');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
