@@ -25,7 +25,8 @@ import {
   Bell,
   ShoppingCart,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import DataPersistenceManager from '../utils/dataPersistence';
