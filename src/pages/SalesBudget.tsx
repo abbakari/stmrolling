@@ -1460,18 +1460,32 @@ const SalesBudget: React.FC = () => {
                             {activeView === 'customer-item' ? (
                               <>
                                 <td className="p-2 border-b border-r border-gray-200 text-xs">
-                                  <div
-                                    className={`truncate ${
-                                      user?.role === 'manager'
-                                        ? 'cursor-pointer hover:text-blue-600 hover:underline'
-                                        : ''
-                                    }`}
-                                    title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
-                                    onClick={() => handleCustomerClick(row.customer)}
-                                  >
-                                    {row.customer}
+                                  <div className="flex items-center justify-between">
+                                    <div
+                                      className={`truncate ${
+                                        user?.role === 'manager'
+                                          ? 'cursor-pointer hover:text-blue-600 hover:underline'
+                                          : ''
+                                      }`}
+                                      title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
+                                      onClick={() => handleCustomerClick(row.customer)}
+                                    >
+                                      {row.customer}
+                                      {user?.role === 'manager' && (
+                                        <span className="ml-1 text-blue-500">👑</span>
+                                      )}
+                                    </div>
                                     {user?.role === 'manager' && (
-                                      <span className="ml-1 text-blue-500">👑</span>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleEditMonthlyData(row.id);
+                                        }}
+                                        className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                                        title="View monthly distribution"
+                                      >
+                                        +
+                                      </button>
                                     )}
                                   </div>
                                 </td>
