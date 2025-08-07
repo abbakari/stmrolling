@@ -244,6 +244,34 @@ const SalesBudget: React.FC = () => {
     localStorage.setItem('salesBudgetData', JSON.stringify(tableData));
   }, [tableData]);
 
+  // Load GIT data from admin system and update table data
+  useEffect(() => {
+    const updateGitDataInTable = () => {
+      setOriginalTableData(prevData =>
+        prevData.map(row => {
+          const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+          return {
+            ...row,
+            git: gitSummary.gitQuantity,
+            // Update monthly data with GIT information if available
+            monthlyData: row.monthlyData.map(month => ({
+              ...month,
+              git: Math.floor(gitSummary.gitQuantity / 12) // Distribute evenly across months
+            }))
+          };
+        })
+      );
+    };
+
+    // Update GIT data on component mount
+    updateGitDataInTable();
+
+    // Set up interval to check for GIT data updates every 30 seconds
+    const interval = setInterval(updateGitDataInTable, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Add event listeners for filter changes
   useEffect(() => {
     // Apply filters whenever any filter changes
