@@ -296,14 +296,15 @@ const SalesBudget: React.FC = () => {
       // Use the row's default rate for calculation if available
       const defaultRate = row?.rate || 1;
       const totalBudget2026 = monthlyData.reduce((sum, month) => sum + (month.budgetValue * defaultRate), 0);
+      const totalDiscount = monthlyData.reduce((sum, month) => sum + month.discount, 0);
+      const netBudgetValue = totalBudget2026 - totalDiscount;
 
-      // Update monthly data with default values for other fields
+      // Update monthly data with calculated values
       const updatedMonthlyData = monthlyData.map(month => ({
         ...month,
-        rate: defaultRate,
-        stock: row?.stock || 0,
-        git: row?.git || 0,
-        discount: 0
+        rate: month.rate || defaultRate,
+        stock: month.stock || row?.stock || 0,
+        git: month.git || row?.git || 0
       }));
 
       setTableData(prev => prev.map(item =>
@@ -311,7 +312,8 @@ const SalesBudget: React.FC = () => {
           ...item,
           monthlyData: updatedMonthlyData,
           budget2026: budgetValue2026,
-          budgetValue2026: totalBudget2026
+          budgetValue2026: netBudgetValue,
+          discount: totalDiscount
         } : item
       ));
 
@@ -322,7 +324,7 @@ const SalesBudget: React.FC = () => {
         return newData;
       });
 
-      showNotification(`Monthly budget data saved for row ${rowId}`, 'success');
+      showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount)`, 'success');
     }
   };
 
@@ -771,7 +773,7 @@ const SalesBudget: React.FC = () => {
               }`}>
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
                   👤 CUSTOMER:
-                  {selectedCustomer && <span className="text-blue-600">��</span>}
+                  {selectedCustomer && <span className="text-blue-600">✓</span>}
                 </label>
                 <select
                   className="w-full text-xs p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
