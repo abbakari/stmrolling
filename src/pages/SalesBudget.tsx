@@ -1936,6 +1936,27 @@ const SalesBudget: React.FC = () => {
           customerData={selectedCustomerForBreakdown ? generateCustomerForecastData(selectedCustomerForBreakdown) : null}
           viewType="sales_budget"
         />
+
+        <ViewOnlyMonthlyDistributionModal
+          isOpen={isViewOnlyModalOpen}
+          onClose={() => {
+            setIsViewOnlyModalOpen(false);
+            setSelectedRowForViewOnly(null);
+          }}
+          data={selectedRowForViewOnly ? {
+            customer: selectedRowForViewOnly.customer,
+            item: selectedRowForViewOnly.item,
+            category: selectedRowForViewOnly.category,
+            brand: selectedRowForViewOnly.brand,
+            monthlyData: selectedRowForViewOnly.monthlyData,
+            totalBudget: selectedRowForViewOnly.budgetValue2026,
+            totalActual: selectedRowForViewOnly.actual2025,
+            totalUnits: selectedRowForViewOnly.budget2026,
+            createdBy: 'Salesman', // This would come from saved data
+            lastModified: new Date().toISOString()
+          } : null}
+          type="sales_budget"
+        />
       </div>
     </Layout>
   );
