@@ -100,13 +100,13 @@ const AppRoutes: React.FC = () => {
       />
 
       {/* Supply Chain Routes */}
-      <Route 
-        path="/inventory-management" 
+      <Route
+        path="/inventory-management"
         element={
           <RoleBasedRoute allowedRoles={['supply_chain', 'admin']}>
-            <InventoryManagement />
+            <SupplyChainManagement />
           </RoleBasedRoute>
-        } 
+        }
       />
 
       <Route 
