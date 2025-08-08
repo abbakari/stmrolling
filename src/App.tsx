@@ -51,8 +51,6 @@ const RoleBasedRoute: React.FC<{
 };
 
 const AppRoutes: React.FC = () => {
-  const { user } = useAuth();
-
   return (
     <Routes>
       {/* Public Routes */}
