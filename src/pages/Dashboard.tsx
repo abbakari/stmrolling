@@ -308,7 +308,7 @@ const Dashboard: React.FC = () => {
             title: 'Department Budget',
             description: 'Manage department finances',
             color: 'blue-600',
-            onClick: () => window.location.href = '/sales-budget'
+            onClick: () => navigate('/sales-budget')
           },
           {
             icon: Users,
@@ -322,7 +322,7 @@ const Dashboard: React.FC = () => {
             title: 'Approval Center',
             description: 'Review submissions',
             color: 'purple-600',
-            onClick: () => window.location.href = '/approval-center'
+            onClick: () => navigate('/approval-center')
           },
           {
             icon: Target,
@@ -347,7 +347,7 @@ const Dashboard: React.FC = () => {
             title: 'Inventory Management',
             description: 'Manage stock levels',
             color: 'blue-600',
-            onClick: () => window.location.href = '/inventory-management'
+            onClick: () => navigate('/inventory-management')
           },
           {
             icon: TrendingUp,
@@ -361,7 +361,7 @@ const Dashboard: React.FC = () => {
             title: 'Distribution',
             description: 'Manage distribution',
             color: 'purple-600',
-            onClick: () => window.location.href = '/distribution-management'
+            onClick: () => navigate('/distribution-management')
           },
           {
             icon: AlertTriangle,
