@@ -237,7 +237,7 @@ const Dashboard: React.FC = () => {
             title: 'User Management',
             description: 'Manage system users',
             color: 'blue-600',
-            onClick: () => window.location.href = '/user-management'
+            onClick: () => navigate('/user-management')
           },
           {
             icon: BarChart3,
@@ -276,7 +276,7 @@ const Dashboard: React.FC = () => {
             title: 'My Budget',
             description: 'Manage personal budget',
             color: 'blue-600',
-            onClick: () => window.location.href = '/sales-budget'
+            onClick: () => navigate('/sales-budget')
           },
           {
             icon: TrendingUp,
@@ -290,7 +290,7 @@ const Dashboard: React.FC = () => {
             title: 'My Forecast',
             description: 'Create sales forecast',
             color: 'purple-600',
-            onClick: () => window.location.href = '/rolling-forecast'
+            onClick: () => navigate('/rolling-forecast')
           },
           {
             icon: Target,
