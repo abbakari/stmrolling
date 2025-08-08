@@ -476,14 +476,21 @@ const Dashboard: React.FC = () => {
             {quickActions.map((action, index) => {
               const IconComponent = action.icon;
               return (
-                <button 
+                <button
                   key={index}
-                  onClick={action.onClick}
-                  className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                  onClick={() => {
+                    try {
+                      action.onClick();
+                    } catch (error) {
+                      showNotification('An error occurred. Please try again.', 'error');
+                    }
+                  }}
+                  className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-left group"
+                  title={`Click to access ${action.title}`}
                 >
-                  <IconComponent className={`w-6 h-6 text-${action.color}`} />
+                  <IconComponent className={`w-6 h-6 text-${action.color} group-hover:scale-110 transition-transform duration-200`} />
                   <div>
-                    <p className="font-medium text-gray-900">{action.title}</p>
+                    <p className="font-medium text-gray-900 group-hover:text-gray-700">{action.title}</p>
                     <p className="text-sm text-gray-600">{action.description}</p>
                   </div>
                 </button>
