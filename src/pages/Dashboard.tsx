@@ -448,6 +448,11 @@ const Dashboard: React.FC = () => {
                  user.role === 'manager' ? 'Department' :
                  user.role === 'supply_chain' ? 'Supply Chain' : 'Personal'}
               </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {user.role === 'admin' ? 'All modules & user management' :
+                 user.role === 'manager' ? 'Team oversight & approvals' :
+                 user.role === 'supply_chain' ? 'Inventory & distribution' : 'Budget & forecast creation'}
+              </p>
             </div>
           </div>
         </div>
