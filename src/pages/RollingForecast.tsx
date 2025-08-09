@@ -297,7 +297,7 @@ const RollingForecast: React.FC = () => {
 
   const handleSubmit = () => {
     if (user?.role === 'salesman') {
-      // Submit for manager approval
+      // Submit for manager approval while preserving data
       try {
         // Convert current forecast data to workflow format
         const forecastData = Object.entries(monthlyForecastData).map(([rowId, monthlyData]) => {
@@ -323,7 +323,7 @@ const RollingForecast: React.FC = () => {
           return;
         }
 
-        // Save to persistence manager for cross-user visibility
+        // Save original forecast data for preservation (kept in table for other purposes)
         const savedForecastData: SavedForecastData[] = Object.entries(monthlyForecastData).map(([rowId, monthlyData]) => {
           const row = tableData.find(r => r.id === rowId);
           const totalForecast = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
@@ -352,19 +352,36 @@ const RollingForecast: React.FC = () => {
             },
             forecastData: monthlyData,
             forecastTotal: totalForecast,
-            status: 'submitted'
+            status: 'saved' // Keep as saved for preservation
           };
         }).filter(f => f.forecastTotal > 0);
 
-        DataPersistenceManager.saveRollingForecastData(savedForecastData);
-        console.log('Rolling forecast data saved for manager visibility:', savedForecastData);
-
         // Submit to workflow context
         const workflowId = submitForApproval([], forecastData);
-        alert(`Forecast submitted successfully! Workflow ID: ${workflowId.slice(-6)}. Data is now visible to managers.`);
 
-        // Clear submitted data
-        setMonthlyForecastData({});
+        // Save original data and create submission copies
+        DataPersistenceManager.saveRollingForecastData(savedForecastData);
+        DataPersistenceManager.saveSubmissionCopies([], savedForecastData, workflowId);
+
+        // Update status to track submission without removing original data
+        savedForecastData.forEach(item => {
+          DataPersistenceManager.updateRollingForecastStatus(item.id, 'submitted');
+        });
+
+        console.log('Rolling forecast data preserved for other purposes:', savedForecastData);
+        console.log('Submission copies created for approval workflow');
+
+        alert(`Forecast submitted successfully! Workflow ID: ${workflowId.slice(-6)}. ` +
+              `Original forecast data preserved in table for other purposes.`);
+
+        // IMPORTANT: DO NOT clear monthly forecast data - keep it for other purposes
+        // The data remains available for:
+        // 1. Further editing and refinement
+        // 2. Comparison with actual results
+        // 3. Historical analysis and reporting
+        // 4. Backup in case resubmission is needed
+        console.log('Monthly forecast data maintained in table for continued use');
+
       } catch (error) {
         console.error('Submission error:', error);
         alert('Failed to submit forecast. Please try again.');
@@ -520,7 +537,7 @@ const RollingForecast: React.FC = () => {
         };
 
         DataPersistenceManager.saveRollingForecastData([savedData]);
-        console.log('Auto-saved forecast data for manager visibility:', savedData);
+        console.log('Auto-saved forecast data for manager visibility and preserved for other purposes:', savedData);
       }
     }
   };
