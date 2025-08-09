@@ -192,7 +192,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Navbar onPasswordModalOpen={() => setShowPasswordModal(true)} />
         
         {/* Spacer for fixed navbar */}
-        <div className="h-24"></div>
+        <div className="h-28"></div>
         
         {/* Horizontal Navigation */}
         <HorizontalNavigation />
