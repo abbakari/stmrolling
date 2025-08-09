@@ -189,6 +189,12 @@ const AdminPanel: React.FC = () => {
           onClose={() => setIsAdminStockModalOpen(false)}
           items={sampleItems}
         />
+
+        {/* Admin Workflow Center Modal */}
+        <AdminWorkflowCenter
+          isOpen={isWorkflowCenterOpen}
+          onClose={() => setIsWorkflowCenterOpen(false)}
+        />
       </div>
     </Layout>
   );
