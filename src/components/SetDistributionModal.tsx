@@ -112,6 +112,12 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
     }
   }, [isOpen, generatePreview]);
 
+  useEffect(() => {
+    if (isOpen) {
+      generatePreview();
+    }
+  }, [distributionType, selectedMonths, monthlyPercentages, isOpen, generatePreview]);
+
   const handleMonthToggle = (month: string) => {
     const newSelectedMonths = selectedMonths.includes(month)
       ? selectedMonths.filter(m => m !== month)
