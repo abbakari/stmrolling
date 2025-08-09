@@ -251,9 +251,16 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
             <DownloadIcon className="w-4 h-4" />
             Export
           </button>
-          <button className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+          <button
+            onClick={() => setEditMode(!editMode)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              editMode
+                ? 'bg-green-600 text-white hover:bg-green-700'
+                : 'bg-orange-500 text-white hover:bg-orange-600'
+            }`}
+          >
             <Edit3 className="w-4 h-4" />
-            Edit
+            {editMode ? 'Save Changes' : 'Edit'}
           </button>
         </div>
       </div>
