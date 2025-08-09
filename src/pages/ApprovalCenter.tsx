@@ -445,6 +445,18 @@ const ApprovalCenter: React.FC = () => {
               ))}
             </div>
 
+            {/* Data Preservation Notice */}
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-900">Data Preservation Status</span>
+              </div>
+              <p className="text-xs text-blue-800">
+                ✅ Original {item.type.replace('_', ' ')} data has been preserved in the respective tables for continued use,
+                analysis, and other business purposes, even after submission for approval.
+              </p>
+            </div>
+
             {/* Forecast Details for Rolling Forecast Items */}
             {item.type === 'rolling_forecast' && item.forecastData && (
               <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
