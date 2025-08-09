@@ -80,7 +80,30 @@ const AdminPanel: React.FC = () => {
 
         {/* Admin Actions Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          
+
+          {/* Workflow Center */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <MessageCircle className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Workflow Center</h3>
+                <p className="text-sm text-gray-600">Coordinate with all teams</p>
+              </div>
+            </div>
+            <p className="text-gray-700 mb-4">
+              Manage follow-backs, requests, and communications from salesmen, managers,
+              and supply chain teams. Track progress and respond to issues.
+            </p>
+            <button
+              onClick={() => setIsWorkflowCenterOpen(true)}
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Open Workflow Center
+            </button>
+          </div>
+
           {/* Global Stock Management */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3 mb-4">
@@ -93,7 +116,7 @@ const AdminPanel: React.FC = () => {
               </div>
             </div>
             <p className="text-gray-700 mb-4">
-              Manage stock quantities that will be applied globally across all user dashboards, 
+              Manage stock quantities that will be applied globally across all user dashboards,
               sales budgets, and rolling forecasts.
             </p>
             <button
