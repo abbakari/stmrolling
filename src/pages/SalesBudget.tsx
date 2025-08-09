@@ -690,9 +690,6 @@ const SalesBudget: React.FC = () => {
     }
   };
 
-  const setDistribution = () => {
-    setIsDistributionModalOpen(true);
-  };
 
   const handleApplyDistribution = (distribution: DistributionConfig) => {
     // Create new distribution tracking entry
@@ -937,7 +934,7 @@ const SalesBudget: React.FC = () => {
                       onClick={() => setIsStockManagementModalOpen(true)}
                       className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
                     >
-                      📦 Manage Stock
+                      ���� Manage Stock
                     </button>
                   </div>
                 </div>
