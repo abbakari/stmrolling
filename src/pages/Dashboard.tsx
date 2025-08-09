@@ -7,6 +7,7 @@ import ExportModal, { ExportConfig } from '../components/ExportModal';
 import GitEtaManagement from '../components/GitEtaManagement';
 import ManagerDataView from '../components/ManagerDataView';
 import GitSummaryWidget from '../components/GitSummaryWidget';
+import AdminStockManagement from '../components/AdminStockManagement';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 import { useStock } from '../contexts/StockContext';
 
