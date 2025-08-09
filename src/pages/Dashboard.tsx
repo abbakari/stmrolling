@@ -20,6 +20,7 @@ const Dashboard: React.FC = () => {
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [isGitEtaModalOpen, setIsGitEtaModalOpen] = useState(false);
   const [isManagerDataViewOpen, setIsManagerDataViewOpen] = useState(false);
+  const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
   const showNotification = (message: string, type: 'success' | 'error') => {
