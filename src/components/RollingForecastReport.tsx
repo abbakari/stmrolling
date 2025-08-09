@@ -336,42 +336,21 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
                     </td>
                     
                     {/* Monthly data columns */}
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.JAN || '-'}
-                    </td>
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.FEB || '-'}
-                    </td>
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.MAR || '-'}
-                    </td>
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.APR || '-'}
-                    </td>
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.MAY || '-'}
-                    </td>
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.JUN || '-'}
-                    </td>
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.JUL || '-'}
-                    </td>
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.AUG || '-'}
-                    </td>
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.SEP || '-'}
-                    </td>
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.OCT || '-'}
-                    </td>
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.NOV || '-'}
-                    </td>
-                    <td className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
-                      {row.DEC || '-'}
-                    </td>
+                    {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(month => (
+                      <td key={month} className="px-3 py-3 text-center text-sm text-gray-900 border-r border-gray-200">
+                        {editMode ? (
+                          <input
+                            type="number"
+                            value={row[month as keyof ReportData] || 0}
+                            onChange={(e) => handleCellEdit(row.id, month, parseInt(e.target.value) || 0)}
+                            className="w-16 px-1 py-1 text-center border border-gray-300 rounded text-sm"
+                            min="0"
+                          />
+                        ) : (
+                          row[month as keyof ReportData] || '-'
+                        )}
+                      </td>
+                    ))}
                     
                     <td className="px-3 py-3 text-center text-sm font-medium text-gray-900 border-r border-gray-200">
                       {row.BUDGET2025}
