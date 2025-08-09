@@ -40,7 +40,7 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
     const loadReportData = () => {
       try {
         // Get all rolling forecast data
-        const savedForecastData = DataPersistenceManager.getAllRollingForecastData();
+        const savedForecastData = DataPersistenceManager.getRollingForecastData();
         
         // Sample table data for demonstration (you may want to replace this with actual data source)
         const sampleTableData = [
