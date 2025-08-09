@@ -1070,6 +1070,11 @@ const SalesBudget: React.FC = () => {
               </div>
             </div>
 
+            {/* Global Stock Summary Widget */}
+            <div className="mb-4">
+              <StockSummaryWidget compact={false} />
+            </div>
+
             {/* Info Alert and View Toggle */}
             <div className="flex justify-between items-center mb-4">
               {user?.role === 'salesman' ? (
