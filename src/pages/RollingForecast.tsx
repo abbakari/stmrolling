@@ -283,8 +283,11 @@ const RollingForecast: React.FC = () => {
     // Update GIT data on component mount
     updateGitDataInTable();
 
-    // Set up interval to check for GIT data updates every 30 seconds
-    const interval = setInterval(updateGitDataInTable, 30000);
+    // Set up interval to check for GIT data and admin stock updates every 30 seconds
+    const interval = setInterval(() => {
+      updateGitDataInTable();
+      loadGlobalStockData();
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
