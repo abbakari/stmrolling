@@ -1038,7 +1038,7 @@ const SalesBudget: React.FC = () => {
                 </div>
               </div>
 
-              {/* Download and Set Distribution Buttons */}
+              {/* Download, Set Distribution, and Admin Stock Buttons */}
               <div className="flex items-center justify-end gap-3">
                 <button
                   onClick={() => setIsSetDistributionModalOpen(true)}
@@ -1048,6 +1048,16 @@ const SalesBudget: React.FC = () => {
                   <PieChart className="w-5 h-5" />
                   <span>Set Distribution</span>
                 </button>
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => setIsAdminStockModalOpen(true)}
+                    className="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-colors transform hover:scale-105 active:scale-95"
+                    title="Manage global stock quantities for all users"
+                  >
+                    <Package className="w-5 h-5" />
+                    <span>Admin Stock</span>
+                  </button>
+                )}
                 <button
                   onClick={handleDownloadBudget}
                   className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors transform hover:scale-105 active:scale-95"
