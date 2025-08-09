@@ -542,6 +542,35 @@ const SalesBudget: React.FC = () => {
     setIsExportModalOpen(true);
   };
 
+  const handleApplyDistribution = (distributionData: { [itemId: number]: MonthlyBudget[] }) => {
+    // Apply the distribution to the table data
+    setTableData(prevData =>
+      prevData.map(item => {
+        if (distributionData[item.id]) {
+          const newMonthlyData = distributionData[item.id];
+          const newBudgetValue2026 = newMonthlyData.reduce((sum, month) => sum + month.budgetValue, 0);
+
+          return {
+            ...item,
+            monthlyData: newMonthlyData,
+            budgetValue2026: newBudgetValue2026
+          };
+        }
+        return item;
+      })
+    );
+
+    // Update the editing monthly data state
+    Object.entries(distributionData).forEach(([itemId, monthlyData]) => {
+      setEditingMonthlyData(prev => ({
+        ...prev,
+        [parseInt(itemId)]: monthlyData
+      }));
+    });
+
+    showNotification(`Distribution applied to ${Object.keys(distributionData).length} items successfully!`, 'success');
+  };
+
   const handleExport = (config: ExportConfig) => {
     const fileName = `budget_${config.year}.${config.format === 'excel' ? 'xlsx' : config.format}`;
     showNotification(`Preparing download for ${config.year}...`, 'success');
