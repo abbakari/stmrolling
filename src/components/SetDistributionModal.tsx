@@ -131,14 +131,14 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
+        <div className="border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <PieChart className="w-6 h-6 text-purple-600" />
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Set Monthly Distribution</h2>
-                <p className="text-sm text-gray-600">Configure automatic distribution for {filteredItems.length} items</p>
+                <h2 className="text-xl font-bold text-gray-900">Set Distribution</h2>
+                <p className="text-sm text-gray-600">Distribute to {filteredItems.length} items</p>
               </div>
             </div>
             <button
@@ -150,159 +150,143 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
           </div>
         </div>
 
-        <div className="flex h-[calc(90vh-120px)]">
-          {/* Configuration Panel */}
-          <div className="w-1/3 border-r border-gray-200 p-6 overflow-y-auto">
-            <div className="space-y-6">
-              {/* Distribution Type */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Distribution Type</h3>
-                <div className="space-y-2">
-                  <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="distributionType"
-                      value="equal"
-                      checked={distributionType === 'equal'}
-                      onChange={(e) => setDistributionType(e.target.value as any)}
-                      className="mr-3"
-                    />
-                    <div>
-                      <div className="font-medium">Equal Distribution</div>
-                      <div className="text-sm text-gray-600">Distribute equally across selected months</div>
-                    </div>
-                  </label>
-                  
-                  <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="distributionType"
-                      value="percentage"
-                      checked={distributionType === 'percentage'}
-                      onChange={(e) => setDistributionType(e.target.value as any)}
-                      className="mr-3"
-                    />
-                    <div>
-                      <div className="font-medium">Percentage-based</div>
-                      <div className="text-sm text-gray-600">Custom percentage for each month</div>
-                    </div>
-                  </label>
-                </div>
+        <div className="p-6 space-y-6">
+          {/* Customer Search */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Search Customer
+            </label>
+            <div className="relative">
+              <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchCustomer}
+                onChange={(e) => setSearchCustomer(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                placeholder="Type customer name..."
+              />
+            </div>
+            {customers.length > 0 && searchCustomer && (
+              <div className="mt-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg">
+                {customers.slice(0, 5).map(customer => (
+                  <div
+                    key={customer}
+                    onClick={() => setSearchCustomer(customer)}
+                    className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm"
+                  >
+                    {customer}
+                  </div>
+                ))}
               </div>
+            )}
+          </div>
 
-              {/* Month Selection */}
-              {distributionType === 'equal' && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-3">Select Months</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {months.map(month => (
-                      <label key={month} className="flex items-center p-2 border rounded cursor-pointer hover:bg-gray-50">
-                        <input
-                          type="checkbox"
-                          checked={selectedMonths.includes(month)}
-                          onChange={() => handleMonthToggle(month)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm">{month}</span>
-                      </label>
-                    ))}
+          {/* Distribution Type */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Distribution Type</h3>
+            <div className="space-y-2">
+              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name="distributionType"
+                  value="equal"
+                  checked={distributionType === 'equal'}
+                  onChange={(e) => setDistributionType(e.target.value as any)}
+                  className="mr-3"
+                />
+                <div className="flex items-center gap-2">
+                  <Calculator className="w-4 h-4 text-blue-600" />
+                  <div>
+                    <div className="font-medium">Equal Distribution</div>
+                    <div className="text-sm text-gray-600">Enter quantity to distribute equally</div>
                   </div>
                 </div>
-              )}
+              </label>
 
-              {/* Percentage Configuration */}
-              {distributionType === 'percentage' && (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-medium text-gray-900">Monthly Percentages</h3>
-                    <div className="text-sm">
-                      Total: <span className={`font-medium ${getTotalPercentage() === 100 ? 'text-green-600' : 'text-red-600'}`}>
-                        {getTotalPercentage().toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {months.map(month => (
-                      <div key={month} className="flex items-center gap-2">
-                        <span className="w-10 text-sm font-medium">{month}</span>
-                        <input
-                          type="number"
-                          value={monthlyPercentages[month] || 0}
-                          onChange={(e) => handlePercentageChange(month, parseFloat(e.target.value) || 0)}
-                          className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                          min="0"
-                          max="100"
-                          step="0.1"
-                        />
-                        <Percent className="w-4 h-4 text-gray-400" />
-                      </div>
-                    ))}
+              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name="distributionType"
+                  value="percentage"
+                  checked={distributionType === 'percentage'}
+                  onChange={(e) => setDistributionType(e.target.value as any)}
+                  className="mr-3"
+                />
+                <div className="flex items-center gap-2">
+                  <Percent className="w-4 h-4 text-green-600" />
+                  <div>
+                    <div className="font-medium">Percentage Distribution</div>
+                    <div className="text-sm text-gray-600">Enter percentage of BUD 2026</div>
                   </div>
                 </div>
-              )}
-
-              {/* Reset Button */}
-              <button
-                onClick={resetToEqual}
-                className="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Reset to Equal
-              </button>
+              </label>
             </div>
           </div>
 
-          {/* Preview Panel */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Preview ({filteredItems.length} items)</h3>
-            
-            {/* Applied Filters Summary */}
-            {(selectedCustomer || selectedCategory || selectedBrand || selectedItem) && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <div className="text-sm font-medium text-blue-800 mb-1">Applied Filters:</div>
-                <div className="text-sm text-blue-700">
-                  {selectedCustomer && <span className="mr-3">Customer: {selectedCustomer}</span>}
-                  {selectedCategory && <span className="mr-3">Category: {selectedCategory}</span>}
-                  {selectedBrand && <span className="mr-3">Brand: {selectedBrand}</span>}
-                  {selectedItem && <span className="mr-3">Item: {selectedItem}</span>}
-                </div>
-              </div>
-            )}
+          {/* Input Fields */}
+          {distributionType === 'equal' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Item Quantity
+              </label>
+              <input
+                type="number"
+                value={itemQuantity || ''}
+                onChange={(e) => setItemQuantity(parseInt(e.target.value) || 0)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                placeholder="Enter quantity (e.g. 13)"
+                min="0"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                System will distribute equally, excess goes to Dec→Nov→Jan...
+              </p>
+            </div>
+          )}
 
-            <div className="space-y-4">
-              {filteredItems.slice(0, 10).map(item => {
-                const itemPreview = previewData[item.id] || item.monthlyData;
-                const totalDistributed = itemPreview.reduce((sum, month) => sum + month.budgetValue, 0);
-                
-                return (
-                  <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <div className="font-medium text-gray-900">{item.customer}</div>
-                        <div className="text-sm text-gray-600 truncate max-w-md">{item.item}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-600">Budget 2026</div>
-                        <div className="font-medium">{item.budget2026.toLocaleString()}</div>
-                        <div className="text-sm text-gray-500">Distributed: {totalDistributed.toLocaleString()}</div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-6 gap-2">
-                      {itemPreview.map(monthData => (
-                        <div key={monthData.month} className="text-center p-2 bg-gray-50 rounded">
-                          <div className="text-xs font-medium text-gray-600">{monthData.month}</div>
-                          <div className="text-sm font-medium">{monthData.budgetValue.toLocaleString()}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-              
-              {filteredItems.length > 10 && (
-                <div className="text-center text-gray-500 text-sm">
-                  ... and {filteredItems.length - 10} more items
+          {distributionType === 'percentage' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Percentage of BUD 2026
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={percentageValue || ''}
+                  onChange={(e) => setPercentageValue(parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="Enter percentage (e.g. 25)"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                />
+                <Percent className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2" />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                System will calculate amount and distribute equally
+              </p>
+            </div>
+          )}
+
+          {/* Summary */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="text-sm">
+              <div className="font-medium text-blue-800 mb-1">
+                Will apply to: {filteredItems.length} items
+              </div>
+              {distributionType === 'equal' && itemQuantity > 0 && (
+                <div className="text-blue-700">
+                  {itemQuantity} items distributed across 12 months
+                  {itemQuantity > 12 && (
+                    <span className="block text-xs">
+                      Base: {Math.floor(itemQuantity / 12)} per month,
+                      Extra: {itemQuantity % 12} items (Dec→Nov→Jan...)
+                    </span>
+                  )}
+                </div>
+              )}
+              {distributionType === 'percentage' && percentageValue > 0 && (
+                <div className="text-blue-700">
+                  {percentageValue}% of each item's BUD 2026 distributed equally
                 </div>
               )}
             </div>
@@ -310,28 +294,21 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              {distributionType === 'percentage' && getTotalPercentage() !== 100 && (
-                <span className="text-red-600">⚠️ Total percentage must equal 100%</span>
-              )}
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleApply}
-                disabled={distributionType === 'percentage' && getTotalPercentage() !== 100}
-                className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Apply Distribution
-              </button>
-            </div>
+        <div className="border-t border-gray-200 px-6 py-4">
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleApplyDistribution}
+              disabled={(!itemQuantity && !percentageValue)}
+              className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              Apply Distribution
+            </button>
           </div>
         </div>
       </div>
