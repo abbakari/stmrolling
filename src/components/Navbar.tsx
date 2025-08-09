@@ -17,11 +17,13 @@ const Navbar: React.FC<NavbarProps> = ({ onPasswordModalOpen }) => {
 
   const colors = [
     'text-yellow-400',
-    'text-blue-400',
-    'text-yellow-500',
-    'text-blue-500',
-    'text-yellow-300',
-    'text-blue-300'
+    'text-cyan-400',
+    'text-orange-400',
+    'text-emerald-400',
+    'text-pink-400',
+    'text-violet-400',
+    'text-lime-400',
+    'text-amber-400'
   ];
 
   const visionText = "Trust you can take a year to build but a minute to destroy";
