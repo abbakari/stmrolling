@@ -30,6 +30,7 @@ import FollowBacksButton from '../components/FollowBacksButton';
 import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import SetDistributionModal from '../components/SetDistributionModal';
 import AdminStockManagement from '../components/AdminStockManagement';
+import StockSummaryWidget from '../components/StockSummaryWidget';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 
