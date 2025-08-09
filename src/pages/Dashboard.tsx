@@ -82,6 +82,12 @@ const Dashboard: React.FC = () => {
         ];
 
       case 'salesman':
+        const salesmanData = getRequestsBySalesman(user?.name || '');
+        const pendingStockItems = salesmanData.requests.filter(r => r.status === 'sent_to_manager').length +
+                                 salesmanData.alerts.filter(a => a.status === 'sent_to_manager').length;
+        const approvedStockItems = salesmanData.requests.filter(r => r.status === 'approved').length +
+                                  salesmanData.alerts.filter(a => a.status === 'approved').length;
+
         return [
           {
             title: 'My Sales',
@@ -92,12 +98,12 @@ const Dashboard: React.FC = () => {
             trend: { value: '+12.5%', isPositive: true }
           },
           {
-            title: 'My Target',
-            value: '87%',
-            subtitle: 'Achievement',
-            icon: Target,
+            title: 'Stock Requests',
+            value: `${salesmanData.requests.length}`,
+            subtitle: `${pendingStockItems} pending review`,
+            icon: Package,
             color: 'success' as const,
-            trend: { value: '+5%', isPositive: true }
+            trend: { value: `+${approvedStockItems} approved`, isPositive: true }
           },
           {
             title: 'My Budget',
@@ -108,12 +114,12 @@ const Dashboard: React.FC = () => {
             trend: { value: '-$12K', isPositive: false }
           },
           {
-            title: 'Forecast Accuracy',
-            value: '94%',
-            subtitle: 'Last quarter',
-            icon: BarChart3,
+            title: 'Stock Alerts',
+            value: `${salesmanData.alerts.length}`,
+            subtitle: 'Active alerts',
+            icon: AlertTriangle,
             color: 'warning' as const,
-            trend: { value: '+2%', isPositive: true }
+            trend: { value: `${salesmanData.alerts.filter(a => a.priority === 'critical').length} critical`, isPositive: false }
           }
         ];
 
