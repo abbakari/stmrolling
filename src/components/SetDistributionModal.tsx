@@ -149,7 +149,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Customer Search */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
