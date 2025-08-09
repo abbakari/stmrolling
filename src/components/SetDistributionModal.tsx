@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { X, PieChart, RotateCcw, Percent, Calendar } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { X, PieChart, Search, Calculator, Percent } from 'lucide-react';
 
 interface MonthlyBudget {
   month: string;
@@ -43,22 +43,32 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
   selectedItem,
   onApplyDistribution
 }) => {
-  const [distributionType, setDistributionType] = useState<'equal' | 'percentage' | 'custom'>('equal');
-  const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
-  const [monthlyPercentages, setMonthlyPercentages] = useState<{ [month: string]: number }>({});
-  const [previewData, setPreviewData] = useState<{ [itemId: number]: MonthlyBudget[] }>({});
+  const [distributionType, setDistributionType] = useState<'equal' | 'percentage'>('equal');
+  const [searchCustomer, setSearchCustomer] = useState('');
+  const [itemQuantity, setItemQuantity] = useState<number>(0);
+  const [percentageValue, setPercentageValue] = useState<number>(0);
 
   const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
-  // Memoize filtered items to prevent infinite loops
+  // Get unique customers for search
+  const customers = useMemo(() => {
+    const uniqueCustomers = Array.from(new Set(items.map(item => item.customer)));
+    return uniqueCustomers.filter(customer =>
+      customer.toLowerCase().includes(searchCustomer.toLowerCase())
+    );
+  }, [items, searchCustomer]);
+
+  // Filter items based on search customer and other filters
   const filteredItems = useMemo(() => {
     return items.filter(item => {
-      return (!selectedCustomer || item.customer.includes(selectedCustomer)) &&
+      const matchesSearch = !searchCustomer || item.customer.toLowerCase().includes(searchCustomer.toLowerCase());
+      return matchesSearch &&
+             (!selectedCustomer || item.customer.includes(selectedCustomer)) &&
              (!selectedCategory || item.category.includes(selectedCategory)) &&
              (!selectedBrand || item.brand.includes(selectedBrand)) &&
              (!selectedItem || item.item.includes(selectedItem));
     });
-  }, [items, selectedCustomer, selectedCategory, selectedBrand, selectedItem]);
+  }, [items, searchCustomer, selectedCustomer, selectedCategory, selectedBrand, selectedItem]);
 
   const generatePreview = useCallback(() => {
     const preview: { [itemId: number]: MonthlyBudget[] } = {};
