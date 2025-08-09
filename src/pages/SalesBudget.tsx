@@ -94,24 +94,6 @@ const SalesBudget: React.FC = () => {
   // Monthly editing state
   const [editingMonthlyData, setEditingMonthlyData] = useState<{[key: number]: MonthlyBudget[]}>({});
 
-  // Distribution tracking state
-  const [appliedDistributions, setAppliedDistributions] = useState<Array<{
-    id: string;
-    type: 'regional' | 'category' | 'customer' | 'seasonal' | 'channel';
-    name: string;
-    appliedAt: Date;
-    segments: number;
-    totalAmount: number;
-    totalUnits: number;
-    isActive: boolean;
-    segments_detail: Array<{
-      name: string;
-      percentage: number;
-      amount: number;
-      units: number;
-      color: string;
-    }>;
-  }>>([]);
 
   // Generate all months for the year
   const getAllYearMonths = () => {
