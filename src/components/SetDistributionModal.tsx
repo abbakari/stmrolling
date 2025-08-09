@@ -50,13 +50,15 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
 
   const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
-  // Filter items based on active filters
-  const filteredItems = items.filter(item => {
-    return (!selectedCustomer || item.customer.includes(selectedCustomer)) &&
-           (!selectedCategory || item.category.includes(selectedCategory)) &&
-           (!selectedBrand || item.brand.includes(selectedBrand)) &&
-           (!selectedItem || item.item.includes(selectedItem));
-  });
+  // Memoize filtered items to prevent infinite loops
+  const filteredItems = useMemo(() => {
+    return items.filter(item => {
+      return (!selectedCustomer || item.customer.includes(selectedCustomer)) &&
+             (!selectedCategory || item.category.includes(selectedCategory)) &&
+             (!selectedBrand || item.brand.includes(selectedBrand)) &&
+             (!selectedItem || item.item.includes(selectedItem));
+    });
+  }, [items, selectedCustomer, selectedCategory, selectedBrand, selectedItem]);
 
   useEffect(() => {
     if (isOpen) {
