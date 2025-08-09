@@ -270,7 +270,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <div className="text-sm">
               <div className="font-medium text-blue-800 mb-1">
-                Will apply to: {filteredItems.length} items
+                Will apply to: {filteredItems.length} items {searchCustomer ? `for customer "${searchCustomer}"` : ''}
               </div>
               {distributionType === 'equal' && itemQuantity > 0 && (
                 <div className="text-blue-700">
