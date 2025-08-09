@@ -54,6 +54,10 @@
   animation: pulse 3s ease-in-out infinite;
 }
 
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
 /* Responsive table styles */
 .table-responsive {
   font-size: 0.875rem;
