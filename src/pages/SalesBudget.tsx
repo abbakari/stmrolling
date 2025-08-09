@@ -1857,11 +1857,6 @@ const SalesBudget: React.FC = () => {
           type={newAdditionType}
         />
 
-        <DistributionModal
-          isOpen={isDistributionModalOpen}
-          onClose={() => setIsDistributionModalOpen(false)}
-          onApplyDistribution={handleApplyDistribution}
-        />
 
         <YearlyBudgetModal
           isOpen={isYearlyBudgetModalOpen}
