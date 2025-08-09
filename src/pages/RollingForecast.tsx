@@ -1842,6 +1842,19 @@ const RollingForecast: React.FC = () => {
         } : null}
         type="rolling_forecast"
       />
+
+      {/* Stock Management Modals */}
+      {user?.role === 'manager' || user?.role === 'admin' ? (
+        <ManagerStockManagement
+          isOpen={isStockManagementModalOpen}
+          onClose={() => setIsStockManagementModalOpen(false)}
+        />
+      ) : (
+        <SalesmanStockManagement
+          isOpen={isStockManagementModalOpen}
+          onClose={() => setIsStockManagementModalOpen(false)}
+        />
+      )}
     </Layout>
   );
 };
