@@ -91,8 +91,6 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onAddUser,
   };
 
   const getDefaultPermissions = (role: UserRole): Permission[] => {
-    // Import permissions from the auth types
-    const { ROLE_PERMISSIONS } = require('../types/auth');
     return ROLE_PERMISSIONS[role] || [];
   };
 
