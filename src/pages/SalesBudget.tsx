@@ -20,7 +20,7 @@ import {
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
 import YearlyBudgetModal from '../components/YearlyBudgetModal';
-import StockManagementModal from '../components/StockManagementModal';
+import SalesmanStockManagement from '../components/SalesmanStockManagement';
 import ManagerDashboard from '../components/ManagerDashboard';
 import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
@@ -1272,7 +1272,7 @@ const SalesBudget: React.FC = () => {
                   }`}>
                     {budgetGrowth > 0 && '📈'}
                     {budgetGrowth < 0 && '📉'}
-                    {budgetGrowth === 0 && '➡️'}
+                    {budgetGrowth === 0 && '��️'}
                     {budgetGrowth.toFixed(1)}%
                   </p>
                   <p className="text-xs text-gray-600">From {selectedYear2025} to {selectedYear2026}</p>
