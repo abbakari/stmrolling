@@ -14,6 +14,7 @@ import SupplyChainManagement from './pages/SupplyChainManagement';
 import DistributionManagement from './pages/DistributionManagement';
 import BiDashboard from './pages/BiDashboard';
 import ApprovalCenter from './pages/ApprovalCenter';
+import AdminPanel from './pages/AdminPanel';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ 
