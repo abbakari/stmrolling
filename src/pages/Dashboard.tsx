@@ -8,6 +8,7 @@ import GitEtaManagement from '../components/GitEtaManagement';
 import ManagerDataView from '../components/ManagerDataView';
 import GitSummaryWidget from '../components/GitSummaryWidget';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
+import { useStock } from '../contexts/StockContext';
 
 
 const Dashboard: React.FC = () => {
