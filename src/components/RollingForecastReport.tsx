@@ -403,6 +403,97 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
           </div>
         </div>
       )}
+
+      {/* Export Preview Modal */}
+      {showExportPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Export Preview</h2>
+                <button
+                  onClick={() => setShowExportPreview(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 max-h-[70vh] overflow-auto">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm text-gray-600">Preview of data to be exported ({reportData.length} rows)</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleDownloadCsv}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <DownloadIcon className="w-4 h-4" />
+                    Download CSV
+                  </button>
+                </div>
+              </div>
+
+              {/* Export Preview Table */}
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-2 py-2 text-left border-r border-gray-200">CUSTOMER</th>
+                        <th className="px-2 py-2 text-left border-r border-gray-200">ITEM</th>
+                        <th className="px-2 py-2 text-left border-r border-gray-200">BRAND</th>
+                        <th className="px-2 py-2 text-left border-r border-gray-200">CATEGORY</th>
+                        {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(month => (
+                          <th key={month} className="px-2 py-2 text-center border-r border-gray-200">{month}</th>
+                        ))}
+                        <th className="px-2 py-2 text-center border-r border-gray-200">BUDGET2025</th>
+                        <th className="px-2 py-2 text-center">FORECAST2025</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {reportData.map((row, index) => (
+                        <tr key={row.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="px-2 py-2 border-r border-gray-200 max-w-[120px] truncate" title={row.customer}>
+                            {row.customer}
+                          </td>
+                          <td className="px-2 py-2 border-r border-gray-200 max-w-[150px] truncate" title={row.item}>
+                            {row.item}
+                          </td>
+                          <td className="px-2 py-2 border-r border-gray-200">{row.brand}</td>
+                          <td className="px-2 py-2 border-r border-gray-200">{row.category}</td>
+                          {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map(month => (
+                            <td key={month} className="px-2 py-2 text-center border-r border-gray-200">
+                              {row[month as keyof ReportData] || 0}
+                            </td>
+                          ))}
+                          <td className="px-2 py-2 text-center border-r border-gray-200 font-medium">
+                            {row.BUDGET2025}
+                          </td>
+                          <td className="px-2 py-2 text-center font-medium text-green-600">
+                            {row.FORECAST2025}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* CSV Raw Data Preview */}
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Raw CSV Data Preview (first 10 lines):</h3>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 font-mono text-xs">
+                  <pre className="whitespace-pre-wrap">
+                    {exportData.split('\n').slice(0, 10).join('\n')}
+                    {exportData.split('\n').length > 10 && '\n... and ' + (exportData.split('\n').length - 10) + ' more lines'}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
