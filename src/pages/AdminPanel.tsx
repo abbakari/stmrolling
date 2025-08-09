@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
-import { Package, Settings, Users } from 'lucide-react';
+import { Package, Settings, Users, MessageCircle } from 'lucide-react';
 import AdminStockManagement from '../components/AdminStockManagement';
+import AdminWorkflowCenter from '../components/AdminWorkflowCenter';
 import { useAuth } from '../contexts/AuthContext';
 
 const AdminPanel: React.FC = () => {
