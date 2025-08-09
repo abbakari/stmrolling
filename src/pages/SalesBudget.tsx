@@ -21,6 +21,7 @@ import ExportModal, { ExportConfig } from '../components/ExportModal';
 import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
 import YearlyBudgetModal from '../components/YearlyBudgetModal';
 import SalesmanStockManagement from '../components/SalesmanStockManagement';
+import ManagerStockManagement from '../components/ManagerStockManagement';
 import ManagerDashboard from '../components/ManagerDashboard';
 import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
@@ -1000,7 +1001,7 @@ const SalesBudget: React.FC = () => {
                 selectedCategory ? 'border-green-400 bg-green-50' : 'border-yellow-400'
               }`}>
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  ��� CATEGORY:
+                  📦 CATEGORY:
                   {selectedCategory && <span className="text-green-600">✓</span>}
                 </label>
                 <select
