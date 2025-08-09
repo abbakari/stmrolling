@@ -92,49 +92,39 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
     return distributeQuantityEqually(amountToDistribute);
   };
 
-  const handleMonthToggle = (month: string) => {
-    const newSelectedMonths = selectedMonths.includes(month)
-      ? selectedMonths.filter(m => m !== month)
-      : [...selectedMonths, month];
-    
-    setSelectedMonths(newSelectedMonths);
-
-    // Auto-adjust equal percentages when months are selected/deselected
-    if (distributionType === 'equal' && newSelectedMonths.length > 0) {
-      const equalPercentage = Math.round(100 / newSelectedMonths.length * 10) / 10;
-      const newPercentages = months.reduce((acc, m) => {
-        acc[m] = newSelectedMonths.includes(m) ? equalPercentage : 0;
-        return acc;
-      }, {} as { [month: string]: number });
-      setMonthlyPercentages(newPercentages);
+  const handleApplyDistribution = () => {
+    if (!itemQuantity && !percentageValue) {
+      alert('Please enter a quantity or percentage value');
+      return;
     }
-  };
 
-  const handlePercentageChange = (month: string, value: number) => {
-    setMonthlyPercentages(prev => ({
-      ...prev,
-      [month]: Math.max(0, Math.min(100, value))
-    }));
-  };
+    const distributionData: { [itemId: number]: MonthlyBudget[] } = {};
 
-  const resetToEqual = () => {
-    setDistributionType('equal');
-    setSelectedMonths([...months]);
-    const equalPercentage = Math.round(100 / months.length * 10) / 10;
-    const equalPercentages = months.reduce((acc, month) => {
-      acc[month] = equalPercentage;
-      return acc;
-    }, {} as { [month: string]: number });
-    setMonthlyPercentages(equalPercentages);
-  };
+    filteredItems.forEach(item => {
+      const newMonthlyData = [...item.monthlyData];
+      let distribution: number[];
 
-  const getTotalPercentage = () => {
-    return Object.values(monthlyPercentages).reduce((sum, val) => sum + val, 0);
-  };
+      if (distributionType === 'equal') {
+        distribution = distributeQuantityEqually(itemQuantity);
+      } else {
+        distribution = distributeByPercentage(item.budget2026, percentageValue);
+      }
 
-  const handleApply = () => {
-    onApplyDistribution(previewData);
+      // Apply distribution to monthly data
+      newMonthlyData.forEach((monthData, index) => {
+        monthData.budgetValue = distribution[index];
+      });
+
+      distributionData[item.id] = newMonthlyData;
+    });
+
+    onApplyDistribution(distributionData);
     onClose();
+
+    // Reset form
+    setItemQuantity(0);
+    setPercentageValue(0);
+    setSearchCustomer('');
   };
 
   if (!isOpen) return null;
