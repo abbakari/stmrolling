@@ -548,11 +548,13 @@ const SalesBudget: React.FC = () => {
       prevData.map(item => {
         if (distributionData[item.id]) {
           const newMonthlyData = distributionData[item.id];
-          const newBudgetValue2026 = newMonthlyData.reduce((sum, month) => sum + month.budgetValue, 0);
+          const newBudget2026 = newMonthlyData.reduce((sum, month) => sum + month.budgetValue, 0);
+          const newBudgetValue2026 = newBudget2026 * (item.rate || 1); // Apply rate to get value
 
           return {
             ...item,
             monthlyData: newMonthlyData,
+            budget2026: newBudget2026, // Update BUD 2026 column
             budgetValue2026: newBudgetValue2026
           };
         }
@@ -569,6 +571,62 @@ const SalesBudget: React.FC = () => {
     });
 
     showNotification(`Distribution applied to ${Object.keys(distributionData).length} items successfully!`, 'success');
+  };
+
+  // Auto-distribute when user enters quantity in BUD 2026 column
+  const handleBudget2026Change = (itemId: number, value: number) => {
+    const distributeQuantityEqually = (quantity: number): MonthlyBudget[] => {
+      const baseAmount = Math.floor(quantity / 12);
+      const remainder = quantity % 12;
+
+      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+      return months.map((month, index) => {
+        let monthlyValue = baseAmount;
+
+        // Add remainder starting from December (index 11) backwards
+        if (remainder > 0) {
+          const remainderIndex = 11 - (remainder - 1); // Start from December
+          if (index >= remainderIndex) {
+            monthlyValue += 1;
+          }
+        }
+
+        return {
+          month,
+          budgetValue: monthlyValue,
+          actualValue: 0,
+          rate: 100,
+          stock: 0,
+          git: 0,
+          discount: 0
+        };
+      });
+    };
+
+    setTableData(prevData =>
+      prevData.map(item => {
+        if (item.id === itemId) {
+          const newMonthlyData = distributeQuantityEqually(value);
+          const newBudgetValue2026 = value * (item.rate || 1);
+
+          return {
+            ...item,
+            budget2026: value,
+            budgetValue2026: newBudgetValue2026,
+            monthlyData: newMonthlyData
+          };
+        }
+        return item;
+      })
+    );
+
+    // Also update editing monthly data
+    const newMonthlyData = distributeQuantityEqually(value);
+    setEditingMonthlyData(prev => ({
+      ...prev,
+      [itemId]: newMonthlyData
+    }));
   };
 
   const handleExport = (config: ExportConfig) => {
