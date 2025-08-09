@@ -15,6 +15,7 @@ import DistributionManagement from './pages/DistributionManagement';
 import BiDashboard from './pages/BiDashboard';
 import ApprovalCenter from './pages/ApprovalCenter';
 import AdminPanel from './pages/AdminPanel';
+import AdminInventoryDashboard from './pages/AdminInventoryDashboard';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ 
@@ -142,6 +143,15 @@ const AppRoutes: React.FC = () => {
         element={
           <RoleBasedRoute allowedRoles={['admin']}>
             <AdminPanel />
+          </RoleBasedRoute>
+        }
+      />
+
+      <Route
+        path="/admin-inventory"
+        element={
+          <RoleBasedRoute allowedRoles={['admin']}>
+            <AdminInventoryDashboard />
           </RoleBasedRoute>
         }
       />
