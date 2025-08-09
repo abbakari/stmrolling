@@ -2096,6 +2096,15 @@ const SalesBudget: React.FC = () => {
           selectedItem={selectedItem}
           onApplyDistribution={handleApplyDistribution}
         />
+
+        {/* Admin Stock Management Modal */}
+        {user?.role === 'admin' && (
+          <AdminStockManagement
+            isOpen={isAdminStockModalOpen}
+            onClose={() => setIsAdminStockModalOpen(false)}
+            items={tableData}
+          />
+        )}
       </div>
     </Layout>
   );
