@@ -127,13 +127,22 @@ const AppRoutes: React.FC = () => {
         } 
       />
 
-      <Route 
-        path="/data-sources" 
+      <Route
+        path="/data-sources"
         element={
           <RoleBasedRoute allowedRoles={['admin']}>
             <DataSources />
           </RoleBasedRoute>
-        } 
+        }
+      />
+
+      <Route
+        path="/admin-panel"
+        element={
+          <RoleBasedRoute allowedRoles={['admin']}>
+            <AdminPanel />
+          </RoleBasedRoute>
+        }
       />
 
       <Route 
