@@ -176,8 +176,14 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
       ].join(','))
     ].join('\n');
 
+    // Show export preview first
+    setExportData(csvContent);
+    setShowExportPreview(true);
+  };
+
+  const handleDownloadCsv = () => {
     // Download CSV
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([exportData], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
@@ -186,6 +192,29 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setShowExportPreview(false);
+  };
+
+  const handleCellEdit = (rowId: string, field: string, value: number) => {
+    if (!editMode) return;
+
+    setReportData(prevData =>
+      prevData.map(row => {
+        if (row.id === rowId) {
+          const updatedRow = { ...row, [field]: value };
+          // Recalculate FORECAST2025 if monthly data changed
+          if (['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].includes(field)) {
+            updatedRow.FORECAST2025 = [
+              updatedRow.JAN, updatedRow.FEB, updatedRow.MAR, updatedRow.APR,
+              updatedRow.MAY, updatedRow.JUN, updatedRow.JUL, updatedRow.AUG,
+              updatedRow.SEP, updatedRow.OCT, updatedRow.NOV, updatedRow.DEC
+            ].reduce((sum, val) => sum + val, 0);
+          }
+          return updatedRow;
+        }
+        return row;
+      })
+    );
   };
 
   if (loading) {
