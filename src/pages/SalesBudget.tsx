@@ -28,6 +28,7 @@ import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
 import FollowBacksButton from '../components/FollowBacksButton';
+import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 
@@ -428,7 +429,7 @@ const SalesBudget: React.FC = () => {
         return newData;
       });
 
-      // Save to persistence manager for cross-user visibility
+      // Save to persistence manager for cross-user visibility and preserve for other purposes
       if (user) {
         const savedData: SavedBudgetData = {
           id: `sales_budget_${rowId}_${Date.now()}`,
@@ -453,10 +454,10 @@ const SalesBudget: React.FC = () => {
         };
 
         DataPersistenceManager.saveSalesBudgetData([savedData]);
-        console.log('Budget data saved for manager visibility:', savedData);
+        console.log('Budget data saved for manager visibility and preserved for other purposes:', savedData);
       }
 
-      showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount). Data is now visible to managers.`, 'success');
+      showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount). Data preserved in table and visible to managers.`, 'success');
     }
   };
 
@@ -811,10 +812,10 @@ const SalesBudget: React.FC = () => {
       console.log('Yearly budget data saved for manager visibility:', savedData);
     }
 
-    showNotification(`Yearly budget for "${budgetData.item}" created successfully and shared with Rolling Forecast. Data is now visible to managers.`, 'success');
+    showNotification(`Yearly budget for "${budgetData.item}" created successfully and shared with Rolling Forecast. Data preserved in table and visible to managers.`, 'success');
   };
 
-  // Submit budgets for manager approval
+  // Submit budgets for manager approval while preserving data in table
   const handleSubmitForApproval = () => {
     setIsSubmittingForApproval(true);
 
@@ -846,19 +847,57 @@ const SalesBudget: React.FC = () => {
         return;
       }
 
+      // Prepare saved budget data for submission copies
+      const savedBudgetData: SavedBudgetData[] = tableData
+        .filter(row => row.budget2026 > 0)
+        .map(row => ({
+          id: `saved_budget_${row.id}_${Date.now()}`,
+          customer: row.customer,
+          item: row.item,
+          category: row.category,
+          brand: row.brand,
+          type: 'sales_budget' as const,
+          createdBy: user?.name || 'Unknown',
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budget2025: row.budget2025,
+          actual2025: row.actual2025,
+          budget2026: row.budget2026,
+          rate: row.rate,
+          stock: row.stock,
+          git: row.git,
+          budgetValue2026: row.budgetValue2026,
+          discount: row.discount,
+          monthlyData: row.monthlyData,
+          status: 'saved'
+        }));
+
+      // Submit to workflow
       const workflowId = submitForApproval(allBudgets);
 
+      // Create submission copies while preserving original data
+      DataPersistenceManager.saveSubmissionCopies(savedBudgetData, [], workflowId);
+
+      // Update status of original saved data to track submission without removing them
+      savedBudgetData.forEach(item => {
+        DataPersistenceManager.updateSalesBudgetStatus(item.id, 'submitted');
+      });
+
       showNotification(
-        `Successfully submitted ${allBudgets.length} budget(s) for manager approval. Workflow ID: ${workflowId.slice(-6)}`,
+        `Successfully submitted ${allBudgets.length} budget(s) for manager approval. ` +
+        `Workflow ID: ${workflowId.slice(-6)}. ✅ Original data preserved in table for other purposes.`,
         'success'
       );
 
-      // Clear submitted budgets from table to prevent re-submission
-      setTableData(prev => prev.map(row => ({
-        ...row,
-        budget2026: 0,
-        budgetValue2026: 0
-      })));
+      // IMPORTANT: DO NOT clear budget data from table - keep it for other purposes
+      // The data remains available for:
+      // 1. Further editing before final approval
+      // 2. Reference and reporting purposes
+      // 3. Backup in case submission needs to be reprocessed
+      // 4. Historical tracking and analysis
+      console.log('Budget data preserved in table after submission for approval');
+      console.log('Saved budget entries:', savedBudgetData.length);
+      console.log('Original table data maintained for other purposes');
 
     } catch (error) {
       console.error('Submission error:', error);
@@ -1327,6 +1366,17 @@ const SalesBudget: React.FC = () => {
                   <span className="text-xs text-blue-600">• Enter monthly data to see growth calculations</span>
                 </p>
               </div>
+            )}
+
+            {/* Data Preservation Status */}
+            {user && (
+              <DataPreservationIndicator
+                itemsCount={tableData.length}
+                submittedCount={DataPersistenceManager.getSubmittedSalesBudgetData().filter(item => item.createdBy === user.name).length}
+                preservedCount={DataPersistenceManager.getOriginalSalesBudgetData().filter(item => item.createdBy === user.name).length}
+                dataType="budget"
+                compact={true}
+              />
             )}
 
             {/* Stats Grid - Real-time Budget Statistics */}

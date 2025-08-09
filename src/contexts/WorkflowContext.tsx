@@ -202,14 +202,14 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
     const id = `wf_${Date.now()}`;
     const year = budgetData[0]?.year || new Date().getFullYear().toString();
     const customers = [...new Set([...budgetData.map(b => b.customer), ...(forecastData?.map(f => f.customer) || [])])];
-    const totalValue = budgetData.reduce((sum, b) => sum + b.totalBudget, 0) + 
+    const totalValue = budgetData.reduce((sum, b) => sum + b.totalBudget, 0) +
                       (forecastData?.reduce((sum, f) => sum + f.forecastValue, 0) || 0);
 
     const newItem: WorkflowItem = {
       id,
       type: forecastData && forecastData.length > 0 ? 'rolling_forecast' : 'sales_budget',
       title: `${year} ${forecastData ? 'Forecast' : 'Budget'} - ${customers.join(', ')}`,
-      description: `Submitted for manager approval`,
+      description: `Submitted for manager approval - Original data preserved in tables for other purposes`,
       createdBy: budgetData[0]?.createdBy || 'Unknown',
       createdByRole: 'salesman',
       currentState: 'submitted',
@@ -218,12 +218,23 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
       totalValue,
       year,
       priority: totalValue > 200000 ? 'high' : totalValue > 100000 ? 'medium' : 'low',
-      comments: [],
+      comments: [
+        {
+          id: `c_${Date.now()}`,
+          author: budgetData[0]?.createdBy || 'System',
+          authorRole: 'salesman',
+          message: 'Data submitted for approval. Original data remains available in sales budget and rolling forecast tables for continued use and other purposes.',
+          timestamp: new Date().toISOString(),
+          type: 'comment'
+        }
+      ],
       budgetData,
       forecastData
     };
 
     setWorkflowItems(prev => [...prev, newItem]);
+
+    console.log(`Workflow ${id} created. Original data preserved in tables for other purposes.`);
     return id;
   };
 
@@ -247,7 +258,7 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
           fromUser: managerId,
           fromRole: 'manager',
           title: `Your ${item.type.replace('_', ' ')} has been approved`,
-          message: comment,
+          message: `${comment} Note: Your original data remains available in the tables for continued use.`,
           workflowItemId: itemId,
           type: 'approval',
           timestamp: new Date().toISOString(),
@@ -288,7 +299,7 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({ children }) 
           fromUser: managerId,
           fromRole: 'manager',
           title: `Your ${item.type.replace('_', ' ')} has been rejected`,
-          message: comment,
+          message: `${comment} Your original data remains available in the tables for revision and resubmission.`,
           workflowItemId: itemId,
           type: 'rejection',
           timestamp: new Date().toISOString(),
