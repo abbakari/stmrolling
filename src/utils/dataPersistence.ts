@@ -36,6 +36,13 @@ export interface SavedForecastData {
   };
   forecastTotal: number;
   status: 'draft' | 'saved' | 'submitted' | 'approved';
+  // Metadata for tracking submissions and preserving originals
+  submissionMetadata?: {
+    originalId: string;
+    workflowId: string;
+    submittedAt: string;
+    originalStatus: 'draft' | 'saved' | 'submitted' | 'approved';
+  };
 }
 
 export interface SavedBudgetData {
@@ -66,6 +73,13 @@ export interface SavedBudgetData {
     discount: number;
   }>;
   status: 'draft' | 'saved' | 'submitted' | 'approved';
+  // Metadata for tracking submissions and preserving originals
+  submissionMetadata?: {
+    originalId: string;
+    workflowId: string;
+    submittedAt: string;
+    originalStatus: 'draft' | 'saved' | 'submitted' | 'approved';
+  };
 }
 
 const SALES_BUDGET_STORAGE_KEY = 'sales_budget_saved_data';
@@ -186,25 +200,70 @@ export class DataPersistenceManager {
     return allData.filter(item => item.customer.toLowerCase().includes(customerName.toLowerCase()));
   }
 
-  // Update status of saved data
+  // Update status of saved data while preserving original entry
   static updateSalesBudgetStatus(itemId: string, status: 'draft' | 'saved' | 'submitted' | 'approved'): void {
     const allData = this.getSalesBudgetData();
-    const updatedData = allData.map(item => 
-      item.id === itemId 
-        ? { ...item, status, lastModified: new Date().toISOString() }
-        : item
-    );
+    const updatedData = allData.map(item => {
+      if (item.id === itemId) {
+        return { ...item, status, lastModified: new Date().toISOString() };
+      }
+      return item;
+    });
     localStorage.setItem(SALES_BUDGET_STORAGE_KEY, JSON.stringify(updatedData));
+    console.log(`Sales budget status updated: ${itemId} -> ${status}`);
   }
 
   static updateRollingForecastStatus(itemId: string, status: 'draft' | 'saved' | 'submitted' | 'approved'): void {
     const allData = this.getRollingForecastData();
-    const updatedData = allData.map(item => 
-      item.id === itemId 
-        ? { ...item, status, lastModified: new Date().toISOString() }
-        : item
-    );
+    const updatedData = allData.map(item => {
+      if (item.id === itemId) {
+        return { ...item, status, lastModified: new Date().toISOString() };
+      }
+      return item;
+    });
     localStorage.setItem(ROLLING_FORECAST_STORAGE_KEY, JSON.stringify(updatedData));
+    console.log(`Rolling forecast status updated: ${itemId} -> ${status}`);
+  }
+
+  // Create submission copy while preserving original data
+  static createSubmissionCopy(originalData: SavedBudgetData | SavedForecastData, workflowId: string): SavedBudgetData | SavedForecastData {
+    const submissionCopy = {
+      ...originalData,
+      id: `${originalData.id}_submission_${workflowId}`,
+      status: 'submitted' as const,
+      lastModified: new Date().toISOString(),
+      // Add metadata to track submission
+      submissionMetadata: {
+        originalId: originalData.id,
+        workflowId,
+        submittedAt: new Date().toISOString(),
+        originalStatus: originalData.status
+      }
+    };
+
+    console.log('Created submission copy with ID:', submissionCopy.id);
+    return submissionCopy;
+  }
+
+  // Save submission copies while keeping originals intact
+  static saveSubmissionCopies(budgetData: SavedBudgetData[], forecastData: SavedForecastData[], workflowId: string): void {
+    try {
+      // Create submission copies for budget data
+      if (budgetData.length > 0) {
+        const budgetCopies = budgetData.map(item => this.createSubmissionCopy(item, workflowId) as SavedBudgetData);
+        this.saveSalesBudgetData(budgetCopies);
+      }
+
+      // Create submission copies for forecast data
+      if (forecastData.length > 0) {
+        const forecastCopies = forecastData.map(item => this.createSubmissionCopy(item, workflowId) as SavedForecastData);
+        this.saveRollingForecastData(forecastCopies);
+      }
+
+      console.log(`Submission copies saved for workflow ${workflowId}`);
+    } catch (error) {
+      console.error('Error saving submission copies:', error);
+    }
   }
 
   // Clear all data (admin function)
@@ -214,35 +273,83 @@ export class DataPersistenceManager {
     console.log('All sales budget and forecast data cleared');
   }
 
-  // Get summary statistics for managers
+  // Get summary statistics for managers - including submission tracking
   static getSummaryStats() {
     const budgetData = this.getSalesBudgetData();
     const forecastData = this.getRollingForecastData();
 
-    const totalBudgetItems = budgetData.length;
-    const totalForecastItems = forecastData.length;
-    const totalBudgetValue = budgetData.reduce((sum, item) => sum + item.budgetValue2026, 0);
-    const totalForecastValue = forecastData.reduce((sum, item) => sum + item.forecastTotal * 100, 0);
+    // Separate original vs submission copies
+    const originalBudgetData = budgetData.filter(item => !item.submissionMetadata);
+    const submittedBudgetData = budgetData.filter(item => item.submissionMetadata);
+    const originalForecastData = forecastData.filter(item => !item.submissionMetadata);
+    const submittedForecastData = forecastData.filter(item => item.submissionMetadata);
+
+    const totalBudgetItems = originalBudgetData.length;
+    const totalForecastItems = originalForecastData.length;
+    const totalSubmittedBudgetItems = submittedBudgetData.length;
+    const totalSubmittedForecastItems = submittedForecastData.length;
+
+    const totalBudgetValue = originalBudgetData.reduce((sum, item) => sum + item.budgetValue2026, 0);
+    const totalForecastValue = originalForecastData.reduce((sum, item) => sum + item.forecastTotal * 100, 0);
+    const totalSubmittedBudgetValue = submittedBudgetData.reduce((sum, item) => sum + item.budgetValue2026, 0);
+    const totalSubmittedForecastValue = submittedForecastData.reduce((sum, item) => sum + item.forecastTotal * 100, 0);
 
     const uniqueCustomers = new Set([
-      ...budgetData.map(item => item.customer),
-      ...forecastData.map(item => item.customer)
+      ...originalBudgetData.map(item => item.customer),
+      ...originalForecastData.map(item => item.customer)
     ]);
 
     const uniqueSalesmen = new Set([
-      ...budgetData.map(item => item.createdBy),
-      ...forecastData.map(item => item.createdBy)
+      ...originalBudgetData.map(item => item.createdBy),
+      ...originalForecastData.map(item => item.createdBy)
     ]);
 
     return {
+      // Original data (still available for other purposes)
       totalBudgetItems,
       totalForecastItems,
       totalBudgetValue,
       totalForecastValue,
+      // Submitted data (for approval workflow)
+      totalSubmittedBudgetItems,
+      totalSubmittedForecastItems,
+      totalSubmittedBudgetValue,
+      totalSubmittedForecastValue,
+      // General stats
       uniqueCustomers: uniqueCustomers.size,
       uniqueSalesmen: uniqueSalesmen.size,
       lastUpdated: new Date().toISOString()
     };
+  }
+
+  // Get only original data (excluding submission copies)
+  static getOriginalSalesBudgetData(): SavedBudgetData[] {
+    return this.getSalesBudgetData().filter(item => !item.submissionMetadata);
+  }
+
+  static getOriginalRollingForecastData(): SavedForecastData[] {
+    return this.getRollingForecastData().filter(item => !item.submissionMetadata);
+  }
+
+  // Get only submitted data (submission copies)
+  static getSubmittedSalesBudgetData(): SavedBudgetData[] {
+    return this.getSalesBudgetData().filter(item => item.submissionMetadata);
+  }
+
+  static getSubmittedRollingForecastData(): SavedForecastData[] {
+    return this.getRollingForecastData().filter(item => item.submissionMetadata);
+  }
+
+  // Get data by workflow ID
+  static getDataByWorkflowId(workflowId: string): { budgetData: SavedBudgetData[], forecastData: SavedForecastData[] } {
+    const budgetData = this.getSalesBudgetData().filter(item =>
+      item.submissionMetadata?.workflowId === workflowId
+    );
+    const forecastData = this.getRollingForecastData().filter(item =>
+      item.submissionMetadata?.workflowId === workflowId
+    );
+
+    return { budgetData, forecastData };
   }
 
   // Sync data between budget and forecast (for consistency)
