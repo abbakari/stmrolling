@@ -124,6 +124,13 @@ const Dashboard: React.FC = () => {
         ];
 
       case 'manager':
+        const pendingForReview = stockRequests.filter(r => r.status === 'sent_to_manager').length +
+                                stockAlerts.filter(a => a.status === 'sent_to_manager').length +
+                                stockProjections.filter(p => p.status === 'sent_to_manager').length +
+                                stockOverviews.filter(o => o.status === 'sent_to_manager').length;
+
+        const criticalAlerts = stockAlerts.filter(a => a.priority === 'critical' && a.status === 'sent_to_manager').length;
+
         return [
           {
             title: 'Department Sales',
@@ -134,12 +141,12 @@ const Dashboard: React.FC = () => {
             trend: { value: '+15%', isPositive: true }
           },
           {
-            title: 'Team Performance',
-            value: '91%',
-            subtitle: 'Average achievement',
-            icon: Users,
+            title: 'Stock Reviews',
+            value: `${pendingForReview}`,
+            subtitle: 'Pending review',
+            icon: Package,
             color: 'success' as const,
-            trend: { value: '+8%', isPositive: true }
+            trend: { value: `${criticalAlerts} critical`, isPositive: criticalAlerts === 0 }
           },
           {
             title: 'Department Budget',
@@ -150,12 +157,12 @@ const Dashboard: React.FC = () => {
             trend: { value: '73%', isPositive: true }
           },
           {
-            title: 'Active Forecasts',
-            value: '18',
-            subtitle: 'This quarter',
-            icon: BarChart3,
+            title: 'Team Stock Requests',
+            value: `${stockRequests.length}`,
+            subtitle: 'Total requests',
+            icon: AlertTriangle,
             color: 'warning' as const,
-            trend: { value: '+3', isPositive: true }
+            trend: { value: `${stockRequests.filter(r => r.status === 'approved').length} approved`, isPositive: true }
           }
         ];
 
