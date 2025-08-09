@@ -1000,7 +1000,7 @@ const SalesBudget: React.FC = () => {
                 selectedCategory ? 'border-green-400 bg-green-50' : 'border-yellow-400'
               }`}>
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  📦 CATEGORY:
+                  ��� CATEGORY:
                   {selectedCategory && <span className="text-green-600">✓</span>}
                 </label>
                 <select
@@ -1848,10 +1848,9 @@ const SalesBudget: React.FC = () => {
           year={selectedYear2026}
         />
 
-        <StockManagementModal
+        <SalesmanStockManagement
           isOpen={isStockManagementModalOpen}
           onClose={() => setIsStockManagementModalOpen(false)}
-          selectedItem={selectedStockItem}
         />
 
         <ManagerDashboard
