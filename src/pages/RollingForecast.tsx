@@ -9,6 +9,8 @@ import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
 import FollowBacksButton from '../components/FollowBacksButton';
+import SalesmanStockManagement from '../components/SalesmanStockManagement';
+import ManagerStockManagement from '../components/ManagerStockManagement';
 import ManagerRollingForecastInterface from '../components/ManagerRollingForecastInterface';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
