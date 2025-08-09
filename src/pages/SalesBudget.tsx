@@ -89,6 +89,7 @@ const SalesBudget: React.FC = () => {
   const [isViewOnlyModalOpen, setIsViewOnlyModalOpen] = useState(false);
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<SalesBudgetItem | null>(null);
   const [isSetDistributionModalOpen, setIsSetDistributionModalOpen] = useState(false);
+  const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
