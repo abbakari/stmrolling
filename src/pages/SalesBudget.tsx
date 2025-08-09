@@ -28,6 +28,9 @@ import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
 import FollowBacksButton from '../components/FollowBacksButton';
 import DataPreservationIndicator from '../components/DataPreservationIndicator';
+import SetDistributionModal from '../components/SetDistributionModal';
+import AdminStockManagement from '../components/AdminStockManagement';
+import StockSummaryWidget from '../components/StockSummaryWidget';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 
@@ -86,6 +89,8 @@ const SalesBudget: React.FC = () => {
   const [selectedCustomerForBreakdown, setSelectedCustomerForBreakdown] = useState<string>('');
   const [isViewOnlyModalOpen, setIsViewOnlyModalOpen] = useState(false);
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<SalesBudgetItem | null>(null);
+  const [isSetDistributionModalOpen, setIsSetDistributionModalOpen] = useState(false);
+  const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
@@ -231,6 +236,34 @@ const SalesBudget: React.FC = () => {
     localStorage.setItem('salesBudgetData', JSON.stringify(tableData));
   }, [tableData]);
 
+  // Load global stock data set by admin
+  const loadGlobalStockData = () => {
+    try {
+      const adminStockData = localStorage.getItem('admin_global_stock_data');
+      if (adminStockData) {
+        const stockItems = JSON.parse(adminStockData);
+
+        // Update table data with admin-set stock quantities
+        setTableData(prevData =>
+          prevData.map(row => {
+            const stockItem = stockItems.find((s: any) =>
+              s.customer === row.customer && s.item === row.item
+            );
+
+            if (stockItem) {
+              return { ...row, stock: stockItem.stockQuantity };
+            }
+            return row;
+          })
+        );
+
+        console.log('Global stock data loaded from admin');
+      }
+    } catch (error) {
+      console.error('Error loading global stock data:', error);
+    }
+  };
+
   // Load GIT data from admin system and update table data
   useEffect(() => {
     // Initialize sample GIT data if none exists
@@ -238,6 +271,9 @@ const SalesBudget: React.FC = () => {
     if (initialized) {
       console.log('Sample GIT data initialized for development/testing');
     }
+
+    // Load global stock data from admin
+    loadGlobalStockData();
 
     const updateGitDataInTable = () => {
       setOriginalTableData(prevData =>
@@ -259,8 +295,11 @@ const SalesBudget: React.FC = () => {
     // Update GIT data on component mount
     updateGitDataInTable();
 
-    // Set up interval to check for GIT data updates every 30 seconds
-    const interval = setInterval(updateGitDataInTable, 30000);
+    // Set up interval to check for GIT data updates and admin stock updates every 30 seconds
+    const interval = setInterval(() => {
+      updateGitDataInTable();
+      loadGlobalStockData();
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
@@ -538,6 +577,93 @@ const SalesBudget: React.FC = () => {
 
   const handleDownloadBudget = () => {
     setIsExportModalOpen(true);
+  };
+
+  const handleApplyDistribution = (distributionData: { [itemId: number]: MonthlyBudget[] }) => {
+    // Apply the distribution to the table data
+    setTableData(prevData =>
+      prevData.map(item => {
+        if (distributionData[item.id]) {
+          const newMonthlyData = distributionData[item.id];
+          const newBudget2026 = newMonthlyData.reduce((sum, month) => sum + month.budgetValue, 0);
+          const newBudgetValue2026 = newBudget2026 * (item.rate || 1); // Apply rate to get value
+
+          return {
+            ...item,
+            monthlyData: newMonthlyData,
+            budget2026: newBudget2026, // Update BUD 2026 column
+            budgetValue2026: newBudgetValue2026
+          };
+        }
+        return item;
+      })
+    );
+
+    // Update the editing monthly data state
+    Object.entries(distributionData).forEach(([itemId, monthlyData]) => {
+      setEditingMonthlyData(prev => ({
+        ...prev,
+        [parseInt(itemId)]: monthlyData
+      }));
+    });
+
+    showNotification(`Distribution applied to ${Object.keys(distributionData).length} items successfully!`, 'success');
+  };
+
+  // Auto-distribute when user enters quantity in BUD 2026 column
+  const handleBudget2026Change = (itemId: number, value: number) => {
+    const distributeQuantityEqually = (quantity: number): MonthlyBudget[] => {
+      const baseAmount = Math.floor(quantity / 12);
+      const remainder = quantity % 12;
+
+      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+      return months.map((month, index) => {
+        let monthlyValue = baseAmount;
+
+        // Add remainder starting from December (index 11) backwards
+        if (remainder > 0) {
+          const remainderIndex = 11 - (remainder - 1); // Start from December
+          if (index >= remainderIndex) {
+            monthlyValue += 1;
+          }
+        }
+
+        return {
+          month,
+          budgetValue: monthlyValue,
+          actualValue: 0,
+          rate: 100,
+          stock: 0,
+          git: 0,
+          discount: 0
+        };
+      });
+    };
+
+    setTableData(prevData =>
+      prevData.map(item => {
+        if (item.id === itemId) {
+          const newMonthlyData = distributeQuantityEqually(value);
+          const newBudgetValue2026 = value * (item.rate || 1);
+
+          return {
+            ...item,
+            budget2026: value,
+            budgetValue2026: newBudgetValue2026,
+            monthlyData: newMonthlyData
+          };
+        }
+        return item;
+      })
+    );
+
+    // Also update editing monthly data
+    const newMonthlyData = distributeQuantityEqually(value);
+    setEditingMonthlyData(prev => ({
+      ...prev,
+      [itemId]: newMonthlyData
+    }));
   };
 
   const handleExport = (config: ExportConfig) => {
@@ -913,8 +1039,26 @@ const SalesBudget: React.FC = () => {
                 </div>
               </div>
 
-              {/* Download Button */}
-              <div className="flex items-center justify-end">
+              {/* Download, Set Distribution, and Admin Stock Buttons */}
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setIsSetDistributionModalOpen(true)}
+                  className="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors transform hover:scale-105 active:scale-95"
+                  title="Set automatic distribution for filtered items"
+                >
+                  <PieChart className="w-5 h-5" />
+                  <span>Set Distribution</span>
+                </button>
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => setIsAdminStockModalOpen(true)}
+                    className="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-colors transform hover:scale-105 active:scale-95"
+                    title="Manage global stock quantities for all users"
+                  >
+                    <Package className="w-5 h-5" />
+                    <span>Admin Stock</span>
+                  </button>
+                )}
                 <button
                   onClick={handleDownloadBudget}
                   className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors transform hover:scale-105 active:scale-95"
@@ -924,6 +1068,11 @@ const SalesBudget: React.FC = () => {
                   <span>Download Budget ({selectedYear2026})</span>
                 </button>
               </div>
+            </div>
+
+            {/* Global Stock Summary Widget */}
+            <div className="mb-4">
+              <StockSummaryWidget compact={false} />
             </div>
 
             {/* Info Alert and View Toggle */}
@@ -1547,10 +1696,9 @@ const SalesBudget: React.FC = () => {
                                   value={row.budget2026}
                                   onChange={(e) => {
                                     const value = parseInt(e.target.value) || 0;
-                                    setTableData(prev => prev.map(item =>
-                                      item.id === row.id ? { ...item, budget2026: value } : item
-                                    ));
+                                    handleBudget2026Change(row.id, value);
                                   }}
+                                  placeholder="Enter quantity"
                                 />
                               )}
                             </td>
@@ -1943,6 +2091,26 @@ const SalesBudget: React.FC = () => {
           } : null}
           type="sales_budget"
         />
+
+        <SetDistributionModal
+          isOpen={isSetDistributionModalOpen}
+          onClose={() => setIsSetDistributionModalOpen(false)}
+          items={tableData}
+          selectedCustomer={selectedCustomer}
+          selectedCategory={selectedCategory}
+          selectedBrand={selectedBrand}
+          selectedItem={selectedItem}
+          onApplyDistribution={handleApplyDistribution}
+        />
+
+        {/* Admin Stock Management Modal */}
+        {user?.role === 'admin' && (
+          <AdminStockManagement
+            isOpen={isAdminStockModalOpen}
+            onClose={() => setIsAdminStockModalOpen(false)}
+            items={tableData}
+          />
+        )}
       </div>
     </Layout>
   );

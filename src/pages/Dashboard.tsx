@@ -7,6 +7,7 @@ import ExportModal, { ExportConfig } from '../components/ExportModal';
 import GitEtaManagement from '../components/GitEtaManagement';
 import ManagerDataView from '../components/ManagerDataView';
 import GitSummaryWidget from '../components/GitSummaryWidget';
+import AdminStockManagement from '../components/AdminStockManagement';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 import { useStock } from '../contexts/StockContext';
 
@@ -19,6 +20,7 @@ const Dashboard: React.FC = () => {
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [isGitEtaModalOpen, setIsGitEtaModalOpen] = useState(false);
   const [isManagerDataViewOpen, setIsManagerDataViewOpen] = useState(false);
+  const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
   const showNotification = (message: string, type: 'success' | 'error') => {
@@ -281,6 +283,13 @@ const Dashboard: React.FC = () => {
             description: 'Manage Goods in Transit',
             color: 'indigo-600',
             onClick: () => setIsGitEtaModalOpen(true)
+          },
+          {
+            icon: Package,
+            title: 'Global Stock Management',
+            description: 'Set stock quantities for all users',
+            color: 'red-600',
+            onClick: () => setIsAdminStockModalOpen(true)
           }
         ];
 
@@ -557,6 +566,15 @@ const Dashboard: React.FC = () => {
           isOpen={isManagerDataViewOpen}
           onClose={() => setIsManagerDataViewOpen(false)}
         />
+
+        {/* Admin Stock Management Modal */}
+        {user?.role === 'admin' && (
+          <AdminStockManagement
+            isOpen={isAdminStockModalOpen}
+            onClose={() => setIsAdminStockModalOpen(false)}
+            items={[]} // We'll get this from global data
+          />
+        )}
       </div>
     </Layout>
   );

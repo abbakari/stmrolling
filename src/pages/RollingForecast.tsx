@@ -13,6 +13,7 @@ import SalesmanStockManagement from '../components/SalesmanStockManagement';
 import ManagerStockManagement from '../components/ManagerStockManagement';
 import ManagerRollingForecastInterface from '../components/ManagerRollingForecastInterface';
 import DataPreservationIndicator from '../components/DataPreservationIndicator';
+import RollingForecastReport from '../components/RollingForecastReport';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 import {
@@ -58,6 +59,7 @@ const RollingForecast: React.FC = () => {
   const [isViewOnlyModalOpen, setIsViewOnlyModalOpen] = useState(false);
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<any>(null);
   const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
+  const [showReportView, setShowReportView] = useState(false);
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
@@ -226,6 +228,34 @@ const RollingForecast: React.FC = () => {
     }
   }, [user]);
 
+  // Load global stock data set by admin
+  const loadGlobalStockData = () => {
+    try {
+      const adminStockData = localStorage.getItem('admin_global_stock_data');
+      if (adminStockData) {
+        const stockItems = JSON.parse(adminStockData);
+
+        // Update table data with admin-set stock quantities
+        setTableData(prevData =>
+          prevData.map(row => {
+            const stockItem = stockItems.find((s: any) =>
+              s.customer === row.customer && s.item === row.item
+            );
+
+            if (stockItem) {
+              return { ...row, stock: stockItem.stockQuantity };
+            }
+            return row;
+          })
+        );
+
+        console.log('Global stock data loaded from admin in Rolling Forecast');
+      }
+    } catch (error) {
+      console.error('Error loading global stock data in Rolling Forecast:', error);
+    }
+  };
+
   // Load GIT data from admin system and update table data
   useEffect(() => {
     // Initialize sample GIT data if none exists
@@ -233,6 +263,9 @@ const RollingForecast: React.FC = () => {
     if (initialized) {
       console.log('Sample GIT data initialized for development/testing');
     }
+
+    // Load global stock data from admin
+    loadGlobalStockData();
 
     const updateGitDataInTable = () => {
       setTableData(prevData =>
@@ -250,8 +283,11 @@ const RollingForecast: React.FC = () => {
     // Update GIT data on component mount
     updateGitDataInTable();
 
-    // Set up interval to check for GIT data updates every 30 seconds
-    const interval = setInterval(updateGitDataInTable, 30000);
+    // Set up interval to check for GIT data and admin stock updates every 30 seconds
+    const interval = setInterval(() => {
+      updateGitDataInTable();
+      loadGlobalStockData();
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
@@ -760,6 +796,15 @@ const RollingForecast: React.FC = () => {
     );
   }
 
+  // Show report view if requested
+  if (showReportView) {
+    return (
+      <Layout>
+        <RollingForecastReport onBack={() => setShowReportView(false)} />
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -810,7 +855,10 @@ const RollingForecast: React.FC = () => {
             </div>
           </div>
 
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+          <button
+            onClick={() => setShowReportView(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
             <Eye className="w-4 h-4" />
             View Rolling Forecast Report
           </button>
@@ -1053,7 +1101,7 @@ const RollingForecast: React.FC = () => {
               {summaryStats.unitsForecast > 0 && (
                 <div className="mt-1">
                   <span className="inline-block px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full font-medium">
-                    ��� Active
+                    ���� Active
                   </span>
                 </div>
               )}
