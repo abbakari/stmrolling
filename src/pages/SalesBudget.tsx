@@ -1216,39 +1216,6 @@ const SalesBudget: React.FC = () => {
               </div>
             </div>
 
-            {/* Distribution Management */}
-            <DistributionManager
-              distributions={appliedDistributions}
-              onEditDistribution={(id) => {
-                console.log('Edit distribution:', id);
-                showNotification('Distribution editing feature coming soon', 'success');
-              }}
-              onDeleteDistribution={(id) => {
-                console.log('Delete distribution:', id);
-                setAppliedDistributions(prev => prev.filter(d => d.id !== id));
-                showNotification('Distribution deleted successfully', 'success');
-              }}
-              onDuplicateDistribution={(id) => {
-                console.log('Duplicate distribution:', id);
-                const dist = appliedDistributions.find(d => d.id === id);
-                if (dist) {
-                  const newDist = { ...dist, id: `${dist.id}_copy_${Date.now()}`, name: `${dist.name} (Copy)` };
-                  setAppliedDistributions(prev => [...prev, newDist]);
-                  showNotification('Distribution duplicated successfully', 'success');
-                }
-              }}
-              onToggleDistribution={(id) => {
-                console.log('Toggle distribution:', id);
-                setAppliedDistributions(prev => prev.map(d =>
-                  d.id === id ? { ...d, isActive: !d.isActive } : d
-                ));
-                showNotification('Distribution status updated', 'success');
-              }}
-              onCreateNew={() => {
-                console.log('Create new distribution');
-                setIsDistributionModalOpen(true);
-              }}
-            />
 
             {/* Real-time Update Indicator */}
             {totalBudget2026 > 0 && (
