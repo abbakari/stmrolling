@@ -762,6 +762,15 @@ const RollingForecast: React.FC = () => {
     );
   }
 
+  // Show report view if requested
+  if (showReportView) {
+    return (
+      <Layout>
+        <RollingForecastReport onBack={() => setShowReportView(false)} />
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -1058,7 +1067,7 @@ const RollingForecast: React.FC = () => {
               {summaryStats.unitsForecast > 0 && (
                 <div className="mt-1">
                   <span className="inline-block px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full font-medium">
-                    ��� Active
+                    ���� Active
                   </span>
                 </div>
               )}
