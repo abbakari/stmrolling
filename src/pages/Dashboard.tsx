@@ -566,6 +566,15 @@ const Dashboard: React.FC = () => {
           isOpen={isManagerDataViewOpen}
           onClose={() => setIsManagerDataViewOpen(false)}
         />
+
+        {/* Admin Stock Management Modal */}
+        {user?.role === 'admin' && (
+          <AdminStockManagement
+            isOpen={isAdminStockModalOpen}
+            onClose={() => setIsAdminStockModalOpen(false)}
+            items={[]} // We'll get this from global data
+          />
+        )}
       </div>
     </Layout>
   );
