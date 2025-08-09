@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, User, Mail, Shield, MapPin, Building, CreditCard, Eye, EyeOff } from 'lucide-react';
-import { UserRole, Permission, User as UserInterface } from '../types/auth';
+import { UserRole, Permission, User as UserInterface, ROLE_PERMISSIONS } from '../types/auth';
 import { getUserRoleName } from '../contexts/AuthContext';
 
 interface AddUserModalProps {
