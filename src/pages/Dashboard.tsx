@@ -283,6 +283,13 @@ const Dashboard: React.FC = () => {
             description: 'Manage Goods in Transit',
             color: 'indigo-600',
             onClick: () => setIsGitEtaModalOpen(true)
+          },
+          {
+            icon: Package,
+            title: 'Global Stock Management',
+            description: 'Set stock quantities for all users',
+            color: 'red-600',
+            onClick: () => setIsAdminStockModalOpen(true)
           }
         ];
 
