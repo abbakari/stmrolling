@@ -1849,10 +1849,17 @@ const SalesBudget: React.FC = () => {
           year={selectedYear2026}
         />
 
-        <SalesmanStockManagement
-          isOpen={isStockManagementModalOpen}
-          onClose={() => setIsStockManagementModalOpen(false)}
-        />
+        {user?.role === 'manager' || user?.role === 'admin' ? (
+          <ManagerStockManagement
+            isOpen={isStockManagementModalOpen}
+            onClose={() => setIsStockManagementModalOpen(false)}
+          />
+        ) : (
+          <SalesmanStockManagement
+            isOpen={isStockManagementModalOpen}
+            onClose={() => setIsStockManagementModalOpen(false)}
+          />
+        )}
 
         <ManagerDashboard
           isOpen={isManagerDashboardOpen}
