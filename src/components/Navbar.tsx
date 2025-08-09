@@ -31,7 +31,7 @@ const Navbar: React.FC<NavbarProps> = ({ onPasswordModalOpen }) => {
   useEffect(() => {
     const colorInterval = setInterval(() => {
       setCurrentColorIndex((prev) => (prev + 1) % colors.length);
-    }, 1500);
+    }, 2000); // Slower color change for better readability
 
     return () => {
       clearInterval(colorInterval);
