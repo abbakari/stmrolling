@@ -303,8 +303,8 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 px-6 py-4">
-          <div className="flex gap-3">
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
+          <div className="flex gap-3 w-full">
             <button
               onClick={onClose}
               className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
