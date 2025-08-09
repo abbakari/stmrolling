@@ -228,6 +228,34 @@ const RollingForecast: React.FC = () => {
     }
   }, [user]);
 
+  // Load global stock data set by admin
+  const loadGlobalStockData = () => {
+    try {
+      const adminStockData = localStorage.getItem('admin_global_stock_data');
+      if (adminStockData) {
+        const stockItems = JSON.parse(adminStockData);
+
+        // Update table data with admin-set stock quantities
+        setTableData(prevData =>
+          prevData.map(row => {
+            const stockItem = stockItems.find((s: any) =>
+              s.customer === row.customer && s.item === row.item
+            );
+
+            if (stockItem) {
+              return { ...row, stock: stockItem.stockQuantity };
+            }
+            return row;
+          })
+        );
+
+        console.log('Global stock data loaded from admin in Rolling Forecast');
+      }
+    } catch (error) {
+      console.error('Error loading global stock data in Rolling Forecast:', error);
+    }
+  };
+
   // Load GIT data from admin system and update table data
   useEffect(() => {
     // Initialize sample GIT data if none exists
@@ -235,6 +263,9 @@ const RollingForecast: React.FC = () => {
     if (initialized) {
       console.log('Sample GIT data initialized for development/testing');
     }
+
+    // Load global stock data from admin
+    loadGlobalStockData();
 
     const updateGitDataInTable = () => {
       setTableData(prevData =>
