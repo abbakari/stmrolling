@@ -90,8 +90,18 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
   };
 
   const handleApplyDistribution = () => {
+    if (!searchCustomer) {
+      alert('Please search and select a customer first');
+      return;
+    }
+
     if (!itemQuantity && !percentageValue) {
       alert('Please enter a quantity or percentage value');
+      return;
+    }
+
+    if (filteredItems.length === 0) {
+      alert('No items found for the selected customer');
       return;
     }
 
