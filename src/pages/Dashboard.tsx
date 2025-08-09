@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import StatsCard from '../components/StatsCard';
 import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building, Truck, Eye } from 'lucide-react';
@@ -7,10 +8,13 @@ import GitEtaManagement from '../components/GitEtaManagement';
 import ManagerDataView from '../components/ManagerDataView';
 import GitSummaryWidget from '../components/GitSummaryWidget';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
+import { useStock } from '../contexts/StockContext';
 
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { stockRequests, stockAlerts, stockProjections, stockOverviews, getRequestsBySalesman } = useStock();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [isGitEtaModalOpen, setIsGitEtaModalOpen] = useState(false);
@@ -78,6 +82,12 @@ const Dashboard: React.FC = () => {
         ];
 
       case 'salesman':
+        const salesmanData = getRequestsBySalesman(user?.name || '');
+        const pendingStockItems = salesmanData.requests.filter(r => r.status === 'sent_to_manager').length +
+                                 salesmanData.alerts.filter(a => a.status === 'sent_to_manager').length;
+        const approvedStockItems = salesmanData.requests.filter(r => r.status === 'approved').length +
+                                  salesmanData.alerts.filter(a => a.status === 'approved').length;
+
         return [
           {
             title: 'My Sales',
@@ -88,12 +98,12 @@ const Dashboard: React.FC = () => {
             trend: { value: '+12.5%', isPositive: true }
           },
           {
-            title: 'My Target',
-            value: '87%',
-            subtitle: 'Achievement',
-            icon: Target,
+            title: 'Stock Requests',
+            value: `${salesmanData.requests.length}`,
+            subtitle: `${pendingStockItems} pending review`,
+            icon: Package,
             color: 'success' as const,
-            trend: { value: '+5%', isPositive: true }
+            trend: { value: `+${approvedStockItems} approved`, isPositive: true }
           },
           {
             title: 'My Budget',
@@ -104,16 +114,23 @@ const Dashboard: React.FC = () => {
             trend: { value: '-$12K', isPositive: false }
           },
           {
-            title: 'Forecast Accuracy',
-            value: '94%',
-            subtitle: 'Last quarter',
-            icon: BarChart3,
+            title: 'Stock Alerts',
+            value: `${salesmanData.alerts.length}`,
+            subtitle: 'Active alerts',
+            icon: AlertTriangle,
             color: 'warning' as const,
-            trend: { value: '+2%', isPositive: true }
+            trend: { value: `${salesmanData.alerts.filter(a => a.priority === 'critical').length} critical`, isPositive: false }
           }
         ];
 
       case 'manager':
+        const pendingForReview = stockRequests.filter(r => r.status === 'sent_to_manager').length +
+                                stockAlerts.filter(a => a.status === 'sent_to_manager').length +
+                                stockProjections.filter(p => p.status === 'sent_to_manager').length +
+                                stockOverviews.filter(o => o.status === 'sent_to_manager').length;
+
+        const criticalAlerts = stockAlerts.filter(a => a.priority === 'critical' && a.status === 'sent_to_manager').length;
+
         return [
           {
             title: 'Department Sales',
@@ -124,12 +141,12 @@ const Dashboard: React.FC = () => {
             trend: { value: '+15%', isPositive: true }
           },
           {
-            title: 'Team Performance',
-            value: '91%',
-            subtitle: 'Average achievement',
-            icon: Users,
+            title: 'Stock Reviews',
+            value: `${pendingForReview}`,
+            subtitle: 'Pending review',
+            icon: Package,
             color: 'success' as const,
-            trend: { value: '+8%', isPositive: true }
+            trend: { value: `${criticalAlerts} critical`, isPositive: criticalAlerts === 0 }
           },
           {
             title: 'Department Budget',
@@ -140,12 +157,12 @@ const Dashboard: React.FC = () => {
             trend: { value: '73%', isPositive: true }
           },
           {
-            title: 'Active Forecasts',
-            value: '18',
-            subtitle: 'This quarter',
-            icon: BarChart3,
+            title: 'Team Stock Requests',
+            value: `${stockRequests.length}`,
+            subtitle: 'Total requests',
+            icon: AlertTriangle,
             color: 'warning' as const,
-            trend: { value: '+3', isPositive: true }
+            trend: { value: `${stockRequests.filter(r => r.status === 'approved').length} approved`, isPositive: true }
           }
         ];
 
@@ -235,7 +252,7 @@ const Dashboard: React.FC = () => {
             title: 'User Management',
             description: 'Manage system users',
             color: 'blue-600',
-            onClick: () => window.location.href = '/user-management'
+            onClick: () => navigate('/user-management')
           },
           {
             icon: BarChart3,
@@ -274,7 +291,7 @@ const Dashboard: React.FC = () => {
             title: 'My Budget',
             description: 'Manage personal budget',
             color: 'blue-600',
-            onClick: () => window.location.href = '/sales-budget'
+            onClick: () => navigate('/sales-budget')
           },
           {
             icon: TrendingUp,
@@ -288,7 +305,7 @@ const Dashboard: React.FC = () => {
             title: 'My Forecast',
             description: 'Create sales forecast',
             color: 'purple-600',
-            onClick: () => window.location.href = '/rolling-forecast'
+            onClick: () => navigate('/rolling-forecast')
           },
           {
             icon: Target,
@@ -306,7 +323,7 @@ const Dashboard: React.FC = () => {
             title: 'Department Budget',
             description: 'Manage department finances',
             color: 'blue-600',
-            onClick: () => window.location.href = '/sales-budget'
+            onClick: () => navigate('/sales-budget')
           },
           {
             icon: Users,
@@ -320,7 +337,7 @@ const Dashboard: React.FC = () => {
             title: 'Approval Center',
             description: 'Review submissions',
             color: 'purple-600',
-            onClick: () => window.location.href = '/approval-center'
+            onClick: () => navigate('/approval-center')
           },
           {
             icon: Target,
@@ -335,6 +352,13 @@ const Dashboard: React.FC = () => {
             description: 'View saved salesman data',
             color: 'indigo-600',
             onClick: () => setIsManagerDataViewOpen(true)
+          },
+          {
+            icon: Package,
+            title: 'Stock Control Center',
+            description: 'Manage all salesman stock requests',
+            color: 'emerald-600',
+            onClick: () => navigate('/sales-budget') // Will open stock management modal
           }
         ];
 
@@ -345,7 +369,7 @@ const Dashboard: React.FC = () => {
             title: 'Inventory Management',
             description: 'Manage stock levels',
             color: 'blue-600',
-            onClick: () => window.location.href = '/inventory-management'
+            onClick: () => navigate('/inventory-management')
           },
           {
             icon: TrendingUp,
@@ -359,7 +383,7 @@ const Dashboard: React.FC = () => {
             title: 'Distribution',
             description: 'Manage distribution',
             color: 'purple-600',
-            onClick: () => window.location.href = '/distribution-management'
+            onClick: () => navigate('/distribution-management')
           },
           {
             icon: AlertTriangle,
@@ -433,7 +457,13 @@ const Dashboard: React.FC = () => {
                 }`} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">{getUserRoleName(user.role)} Dashboard</h3>
+                <div className="flex items-center space-x-2">
+                  <h3 className="font-semibold text-gray-900">{getUserRoleName(user.role)} Dashboard</h3>
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1 animate-pulse"></span>
+                    Online
+                  </span>
+                </div>
                 <p className="text-sm text-gray-600">
                   {user.department && `Department: ${user.department}`}
                 </p>
@@ -445,6 +475,11 @@ const Dashboard: React.FC = () => {
                 {user.role === 'admin' ? 'Full System' :
                  user.role === 'manager' ? 'Department' :
                  user.role === 'supply_chain' ? 'Supply Chain' : 'Personal'}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {user.role === 'admin' ? 'All modules & user management' :
+                 user.role === 'manager' ? 'Team oversight & approvals' :
+                 user.role === 'supply_chain' ? 'Inventory & distribution' : 'Budget & forecast creation'}
               </p>
             </div>
           </div>
@@ -469,14 +504,21 @@ const Dashboard: React.FC = () => {
             {quickActions.map((action, index) => {
               const IconComponent = action.icon;
               return (
-                <button 
+                <button
                   key={index}
-                  onClick={action.onClick}
-                  className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                  onClick={() => {
+                    try {
+                      action.onClick();
+                    } catch (error) {
+                      showNotification('An error occurred. Please try again.', 'error');
+                    }
+                  }}
+                  className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-left group"
+                  title={`Click to access ${action.title}`}
                 >
-                  <IconComponent className={`w-6 h-6 text-${action.color}`} />
+                  <IconComponent className={`w-6 h-6 text-${action.color} group-hover:scale-110 transition-transform duration-200`} />
                   <div>
-                    <p className="font-medium text-gray-900">{action.title}</p>
+                    <p className="font-medium text-gray-900 group-hover:text-gray-700">{action.title}</p>
                     <p className="text-sm text-gray-600">{action.description}</p>
                   </div>
                 </button>

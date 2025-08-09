@@ -19,10 +19,9 @@ import {
 } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
-import DistributionModal, { DistributionConfig } from '../components/DistributionModal';
-import DistributionManager from '../components/DistributionManager';
 import YearlyBudgetModal from '../components/YearlyBudgetModal';
-import StockManagementModal from '../components/StockManagementModal';
+import SalesmanStockManagement from '../components/SalesmanStockManagement';
+import ManagerStockManagement from '../components/ManagerStockManagement';
 import ManagerDashboard from '../components/ManagerDashboard';
 import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
@@ -79,7 +78,6 @@ const SalesBudget: React.FC = () => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isNewAdditionModalOpen, setIsNewAdditionModalOpen] = useState(false);
   const [newAdditionType] = useState<'customer' | 'item'>('item');
-  const [isDistributionModalOpen, setIsDistributionModalOpen] = useState(false);
   const [isYearlyBudgetModalOpen, setIsYearlyBudgetModalOpen] = useState(false);
   const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
   const [selectedStockItem, setSelectedStockItem] = useState<any>(null);
@@ -98,24 +96,6 @@ const SalesBudget: React.FC = () => {
   // Monthly editing state
   const [editingMonthlyData, setEditingMonthlyData] = useState<{[key: number]: MonthlyBudget[]}>({});
 
-  // Distribution tracking state
-  const [appliedDistributions, setAppliedDistributions] = useState<Array<{
-    id: string;
-    type: 'regional' | 'category' | 'customer' | 'seasonal' | 'channel';
-    name: string;
-    appliedAt: Date;
-    segments: number;
-    totalAmount: number;
-    totalUnits: number;
-    isActive: boolean;
-    segments_detail: Array<{
-      name: string;
-      percentage: number;
-      amount: number;
-      units: number;
-      color: string;
-    }>;
-  }>>([]);
 
   // Generate all months for the year
   const getAllYearMonths = () => {
@@ -694,59 +674,7 @@ const SalesBudget: React.FC = () => {
     }
   };
 
-  const setDistribution = () => {
-    setIsDistributionModalOpen(true);
-  };
 
-  const handleApplyDistribution = (distribution: DistributionConfig) => {
-    // Create new distribution tracking entry
-    const newDistribution = {
-      id: `dist_${Date.now()}`,
-      type: distribution.type,
-      name: `${distribution.type.charAt(0).toUpperCase() + distribution.type.slice(1)} Distribution`,
-      appliedAt: new Date(),
-      segments: Object.keys(distribution.distributions).length,
-      totalAmount: distribution.totalBudget,
-      totalUnits: distribution.totalUnits,
-      isActive: true,
-      segments_detail: Object.entries(distribution.distributions).map(([name, data], index) => ({
-        name,
-        percentage: data.percentage,
-        amount: data.amount,
-        units: data.units,
-        color: `hsl(${(index * 360) / Object.keys(distribution.distributions).length}, 70%, 50%)`
-      }))
-    };
-
-    // Add to applied distributions
-    setAppliedDistributions(prev => [...prev, newDistribution]);
-
-    // Apply distribution to table data based on distribution type
-    setTableData(prev => prev.map(item => {
-      const totalBudget = item.budget2026 || 100; // Use current budget or default
-      const distributionEntry = Object.entries(distribution.distributions)[0]; // Use first distribution as example
-      const percentage = distributionEntry[1].percentage / 100;
-
-      // Update budget value based on distribution
-      const newBudget = Math.round(totalBudget * percentage);
-
-      return {
-        ...item,
-        budget2026: newBudget,
-        budgetValue2026: newBudget * item.rate,
-        // Update monthly data if exists
-        monthlyData: item.monthlyData.map(month => ({
-          ...month,
-          budgetValue: Math.round(month.budgetValue * percentage)
-        }))
-      };
-    }));
-
-    showNotification(
-      `Distribution applied: ${Object.keys(distribution.distributions).length} segments created for ${distribution.type}`,
-      'success'
-    );
-  };
 
   const handleYearlyBudgetSave = (budgetData: any) => {
     // Save to BudgetContext for sharing with RollingForecast
@@ -1240,19 +1168,6 @@ const SalesBudget: React.FC = () => {
                       </button>
                     </>
                   )}
-                  {user?.role === 'salesman' && (
-                    <button
-                      onClick={() => {
-                        console.log('Distribution button clicked');
-                        setDistribution();
-                      }}
-                      className="bg-blue-100 text-blue-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-blue-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-                      title="Open distribution management for budget allocation"
-                    >
-                      <PieChart className="w-4 h-4" />
-                      <span>Distribution</span>
-                    </button>
-                  )}
 
                   <button
                     onClick={() => {
@@ -1323,39 +1238,6 @@ const SalesBudget: React.FC = () => {
               </div>
             </div>
 
-            {/* Distribution Management */}
-            <DistributionManager
-              distributions={appliedDistributions}
-              onEditDistribution={(id) => {
-                console.log('Edit distribution:', id);
-                showNotification('Distribution editing feature coming soon', 'success');
-              }}
-              onDeleteDistribution={(id) => {
-                console.log('Delete distribution:', id);
-                setAppliedDistributions(prev => prev.filter(d => d.id !== id));
-                showNotification('Distribution deleted successfully', 'success');
-              }}
-              onDuplicateDistribution={(id) => {
-                console.log('Duplicate distribution:', id);
-                const dist = appliedDistributions.find(d => d.id === id);
-                if (dist) {
-                  const newDist = { ...dist, id: `${dist.id}_copy_${Date.now()}`, name: `${dist.name} (Copy)` };
-                  setAppliedDistributions(prev => [...prev, newDist]);
-                  showNotification('Distribution duplicated successfully', 'success');
-                }
-              }}
-              onToggleDistribution={(id) => {
-                console.log('Toggle distribution:', id);
-                setAppliedDistributions(prev => prev.map(d =>
-                  d.id === id ? { ...d, isActive: !d.isActive } : d
-                ));
-                showNotification('Distribution status updated', 'success');
-              }}
-              onCreateNew={() => {
-                console.log('Create new distribution');
-                setIsDistributionModalOpen(true);
-              }}
-            />
 
             {/* Real-time Update Indicator */}
             {totalBudget2026 > 0 && (
@@ -1441,7 +1323,7 @@ const SalesBudget: React.FC = () => {
                   }`}>
                     {budgetGrowth > 0 && '📈'}
                     {budgetGrowth < 0 && '📉'}
-                    {budgetGrowth === 0 && '➡️'}
+                    {budgetGrowth === 0 && '��️'}
                     {budgetGrowth.toFixed(1)}%
                   </p>
                   <p className="text-xs text-gray-600">From {selectedYear2025} to {selectedYear2026}</p>
@@ -2008,11 +1890,6 @@ const SalesBudget: React.FC = () => {
           type={newAdditionType}
         />
 
-        <DistributionModal
-          isOpen={isDistributionModalOpen}
-          onClose={() => setIsDistributionModalOpen(false)}
-          onApplyDistribution={handleApplyDistribution}
-        />
 
         <YearlyBudgetModal
           isOpen={isYearlyBudgetModalOpen}
@@ -2022,11 +1899,17 @@ const SalesBudget: React.FC = () => {
           year={selectedYear2026}
         />
 
-        <StockManagementModal
-          isOpen={isStockManagementModalOpen}
-          onClose={() => setIsStockManagementModalOpen(false)}
-          selectedItem={selectedStockItem}
-        />
+        {user?.role === 'manager' || user?.role === 'admin' ? (
+          <ManagerStockManagement
+            isOpen={isStockManagementModalOpen}
+            onClose={() => setIsStockManagementModalOpen(false)}
+          />
+        ) : (
+          <SalesmanStockManagement
+            isOpen={isStockManagementModalOpen}
+            onClose={() => setIsStockManagementModalOpen(false)}
+          />
+        )}
 
         <ManagerDashboard
           isOpen={isManagerDashboardOpen}

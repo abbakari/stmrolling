@@ -9,6 +9,8 @@ import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
 import FollowBacksButton from '../components/FollowBacksButton';
+import SalesmanStockManagement from '../components/SalesmanStockManagement';
+import ManagerStockManagement from '../components/ManagerStockManagement';
 import ManagerRollingForecastInterface from '../components/ManagerRollingForecastInterface';
 import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
@@ -55,6 +57,7 @@ const RollingForecast: React.FC = () => {
   const [selectedCustomerForBreakdown, setSelectedCustomerForBreakdown] = useState<string>('');
   const [isViewOnlyModalOpen, setIsViewOnlyModalOpen] = useState(false);
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<any>(null);
+  const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
@@ -989,12 +992,21 @@ const RollingForecast: React.FC = () => {
                 </div>
               </div>
               
-              <button 
+              <button
                 onClick={() => setIsNewAdditionModalOpen(true)}
                 className="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 New Addition
+              </button>
+
+              <button
+                onClick={() => setIsStockManagementModalOpen(true)}
+                className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center gap-2"
+                title={user?.role === 'manager' ? "Manage all salesman stock requests" : "Manage stock requests and alerts"}
+              >
+                <Package className="w-4 h-4" />
+                Stock Manager
               </button>
               
               <div className="space-y-2">
@@ -1041,7 +1053,7 @@ const RollingForecast: React.FC = () => {
               {summaryStats.unitsForecast > 0 && (
                 <div className="mt-1">
                   <span className="inline-block px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full font-medium">
-                    📈 Active
+                    ��� Active
                   </span>
                 </div>
               )}
@@ -1861,6 +1873,19 @@ const RollingForecast: React.FC = () => {
         } : null}
         type="rolling_forecast"
       />
+
+      {/* Stock Management Modals */}
+      {user?.role === 'manager' || user?.role === 'admin' ? (
+        <ManagerStockManagement
+          isOpen={isStockManagementModalOpen}
+          onClose={() => setIsStockManagementModalOpen(false)}
+        />
+      ) : (
+        <SalesmanStockManagement
+          isOpen={isStockManagementModalOpen}
+          onClose={() => setIsStockManagementModalOpen(false)}
+        />
+      )}
     </Layout>
   );
 };

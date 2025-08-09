@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth, canAccessDashboard } from './contexts/AuthContext';
 import { BudgetProvider } from './contexts/BudgetContext';
 import { WorkflowProvider } from './contexts/WorkflowContext';
+import { StockProvider } from './contexts/StockContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import SalesBudget from './pages/SalesBudget';
@@ -51,8 +52,6 @@ const RoleBasedRoute: React.FC<{
 };
 
 const AppRoutes: React.FC = () => {
-  const { user } = useAuth();
-
   return (
     <Routes>
       {/* Public Routes */}
@@ -157,9 +156,11 @@ const App: React.FC = () => {
     <AuthProvider>
       <BudgetProvider>
         <WorkflowProvider>
-          <Router>
-            <AppRoutes />
-          </Router>
+          <StockProvider>
+            <Router>
+              <AppRoutes />
+            </Router>
+          </StockProvider>
         </WorkflowProvider>
       </BudgetProvider>
     </AuthProvider>
