@@ -156,9 +156,11 @@ const App: React.FC = () => {
     <AuthProvider>
       <BudgetProvider>
         <WorkflowProvider>
-          <Router>
-            <AppRoutes />
-          </Router>
+          <StockProvider>
+            <Router>
+              <AppRoutes />
+            </Router>
+          </StockProvider>
         </WorkflowProvider>
       </BudgetProvider>
     </AuthProvider>
