@@ -28,6 +28,7 @@ import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
 import FollowBacksButton from '../components/FollowBacksButton';
+import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 
@@ -884,7 +885,7 @@ const SalesBudget: React.FC = () => {
 
       showNotification(
         `Successfully submitted ${allBudgets.length} budget(s) for manager approval. ` +
-        `Workflow ID: ${workflowId.slice(-6)}. Original data preserved in table for other purposes.`,
+        `Workflow ID: ${workflowId.slice(-6)}. ✅ Original data preserved in table for other purposes.`,
         'success'
       );
 
@@ -1365,6 +1366,17 @@ const SalesBudget: React.FC = () => {
                   <span className="text-xs text-blue-600">• Enter monthly data to see growth calculations</span>
                 </p>
               </div>
+            )}
+
+            {/* Data Preservation Status */}
+            {user && (
+              <DataPreservationIndicator
+                itemsCount={tableData.length}
+                submittedCount={DataPersistenceManager.getSubmittedSalesBudgetData().filter(item => item.createdBy === user.name).length}
+                preservedCount={DataPersistenceManager.getOriginalSalesBudgetData().filter(item => item.createdBy === user.name).length}
+                dataType="budget"
+                compact={true}
+              />
             )}
 
             {/* Stats Grid - Real-time Budget Statistics */}
