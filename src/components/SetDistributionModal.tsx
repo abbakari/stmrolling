@@ -58,17 +58,14 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
     );
   }, [items, searchCustomer]);
 
-  // Filter items based on search customer and other filters
+  // Filter items based on search customer only - ignore other filters for distribution
   const filteredItems = useMemo(() => {
+    if (!searchCustomer) return [];
+
     return items.filter(item => {
-      const matchesSearch = !searchCustomer || item.customer.toLowerCase().includes(searchCustomer.toLowerCase());
-      return matchesSearch &&
-             (!selectedCustomer || item.customer.includes(selectedCustomer)) &&
-             (!selectedCategory || item.category.includes(selectedCategory)) &&
-             (!selectedBrand || item.brand.includes(selectedBrand)) &&
-             (!selectedItem || item.item.includes(selectedItem));
+      return item.customer.toLowerCase().includes(searchCustomer.toLowerCase());
     });
-  }, [items, searchCustomer, selectedCustomer, selectedCategory, selectedBrand, selectedItem]);
+  }, [items, searchCustomer]);
 
   // Smart distribution logic
   const distributeQuantityEqually = (quantity: number): number[] => {
