@@ -29,6 +29,7 @@ import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistr
 import FollowBacksButton from '../components/FollowBacksButton';
 import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import SetDistributionModal from '../components/SetDistributionModal';
+import AdminStockManagement from '../components/AdminStockManagement';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 
