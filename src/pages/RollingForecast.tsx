@@ -974,12 +974,21 @@ const RollingForecast: React.FC = () => {
                 </div>
               </div>
               
-              <button 
+              <button
                 onClick={() => setIsNewAdditionModalOpen(true)}
                 className="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 New Addition
+              </button>
+
+              <button
+                onClick={() => setIsStockManagementModalOpen(true)}
+                className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center gap-2"
+                title={user?.role === 'manager' ? "Manage all salesman stock requests" : "Manage stock requests and alerts"}
+              >
+                <Package className="w-4 h-4" />
+                Stock Manager
               </button>
               
               <div className="space-y-2">
@@ -1026,7 +1035,7 @@ const RollingForecast: React.FC = () => {
               {summaryStats.unitsForecast > 0 && (
                 <div className="mt-1">
                   <span className="inline-block px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full font-medium">
-                    📈 Active
+                    ��� Active
                   </span>
                 </div>
               )}
