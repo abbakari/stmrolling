@@ -14,6 +14,7 @@ import { useStock } from '../contexts/StockContext';
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { stockRequests, stockAlerts, stockProjections, stockOverviews, getRequestsBySalesman } = useStock();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [isGitEtaModalOpen, setIsGitEtaModalOpen] = useState(false);
