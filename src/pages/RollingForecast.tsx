@@ -10,6 +10,7 @@ import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
 import FollowBacksButton from '../components/FollowBacksButton';
 import ManagerRollingForecastInterface from '../components/ManagerRollingForecastInterface';
+import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 import {
@@ -372,7 +373,7 @@ const RollingForecast: React.FC = () => {
         console.log('Submission copies created for approval workflow');
 
         alert(`Forecast submitted successfully! Workflow ID: ${workflowId.slice(-6)}. ` +
-              `Original forecast data preserved in table for other purposes.`);
+              `✅ Original forecast data preserved in table for other purposes.`);
 
         // IMPORTANT: DO NOT clear monthly forecast data - keep it for other purposes
         // The data remains available for:
@@ -1047,12 +1048,25 @@ const RollingForecast: React.FC = () => {
             </div>
           </div>
 
-          {/* Customer-Specific Forecast Totals */}
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-              <span>📊</span>
-              Forecast Breakdown by Customer
-            </h3>
+          {/* Data Preservation Status */}
+        {user && (
+          <div className="mb-6">
+            <DataPreservationIndicator
+              itemsCount={tableData.length}
+              submittedCount={DataPersistenceManager.getSubmittedRollingForecastData().filter(item => item.createdBy === user.name).length}
+              preservedCount={DataPersistenceManager.getOriginalRollingForecastData().filter(item => item.createdBy === user.name).length}
+              dataType="forecast"
+              compact={true}
+            />
+          </div>
+        )}
+
+        {/* Customer-Specific Forecast Totals */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+            <span>📊</span>
+            Forecast Breakdown by Customer
+          </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {(() => {
