@@ -544,7 +544,7 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
                     <p className="text-xs text-gray-500 mt-1">{selectedItem.responses.length} message{selectedItem.responses.length !== 1 ? 's' : ''}</p>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto p-4">
+                  <div className="flex-1 overflow-y-auto p-4" id="conversation-container">
                     {selectedItem.responses.length === 0 ? (
                       <div className="text-center py-8">
                         <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
@@ -555,13 +555,13 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
                       <div className="space-y-4">
                         {selectedItem.responses.map((response, index) => (
                           <div
-                            key={response.id}
-                            className={`flex ${response.isAdminResponse ? 'justify-end' : 'justify-start'}`}
+                            key={`${response.id}-${response.timestamp}`}
+                            className={`flex ${response.isAdminResponse ? 'justify-end' : 'justify-start'} animate-fadeIn`}
                           >
                             <div
-                              className={`max-w-[80%] p-3 rounded-lg ${
+                              className={`max-w-[80%] p-3 rounded-lg transition-all duration-200 ${
                                 response.isAdminResponse
-                                  ? 'bg-blue-600 text-white rounded-br-none'
+                                  ? 'bg-blue-600 text-white rounded-br-none shadow-md'
                                   : 'bg-white border border-gray-200 text-gray-900 rounded-bl-none shadow-sm'
                               }`}
                             >
@@ -577,8 +577,15 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
                                   ({response.fromRole})
                                 </span>
                                 {response.isAdminResponse && (
-                                  <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded text-[10px]">
+                                  <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded text-[10px] font-semibold">
                                     Admin
+                                  </span>
+                                )}
+                                {index === selectedItem.responses.length - 1 && (
+                                  <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                    response.isAdminResponse ? 'bg-blue-500 text-white' : 'bg-green-100 text-green-600'
+                                  }`}>
+                                    Latest
                                   </span>
                                 )}
                               </div>
@@ -589,10 +596,13 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
                                 {response.message}
                               </p>
 
-                              <div className={`text-xs mt-2 ${
+                              <div className={`text-xs mt-2 flex items-center gap-2 ${
                                 response.isAdminResponse ? 'text-blue-200' : 'text-gray-500'
                               }`}>
-                                {new Date(response.timestamp).toLocaleString()}
+                                <span>{new Date(response.timestamp).toLocaleString()}</span>
+                                {response.isAdminResponse && (
+                                  <CheckCircle className="w-3 h-3" />
+                                )}
                               </div>
                             </div>
                           </div>
