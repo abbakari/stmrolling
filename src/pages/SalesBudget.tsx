@@ -1644,10 +1644,9 @@ const SalesBudget: React.FC = () => {
                                   value={row.budget2026}
                                   onChange={(e) => {
                                     const value = parseInt(e.target.value) || 0;
-                                    setTableData(prev => prev.map(item =>
-                                      item.id === row.id ? { ...item, budget2026: value } : item
-                                    ));
+                                    handleBudget2026Change(row.id, value);
                                   }}
+                                  placeholder="Enter quantity"
                                 />
                               )}
                             </td>
