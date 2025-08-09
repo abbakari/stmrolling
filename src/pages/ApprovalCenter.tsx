@@ -42,6 +42,8 @@ import { useBudget } from '../contexts/BudgetContext';
 import WorkflowItemDetailModal from '../components/WorkflowItemDetailModal';
 import ManagerApprovalWorkflow from '../components/ManagerApprovalWorkflow';
 import GitSummaryWidget from '../components/GitSummaryWidget';
+import DataPreservationIndicator from '../components/DataPreservationIndicator';
+import DataPersistenceManager from '../utils/dataPersistence';
 
 // Department and Manager Mappings
 const DEPARTMENT_MANAGERS = {
