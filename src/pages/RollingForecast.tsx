@@ -13,6 +13,7 @@ import SalesmanStockManagement from '../components/SalesmanStockManagement';
 import ManagerStockManagement from '../components/ManagerStockManagement';
 import ManagerRollingForecastInterface from '../components/ManagerRollingForecastInterface';
 import DataPreservationIndicator from '../components/DataPreservationIndicator';
+import RollingForecastReport from '../components/RollingForecastReport';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 import {
