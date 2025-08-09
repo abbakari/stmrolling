@@ -1982,6 +1982,17 @@ const SalesBudget: React.FC = () => {
           } : null}
           type="sales_budget"
         />
+
+        <SetDistributionModal
+          isOpen={isSetDistributionModalOpen}
+          onClose={() => setIsSetDistributionModalOpen(false)}
+          items={tableData}
+          selectedCustomer={selectedCustomer}
+          selectedCategory={selectedCategory}
+          selectedBrand={selectedBrand}
+          selectedItem={selectedItem}
+          onApplyDistribution={handleApplyDistribution}
+        />
       </div>
     </Layout>
   );
