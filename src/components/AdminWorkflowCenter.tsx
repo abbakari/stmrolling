@@ -553,7 +553,7 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
                     <p className="text-xs text-gray-500 mt-1">{selectedItem.responses.length} message{selectedItem.responses.length !== 1 ? 's' : ''}</p>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto p-4" id="conversation-container">
+                  <div className="flex-1 overflow-y-auto p-4" ref={conversationRef}>
                     {selectedItem.responses.length === 0 ? (
                       <div className="text-center py-8">
                         <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
