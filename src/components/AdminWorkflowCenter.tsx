@@ -39,6 +39,7 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
   const [workflowItems, setWorkflowItems] = useState<WorkflowItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<WorkflowItem | null>(null);
   const [responseMessage, setResponseMessage] = useState('');
+  const [targetUser, setTargetUser] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -229,6 +230,7 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
   const handleSendResponse = () => {
     if (!selectedItem || !responseMessage.trim()) return;
 
+    const responseTarget = targetUser || selectedItem.fromUser;
     const newResponse: WorkflowResponse = {
       id: `resp_${Date.now()}`,
       message: responseMessage,
@@ -250,13 +252,20 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
       return item;
     });
 
+    // Send notification to target user
+    sendNotificationToUser(responseTarget, selectedItem.fromRole, newResponse.message, selectedItem.title);
+
     setWorkflowItems(updatedItems);
     localStorage.setItem(WORKFLOW_STORAGE_KEY, JSON.stringify(updatedItems));
     setResponseMessage('');
-    
-    // Update selected item
+    setTargetUser('');
+
+    // Force refresh of selected item to show new conversation
     const updatedItem = updatedItems.find(item => item.id === selectedItem.id);
-    if (updatedItem) setSelectedItem(updatedItem);
+    if (updatedItem) {
+      setSelectedItem(null); // Clear first
+      setTimeout(() => setSelectedItem(updatedItem), 0); // Then set with new data
+    }
   };
 
   const updateItemStatus = (itemId: string, newStatus: WorkflowItem['status']) => {
@@ -298,6 +307,47 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
     const urgent = workflowItems.filter(item => item.priority === 'urgent').length;
     
     return { total, pending, inProgress, urgent };
+  };
+
+  const sendNotificationToUser = (targetUser: string, targetRole: string, message: string, subject: string) => {
+    try {
+      const notification = {
+        id: `admin_response_${Date.now()}`,
+        type: 'admin_response',
+        title: `Admin Response: ${subject}`,
+        message: `Admin responded: ${message}`,
+        fromUser: user?.name || 'System Administrator',
+        toUser: targetUser,
+        toRole: targetRole,
+        timestamp: new Date().toISOString(),
+        isRead: false,
+        priority: 'medium'
+      };
+
+      // Save to user notifications
+      const userNotifications = JSON.parse(localStorage.getItem(`user_notifications_${targetRole}`) || '[]');
+      userNotifications.push(notification);
+      localStorage.setItem(`user_notifications_${targetRole}`, JSON.stringify(userNotifications));
+
+      console.log(`Notification sent to ${targetUser} (${targetRole}):`, notification);
+    } catch (error) {
+      console.error('Error sending notification to user:', error);
+    }
+  };
+
+  const getAvailableUsers = () => {
+    // Extract unique users from workflow items
+    const users = workflowItems.map(item => ({
+      name: item.fromUser,
+      role: item.fromRole
+    }));
+
+    // Remove duplicates
+    const uniqueUsers = users.filter((user, index, self) =>
+      index === self.findIndex(u => u.name === user.name && u.role === user.role)
+    );
+
+    return uniqueUsers;
   };
 
   const stats = getStats();
@@ -554,22 +604,48 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
 
                 {/* Response Form */}
                 <div className="p-4 border-t border-gray-200 bg-gray-50">
+                  {/* Target User Selection */}
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Send response to:
+                    </label>
+                    <select
+                      value={targetUser}
+                      onChange={(e) => setTargetUser(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">{selectedItem?.fromUser} ({selectedItem?.fromRole}) - Original Sender</option>
+                      {getAvailableUsers().map((user, index) => (
+                        <option key={index} value={user.name}>
+                          {user.name} ({user.role})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="flex gap-3">
                     <textarea
                       value={responseMessage}
                       onChange={(e) => setResponseMessage(e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Type your response..."
+                      placeholder={`Type your response to ${targetUser || selectedItem?.fromUser}...`}
                       rows={3}
                     />
                     <button
                       onClick={handleSendResponse}
                       disabled={!responseMessage.trim()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 self-end"
                     >
                       <Send className="w-4 h-4" />
                       Send
                     </button>
+                  </div>
+
+                  {/* Response Info */}
+                  <div className="mt-2 text-xs text-gray-500">
+                    Response will be sent to: <span className="font-medium text-gray-700">
+                      {targetUser || selectedItem?.fromUser} ({targetUser ? getAvailableUsers().find(u => u.name === targetUser)?.role : selectedItem?.fromRole})
+                    </span>
                   </div>
                 </div>
               </>
