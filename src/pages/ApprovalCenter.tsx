@@ -692,6 +692,10 @@ const ApprovalCenter: React.FC = () => {
               <p className="text-gray-600 mt-1">
                 Managing {getManagedSalesmen().length} salesmen | {filteredItems.length} items requiring attention
               </p>
+              <p className="text-sm text-blue-600 mt-1 flex items-center gap-1">
+                <Shield className="w-4 h-4" />
+                All submitted data remains preserved in original tables for continued operations
+              </p>
             </div>
           </div>
 
