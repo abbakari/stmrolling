@@ -914,8 +914,16 @@ const SalesBudget: React.FC = () => {
                 </div>
               </div>
 
-              {/* Download Button */}
-              <div className="flex items-center justify-end">
+              {/* Download and Set Distribution Buttons */}
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setIsSetDistributionModalOpen(true)}
+                  className="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors transform hover:scale-105 active:scale-95"
+                  title="Set automatic distribution for filtered items"
+                >
+                  <PieChart className="w-5 h-5" />
+                  <span>Set Distribution</span>
+                </button>
                 <button
                   onClick={handleDownloadBudget}
                   className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors transform hover:scale-105 active:scale-95"
