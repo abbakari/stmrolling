@@ -35,6 +35,9 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
   const { user } = useAuth();
   const [reportData, setReportData] = useState<ReportData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [showExportPreview, setShowExportPreview] = useState(false);
+  const [exportData, setExportData] = useState<string>('');
 
   useEffect(() => {
     const loadReportData = () => {
