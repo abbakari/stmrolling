@@ -96,7 +96,7 @@ const Navbar: React.FC<NavbarProps> = ({ onPasswordModalOpen }) => {
         </div>
       </div>
 
-      <nav className="bg-gray-800 text-white shadow-lg fixed top-8 left-0 right-0 z-40">
+      <nav className="bg-gray-800 text-white shadow-lg fixed top-12 left-0 right-0 z-40">
 
       <div className="container-fluid px-4">
         <div className="flex items-center justify-between h-16">
