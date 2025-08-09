@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 const AdminPanel: React.FC = () => {
   const { user } = useAuth();
   const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
+  const [isWorkflowCenterOpen, setIsWorkflowCenterOpen] = useState(false);
 
   // Sample items for admin stock management
   const sampleItems = [
