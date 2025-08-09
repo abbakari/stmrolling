@@ -352,6 +352,13 @@ const Dashboard: React.FC = () => {
             description: 'View saved salesman data',
             color: 'indigo-600',
             onClick: () => setIsManagerDataViewOpen(true)
+          },
+          {
+            icon: Package,
+            title: 'Stock Control Center',
+            description: 'Manage all salesman stock requests',
+            color: 'emerald-600',
+            onClick: () => navigate('/sales-budget') // Will open stock management modal
           }
         ];
 
