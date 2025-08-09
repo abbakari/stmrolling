@@ -43,6 +43,7 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const conversationRef = useRef<HTMLDivElement>(null);
 
   const WORKFLOW_STORAGE_KEY = 'admin_workflow_center';
 
