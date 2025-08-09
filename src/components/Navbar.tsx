@@ -48,7 +48,7 @@ const Navbar: React.FC<NavbarProps> = ({ onPasswordModalOpen }) => {
     <>
       {/* Animated Vision Text */}
       <div className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 py-3 fixed top-0 left-0 right-0 z-50 overflow-hidden border-b-2 border-blue-600/30 shadow-lg">
-        <div className="animate-marquee whitespace-nowrap">
+        <div className="animate-marquee whitespace-nowrap animate-pulse-text">
           <span
             className={`inline-block px-6 text-base font-extrabold uppercase tracking-wider transition-all duration-1000 ${
               colors[currentColorIndex]
