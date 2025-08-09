@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Home, 
-  BarChart3, 
-  TrendingUp, 
-  Users, 
-  Settings, 
-  Database, 
-  Package, 
-  Truck, 
+import {
+  Home,
+  BarChart3,
+  TrendingUp,
+  Users,
+  Settings,
+  Database,
+  Package,
+  Truck,
   LogOut,
   Menu,
   X,
   User,
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Monitor
 } from 'lucide-react';
 import { useAuth, hasPermission, canAccessDashboard, getUserRoleName } from '../contexts/AuthContext';
 import { UserRole } from '../types/auth';
@@ -125,6 +126,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           name: 'Data Sources',
           href: '/data-sources',
           icon: Database,
+          roles: ['admin']
+        },
+        {
+          name: 'Admin Inventory Control',
+          href: '/admin-inventory',
+          icon: Monitor,
           roles: ['admin']
         },
         {
