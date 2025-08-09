@@ -78,8 +78,11 @@ const AdminStockManagement: React.FC<AdminStockManagementProps> = ({
   };
 
   const updateStockQuantity = (id: string, quantity: number) => {
-    const updatedItems = stockItems.map(item => 
-      item.id === id 
+    const stockItem = stockItems.find(s => s.id === id);
+    const oldQuantity = stockItem?.stockQuantity || 0;
+
+    const updatedItems = stockItems.map(item =>
+      item.id === id
         ? {
             ...item,
             stockQuantity: quantity,
@@ -88,16 +91,83 @@ const AdminStockManagement: React.FC<AdminStockManagementProps> = ({
           }
         : item
     );
-    
+
     setStockItems(updatedItems);
     saveStockData(updatedItems);
-    
+
     // Apply stock changes globally to all users
     applyStockChangesGlobally(id, quantity);
-    
+
+    // Update stock totals across the system
+    updateGlobalStockTotals(updatedItems);
+
+    // Create workflow notification for significant stock changes
+    if (Math.abs(quantity - oldQuantity) > 10) {
+      createStockChangeNotification(stockItem, oldQuantity, quantity);
+    }
+
     showNotification(`Stock updated for ${stockItems.find(s => s.id === id)?.item}`, 'success');
     setEditingId(null);
     setNewStock(0);
+  };
+
+  const updateGlobalStockTotals = (items: StockItem[]) => {
+    try {
+      // Calculate total stock by category, brand, etc.
+      const stockSummary = {
+        totalItems: items.length,
+        totalStock: items.reduce((sum, item) => sum + item.stockQuantity, 0),
+        stockByCategory: items.reduce((acc, item) => {
+          acc[item.category] = (acc[item.category] || 0) + item.stockQuantity;
+          return acc;
+        }, {} as Record<string, number>),
+        stockByBrand: items.reduce((acc, item) => {
+          acc[item.brand] = (acc[item.brand] || 0) + item.stockQuantity;
+          return acc;
+        }, {} as Record<string, number>),
+        lowStockItems: items.filter(item => item.stockQuantity < 10).length,
+        outOfStockItems: items.filter(item => item.stockQuantity === 0).length,
+        lastUpdated: new Date().toISOString()
+      };
+
+      // Save global stock summary
+      localStorage.setItem('global_stock_summary', JSON.stringify(stockSummary));
+
+      console.log('Global stock totals updated:', stockSummary);
+    } catch (error) {
+      console.error('Error updating global stock totals:', error);
+    }
+  };
+
+  const createStockChangeNotification = (stockItem: StockItem | undefined, oldQuantity: number, newQuantity: number) => {
+    if (!stockItem) return;
+
+    try {
+      const notification = {
+        id: `stock_change_${Date.now()}`,
+        type: 'stock_update',
+        title: `Stock Updated: ${stockItem.item}`,
+        message: `Admin updated stock from ${oldQuantity} to ${newQuantity} units for ${stockItem.customer}`,
+        timestamp: new Date().toISOString(),
+        metadata: {
+          itemId: stockItem.id,
+          customer: stockItem.customer,
+          item: stockItem.item,
+          oldQuantity,
+          newQuantity,
+          change: newQuantity - oldQuantity
+        }
+      };
+
+      // Save to notifications for other users
+      const existingNotifications = JSON.parse(localStorage.getItem('system_notifications') || '[]');
+      existingNotifications.push(notification);
+      localStorage.setItem('system_notifications', JSON.stringify(existingNotifications));
+
+      console.log('Stock change notification created:', notification);
+    } catch (error) {
+      console.error('Error creating stock change notification:', error);
+    }
   };
 
   const applyStockChangesGlobally = (stockId: string, quantity: number) => {
