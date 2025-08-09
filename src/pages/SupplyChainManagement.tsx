@@ -183,32 +183,35 @@ const SupplyChainManagement: React.FC = () => {
         estimatedDelivery: new Date(Date.now() + Math.random() * 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       }));
 
-    // Update existing submissions with sales units if they're sales_budget type
-    const updatedExisting = prev.filter(sub => !sub.id.startsWith('budget_') && !sub.id.startsWith('forecast_'))
-      .map(sub => {
-        if (sub.type === 'sales_budget' && !sub.salesUnits) {
-          // Add sales units to existing sales budget submissions
-          return {
-            ...sub,
-            salesUnits: Math.floor(sub.totalValue / 341), // Using average rate
-            itemDetails: {
-              item: sub.id === 'sub_001' ? 'BF GOODRICH TYRE 235/85R16' : 'MICHELIN TYRE 265/65R17',
-              category: 'Tyres',
-              brand: sub.id === 'sub_001' ? 'BF Goodrich' : 'Michelin',
-              rate: sub.id === 'sub_001' ? 341 : 300,
-              salesUnits: Math.floor(sub.totalValue / (sub.id === 'sub_001' ? 341 : 300))
-            }
-          };
-        }
-        return sub;
-      });
+    // Update processed submissions with new data
+    setProcessedSubmissions(prev => {
+      // Filter out old budget and forecast submissions
+      const updatedExisting = prev.filter(sub => !sub.id.startsWith('budget_') && !sub.id.startsWith('forecast_'))
+        .map(sub => {
+          if (sub.type === 'sales_budget' && !sub.salesUnits) {
+            // Add sales units to existing sales budget submissions
+            return {
+              ...sub,
+              salesUnits: Math.floor(sub.totalValue / 341), // Using average rate
+              itemDetails: {
+                item: sub.id === 'sub_001' ? 'BF GOODRICH TYRE 235/85R16' : 'MICHELIN TYRE 265/65R17',
+                category: 'Tyres',
+                brand: sub.id === 'sub_001' ? 'BF Goodrich' : 'Michelin',
+                rate: sub.id === 'sub_001' ? 341 : 300,
+                salesUnits: Math.floor(sub.totalValue / (sub.id === 'sub_001' ? 341 : 300))
+              }
+            };
+          }
+          return sub;
+        });
 
-    // Merge with existing submissions
-    setProcessedSubmissions([
-      ...updatedExisting,
-      ...budgetSubmissions,
-      ...forecastSubmissions
-    ]);
+      // Merge with new submissions
+      return [
+        ...updatedExisting,
+        ...budgetSubmissions,
+        ...forecastSubmissions
+      ];
+    });
   }, []);
 
   const calculateMetrics = (): SupplyChainMetrics => {
