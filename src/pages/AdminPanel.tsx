@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
-import { Package, Settings, Users, MessageCircle } from 'lucide-react';
+import { Package, Settings, Users, MessageCircle, Monitor, Activity } from 'lucide-react';
 import AdminStockManagement from '../components/AdminStockManagement';
 import AdminWorkflowCenter from '../components/AdminWorkflowCenter';
 import { useAuth } from '../contexts/AuthContext';
@@ -80,6 +80,29 @@ const AdminPanel: React.FC = () => {
 
         {/* Admin Actions Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {/* Admin Inventory Control Center */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Monitor className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Inventory Control Center</h3>
+                <p className="text-sm text-gray-600">Advanced admin inventory dashboard</p>
+              </div>
+            </div>
+            <p className="text-gray-700 mb-4">
+              Comprehensive admin-only inventory dashboard with real-time user monitoring,
+              process notifications, and advanced stock management capabilities.
+            </p>
+            <button
+              onClick={() => window.location.href = '/admin-inventory'}
+              className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              Open Control Center
+            </button>
+          </div>
 
           {/* Workflow Center */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
@@ -170,17 +193,61 @@ const AdminPanel: React.FC = () => {
               Open Settings
             </button>
           </div>
+
+          {/* System Activity Monitor */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Activity className="w-6 h-6 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">BI Dashboard</h3>
+                <p className="text-sm text-gray-600">Business intelligence analytics</p>
+              </div>
+            </div>
+            <p className="text-gray-700 mb-4">
+              Access advanced analytics, reports, and business intelligence tools for system-wide insights.
+            </p>
+            <button
+              onClick={() => window.location.href = '/bi-dashboard'}
+              className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+            >
+              Open BI Dashboard
+            </button>
+          </div>
         </div>
 
         {/* Important Notes */}
+        {/* Important Notes */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-yellow-800 mb-2">Important Notes</h3>
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">Admin Dashboard Features</h3>
           <ul className="list-disc list-inside text-yellow-700 space-y-1">
-            <li>Global stock changes will be applied to all users immediately</li>
-            <li>Stock quantities set here override individual user settings</li>
-            <li>Changes are automatically saved and synchronized across the system</li>
-            <li>All stock modifications are logged for audit purposes</li>
+            <li><strong>Inventory Control Center:</strong> Real-time user monitoring, process notifications, and comprehensive stock management</li>
+            <li><strong>Workflow Center:</strong> Direct communication and coordination with all user types and roles</li>
+            <li><strong>Global Stock Management:</strong> Override and set stock quantities that apply across all users</li>
+            <li><strong>User Activity Monitoring:</strong> Track all user actions, requests, and system interactions in real-time</li>
           </ul>
+        </div>
+
+        {/* Quick Access to Control Center */}
+        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+          <div className="flex items-center gap-3 mb-4">
+            <Monitor className="w-8 h-8" />
+            <div>
+              <h3 className="text-xl font-semibold">Admin Inventory Control Center</h3>
+              <p className="text-purple-100">The specialized admin-only inventory dashboard</p>
+            </div>
+          </div>
+          <p className="text-purple-100 mb-4">
+            Unlike the regular inventory management page, this dashboard is designed specifically for administrators
+            to monitor user activities, handle notifications, coordinate processes, and manage global stock settings.
+          </p>
+          <button
+            onClick={() => window.location.href = '/admin-inventory'}
+            className="bg-white text-purple-600 px-6 py-2 rounded-lg hover:bg-purple-50 transition-colors font-medium"
+          >
+            Access Control Center
+          </button>
         </div>
 
         {/* Admin Stock Management Modal */}
