@@ -47,34 +47,48 @@ const Navbar: React.FC<NavbarProps> = ({ onPasswordModalOpen }) => {
   return (
     <>
       {/* Animated Vision Text */}
-      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 py-2 fixed top-0 left-0 right-0 z-50 overflow-hidden">
+      <div className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 py-3 fixed top-0 left-0 right-0 z-50 overflow-hidden border-b-2 border-blue-600/30 shadow-lg">
         <div className="animate-marquee whitespace-nowrap">
           <span
-            className={`inline-block px-4 text-sm font-bold transition-all duration-700 ${
+            className={`inline-block px-6 text-base font-extrabold uppercase tracking-wider transition-all duration-1000 ${
               colors[currentColorIndex]
             }`}
             style={{
-              textShadow: '0 0 8px currentColor',
+              textShadow: '0 0 12px currentColor, 0 0 20px currentColor, 0 2px 4px rgba(0,0,0,0.8)',
+              filter: 'brightness(1.2) saturate(1.3)',
             }}
           >
             {visionText}
           </span>
           <span
-            className={`inline-block px-4 text-sm font-bold transition-all duration-700 ${
+            className={`inline-block px-6 text-base font-extrabold uppercase tracking-wider transition-all duration-1000 ${
               colors[(currentColorIndex + 1) % colors.length]
             }`}
             style={{
-              textShadow: '0 0 8px currentColor',
+              textShadow: '0 0 12px currentColor, 0 0 20px currentColor, 0 2px 4px rgba(0,0,0,0.8)',
+              filter: 'brightness(1.2) saturate(1.3)',
             }}
           >
             {visionText}
           </span>
           <span
-            className={`inline-block px-4 text-sm font-bold transition-all duration-700 ${
+            className={`inline-block px-6 text-base font-extrabold uppercase tracking-wider transition-all duration-1000 ${
               colors[(currentColorIndex + 2) % colors.length]
             }`}
             style={{
-              textShadow: '0 0 8px currentColor',
+              textShadow: '0 0 12px currentColor, 0 0 20px currentColor, 0 2px 4px rgba(0,0,0,0.8)',
+              filter: 'brightness(1.2) saturate(1.3)',
+            }}
+          >
+            {visionText}
+          </span>
+          <span
+            className={`inline-block px-6 text-base font-extrabold uppercase tracking-wider transition-all duration-1000 ${
+              colors[(currentColorIndex + 3) % colors.length]
+            }`}
+            style={{
+              textShadow: '0 0 12px currentColor, 0 0 20px currentColor, 0 2px 4px rgba(0,0,0,0.8)',
+              filter: 'brightness(1.2) saturate(1.3)',
             }}
           >
             {visionText}
