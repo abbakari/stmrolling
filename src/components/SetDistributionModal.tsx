@@ -60,26 +60,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
     });
   }, [items, selectedCustomer, selectedCategory, selectedBrand, selectedItem]);
 
-  useEffect(() => {
-    if (isOpen) {
-      // Initialize with all months selected for equal distribution
-      setSelectedMonths([...months]);
-      // Initialize equal percentages
-      const equalPercentage = Math.round(100 / months.length * 10) / 10;
-      const initialPercentages = months.reduce((acc, month) => {
-        acc[month] = equalPercentage;
-        return acc;
-      }, {} as { [month: string]: number });
-      setMonthlyPercentages(initialPercentages);
-      generatePreview();
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    generatePreview();
-  }, [distributionType, selectedMonths, monthlyPercentages, filteredItems]);
-
-  const generatePreview = () => {
+  const generatePreview = useCallback(() => {
     const preview: { [itemId: number]: MonthlyBudget[] } = {};
 
     filteredItems.forEach(item => {
@@ -109,7 +90,27 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
     });
 
     setPreviewData(preview);
-  };
+  }, [distributionType, selectedMonths, monthlyPercentages, filteredItems]);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Initialize with all months selected for equal distribution
+      setSelectedMonths([...months]);
+      // Initialize equal percentages
+      const equalPercentage = Math.round(100 / months.length * 10) / 10;
+      const initialPercentages = months.reduce((acc, month) => {
+        acc[month] = equalPercentage;
+        return acc;
+      }, {} as { [month: string]: number });
+      setMonthlyPercentages(initialPercentages);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      generatePreview();
+    }
+  }, [isOpen, generatePreview]);
 
   const handleMonthToggle = (month: string) => {
     const newSelectedMonths = selectedMonths.includes(month)
