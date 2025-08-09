@@ -56,6 +56,14 @@ const AdminWorkflowCenter: React.FC<AdminWorkflowCenterProps> = ({
     }
   }, [isOpen]);
 
+  // Auto-scroll to bottom when new messages are added
+  useEffect(() => {
+    if (selectedItem && conversationRef.current) {
+      const container = conversationRef.current;
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [selectedItem?.responses]);
+
   const loadWorkflowItems = () => {
     try {
       // Load from various sources
