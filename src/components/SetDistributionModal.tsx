@@ -70,63 +70,27 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
     });
   }, [items, searchCustomer, selectedCustomer, selectedCategory, selectedBrand, selectedItem]);
 
-  const generatePreview = useCallback(() => {
-    const preview: { [itemId: number]: MonthlyBudget[] } = {};
+  // Smart distribution logic
+  const distributeQuantityEqually = (quantity: number): number[] => {
+    const baseAmount = Math.floor(quantity / 12);
+    const remainder = quantity % 12;
 
-    filteredItems.forEach(item => {
-      const newMonthlyData = [...item.monthlyData];
+    // Start with base amount for all months
+    const distribution = new Array(12).fill(baseAmount);
 
-      if (distributionType === 'equal') {
-        // Equal distribution across selected months
-        const monthsToDistribute = selectedMonths.length > 0 ? selectedMonths : months;
-        const equalValue = item.budget2026 / monthsToDistribute.length;
-
-        newMonthlyData.forEach(monthData => {
-          if (monthsToDistribute.includes(monthData.month)) {
-            monthData.budgetValue = Math.round(equalValue);
-          } else {
-            monthData.budgetValue = 0;
-          }
-        });
-      } else if (distributionType === 'percentage') {
-        // Percentage-based distribution
-        newMonthlyData.forEach(monthData => {
-          const percentage = monthlyPercentages[monthData.month] || 0;
-          monthData.budgetValue = Math.round((item.budget2026 * percentage) / 100);
-        });
-      }
-
-      preview[item.id] = newMonthlyData;
-    });
-
-    setPreviewData(preview);
-  }, [distributionType, selectedMonths, monthlyPercentages, filteredItems]);
-
-  useEffect(() => {
-    if (isOpen) {
-      // Initialize with all months selected for equal distribution
-      setSelectedMonths([...months]);
-      // Initialize equal percentages
-      const equalPercentage = Math.round(100 / months.length * 10) / 10;
-      const initialPercentages = months.reduce((acc, month) => {
-        acc[month] = equalPercentage;
-        return acc;
-      }, {} as { [month: string]: number });
-      setMonthlyPercentages(initialPercentages);
+    // Distribute remainder starting from December (index 11) backwards
+    for (let i = 0; i < remainder; i++) {
+      const monthIndex = 11 - i; // Start from December (11) and go backwards
+      distribution[monthIndex] += 1;
     }
-  }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen) {
-      generatePreview();
-    }
-  }, [isOpen, generatePreview]);
+    return distribution;
+  };
 
-  useEffect(() => {
-    if (isOpen) {
-      generatePreview();
-    }
-  }, [distributionType, selectedMonths, monthlyPercentages, isOpen, generatePreview]);
+  const distributeByPercentage = (totalBudget: number, percentage: number): number[] => {
+    const amountToDistribute = Math.round((totalBudget * percentage) / 100);
+    return distributeQuantityEqually(amountToDistribute);
+  };
 
   const handleMonthToggle = (month: string) => {
     const newSelectedMonths = selectedMonths.includes(month)
