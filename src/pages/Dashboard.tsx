@@ -9,6 +9,7 @@ import ManagerDataView from '../components/ManagerDataView';
 import GitSummaryWidget from '../components/GitSummaryWidget';
 import AdminStockManagement from '../components/AdminStockManagement';
 import UserCommunicationCenter from '../components/UserCommunicationCenter';
+import CommunicationDemoInfo from '../components/CommunicationDemoInfo';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 import { useStock } from '../contexts/StockContext';
 import { initializeCommunicationDemo } from '../utils/communicationDemo';
