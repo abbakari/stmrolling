@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  X, 
-  Package, 
-  Search, 
-  Filter, 
-  Save, 
-  Upload, 
-  Download, 
-  AlertTriangle, 
-  CheckCircle, 
+import {
+  X,
+  Package,
+  Search,
+  Filter,
+  Save,
+  Upload,
+  Download,
+  AlertTriangle,
+  CheckCircle,
   RefreshCw,
   Plus,
   Edit3,
@@ -17,7 +17,8 @@ import {
   BarChart3,
   TrendingUp,
   Target,
-  Users
+  Users,
+  DollarSign
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
