@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from './contexts/SupabaseAuthContext';
 import { BudgetProvider } from './contexts/BudgetContext';
 import { WorkflowProvider } from './contexts/WorkflowContext';
 import { StockProvider } from './contexts/StockContext';
-import Login from './pages/Login';
+import Login from './pages/SupabaseLogin';
 import Dashboard from './pages/Dashboard';
 import SalesBudget from './pages/SalesBudget';
 import RollingForecast from './pages/RollingForecast';
@@ -29,7 +29,7 @@ const ProtectedRoute: React.FC<{
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredDashboard && !user.canAccessDashboard(requiredDashboard)) {
+  if (requiredDashboard && !canAccessDashboard(requiredDashboard)) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -55,6 +55,8 @@ const RoleBasedRoute: React.FC<{
 };
 
 const AppRoutes: React.FC = () => {
+  const { canAccessDashboard } = useAuth();
+
   return (
     <Routes>
       {/* Public Routes */}
