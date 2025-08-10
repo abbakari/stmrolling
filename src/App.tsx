@@ -1,10 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth, canAccessDashboard } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/SupabaseAuthContext';
+import SupabaseSetup from './components/SupabaseSetup';
 import { BudgetProvider } from './contexts/BudgetContext';
 import { WorkflowProvider } from './contexts/WorkflowContext';
 import { StockProvider } from './contexts/StockContext';
-import Login from './pages/Login';
+import Login from './pages/SupabaseLogin';
 import Dashboard from './pages/Dashboard';
 import SalesBudget from './pages/SalesBudget';
 import RollingForecast from './pages/RollingForecast';
@@ -29,7 +30,7 @@ const ProtectedRoute: React.FC<{
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredDashboard && !canAccessDashboard(user, requiredDashboard)) {
+  if (requiredDashboard && !canAccessDashboard(requiredDashboard)) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -55,6 +56,8 @@ const RoleBasedRoute: React.FC<{
 };
 
 const AppRoutes: React.FC = () => {
+  const { canAccessDashboard } = useAuth();
+
   return (
     <Routes>
       {/* Public Routes */}
@@ -182,6 +185,17 @@ const AppRoutes: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // Check if Supabase is properly configured
+  const isSupabaseConfigured =
+    import.meta.env.VITE_SUPABASE_URL &&
+    import.meta.env.VITE_SUPABASE_ANON_KEY &&
+    import.meta.env.VITE_SUPABASE_URL !== 'https://your-project.supabase.co' &&
+    import.meta.env.VITE_SUPABASE_ANON_KEY !== 'your-anon-key-here';
+
+  if (!isSupabaseConfigured) {
+    return <SupabaseSetup />;
+  }
+
   return (
     <AuthProvider>
       <BudgetProvider>
