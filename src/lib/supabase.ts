@@ -4,8 +4,20 @@ import type { Database } from '../types/database';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Debug log environment variables
+console.log('Environment check:', {
+  url: supabaseUrl ? 'Set' : 'Missing',
+  key: supabaseAnonKey ? 'Set' : 'Missing',
+  urlValue: supabaseUrl,
+  keyValue: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'undefined'
+});
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  console.error('Supabase configuration error:', {
+    VITE_SUPABASE_URL: supabaseUrl || 'MISSING',
+    VITE_SUPABASE_ANON_KEY: supabaseAnonKey ? 'PROVIDED' : 'MISSING'
+  });
+  throw new Error(`Missing Supabase environment variables. URL: ${supabaseUrl ? 'OK' : 'MISSING'}, Key: ${supabaseAnonKey ? 'OK' : 'MISSING'}`);
 }
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
