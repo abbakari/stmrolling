@@ -16,6 +16,7 @@ import BiDashboard from './pages/BiDashboard';
 import ApprovalCenter from './pages/ApprovalCenter';
 import AdminPanel from './pages/AdminPanel';
 import AdminInventoryDashboard from './pages/AdminInventoryDashboard';
+import AdvancedAdminDashboard from './pages/AdvancedAdminDashboard';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ 
@@ -156,13 +157,22 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      <Route 
-        path="/bi-dashboard" 
+      <Route
+        path="/advanced-admin"
+        element={
+          <RoleBasedRoute allowedRoles={['admin']}>
+            <AdvancedAdminDashboard />
+          </RoleBasedRoute>
+        }
+      />
+
+      <Route
+        path="/bi-dashboard"
         element={
           <RoleBasedRoute allowedRoles={['admin']}>
             <BiDashboard />
           </RoleBasedRoute>
-        } 
+        }
       />
 
       {/* Fallback */}

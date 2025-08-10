@@ -621,10 +621,15 @@ const SalesBudget: React.FC = () => {
       return months.map((month, index) => {
         let monthlyValue = baseAmount;
 
-        // Add remainder starting from December (index 11) backwards
-        if (remainder > 0) {
-          const remainderIndex = 11 - (remainder - 1); // Start from December
-          if (index >= remainderIndex) {
+        // First fill January to December
+        if (remainder > 0 && index < remainder) {
+          monthlyValue += 1;
+        }
+        // If still have remainder after filling Jan-Dec, continue backward from Dec
+        else if (remainder > 12) {
+          const extraRemainder = remainder - 12;
+          const backwardIndex = 11 - (index - 12);
+          if (index >= 12 - extraRemainder && backwardIndex >= 0) {
             monthlyValue += 1;
           }
         }
@@ -1294,6 +1299,18 @@ const SalesBudget: React.FC = () => {
                 <div className="flex flex-col gap-1">
                   {user?.role === 'salesman' && (
                     <>
+                      <button
+                        onClick={() => {
+                          console.log('New Addition button clicked');
+                          setIsNewAdditionModalOpen(true);
+                        }}
+                        className="bg-gray-500 text-white font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                        title="Add new customer or item to the budget (Salesman only)"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>New Addition</span>
+                      </button>
+
                       <button
                         onClick={() => {
                           console.log('Yearly Budget button clicked');

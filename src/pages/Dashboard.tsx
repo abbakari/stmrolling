@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import StatsCard from '../components/StatsCard';
-import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building, Truck, Eye } from 'lucide-react';
+import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building, Truck, Eye, MessageSquare } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import GitEtaManagement from '../components/GitEtaManagement';
 import ManagerDataView from '../components/ManagerDataView';
 import GitSummaryWidget from '../components/GitSummaryWidget';
 import AdminStockManagement from '../components/AdminStockManagement';
+import UserCommunicationCenter from '../components/UserCommunicationCenter';
+import CommunicationDemoInfo from '../components/CommunicationDemoInfo';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 import { useStock } from '../contexts/StockContext';
+import { initializeCommunicationDemo } from '../utils/communicationDemo';
 
 
 const Dashboard: React.FC = () => {
@@ -21,7 +24,16 @@ const Dashboard: React.FC = () => {
   const [isGitEtaModalOpen, setIsGitEtaModalOpen] = useState(false);
   const [isManagerDataViewOpen, setIsManagerDataViewOpen] = useState(false);
   const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
+  const [isCommunicationCenterOpen, setIsCommunicationCenterOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+
+  // Initialize demo communication data
+  React.useEffect(() => {
+    const initialized = initializeCommunicationDemo();
+    if (initialized) {
+      console.log('Communication demo data initialized');
+    }
+  }, []);
 
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type });
@@ -290,6 +302,13 @@ const Dashboard: React.FC = () => {
             description: 'Set stock quantities for all users',
             color: 'red-600',
             onClick: () => setIsAdminStockModalOpen(true)
+          },
+          {
+            icon: MessageSquare,
+            title: 'Advanced Admin Control',
+            description: 'Comprehensive system management',
+            color: 'gray-600',
+            onClick: () => navigate('/advanced-admin')
           }
         ];
 
@@ -322,6 +341,13 @@ const Dashboard: React.FC = () => {
             description: 'View personal targets',
             color: 'orange-600',
             onClick: () => showNotification('Personal targets opened', 'success')
+          },
+          {
+            icon: MessageSquare,
+            title: 'Communication Center',
+            description: 'Messages and notifications',
+            color: 'cyan-600',
+            onClick: () => setIsCommunicationCenterOpen(true)
           }
         ];
 
@@ -368,6 +394,13 @@ const Dashboard: React.FC = () => {
             description: 'Manage all salesman stock requests',
             color: 'emerald-600',
             onClick: () => navigate('/sales-budget') // Will open stock management modal
+          },
+          {
+            icon: MessageSquare,
+            title: 'Communication Center',
+            description: 'Messages and notifications',
+            color: 'cyan-600',
+            onClick: () => setIsCommunicationCenterOpen(true)
           }
         ];
 
@@ -400,6 +433,13 @@ const Dashboard: React.FC = () => {
             description: 'Monitor low stock items',
             color: 'orange-600',
             onClick: () => showNotification('Stock alerts checked', 'success')
+          },
+          {
+            icon: MessageSquare,
+            title: 'Communication Center',
+            description: 'Messages and notifications',
+            color: 'cyan-600',
+            onClick: () => setIsCommunicationCenterOpen(true)
           }
         ];
 
@@ -494,6 +534,9 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Communication Demo Info - Show for all users */}
+        <CommunicationDemoInfo />
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {statsData.map((stat, index) => (
@@ -573,6 +616,14 @@ const Dashboard: React.FC = () => {
             isOpen={isAdminStockModalOpen}
             onClose={() => setIsAdminStockModalOpen(false)}
             items={[]} // We'll get this from global data
+          />
+        )}
+
+        {/* User Communication Center */}
+        {user?.role !== 'admin' && (
+          <UserCommunicationCenter
+            isOpen={isCommunicationCenterOpen}
+            onClose={() => setIsCommunicationCenterOpen(false)}
           />
         )}
       </div>
