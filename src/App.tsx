@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth, canAccessDashboard } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/SupabaseAuthContext';
 import { BudgetProvider } from './contexts/BudgetContext';
 import { WorkflowProvider } from './contexts/WorkflowContext';
 import { StockProvider } from './contexts/StockContext';
@@ -29,7 +29,7 @@ const ProtectedRoute: React.FC<{
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredDashboard && !canAccessDashboard(user, requiredDashboard)) {
+  if (requiredDashboard && !user.canAccessDashboard(requiredDashboard)) {
     return <Navigate to="/dashboard" replace />;
   }
 
