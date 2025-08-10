@@ -423,6 +423,13 @@ const Dashboard: React.FC = () => {
             description: 'Monitor low stock items',
             color: 'orange-600',
             onClick: () => showNotification('Stock alerts checked', 'success')
+          },
+          {
+            icon: MessageSquare,
+            title: 'Communication Center',
+            description: 'Messages and notifications',
+            color: 'cyan-600',
+            onClick: () => setIsCommunicationCenterOpen(true)
           }
         ];
 
