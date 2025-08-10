@@ -26,6 +26,14 @@ const Dashboard: React.FC = () => {
   const [isCommunicationCenterOpen, setIsCommunicationCenterOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
+  // Initialize demo communication data
+  React.useEffect(() => {
+    const initialized = initializeCommunicationDemo();
+    if (initialized) {
+      console.log('Communication demo data initialized');
+    }
+  }, []);
+
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
