@@ -67,7 +67,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
     });
   }, [items, searchCustomer]);
 
-  // Smart distribution logic
+  // Smart distribution logic - Start Jan to Dec, then backward Dec to Jan
   const distributeQuantityEqually = (quantity: number): number[] => {
     const baseAmount = Math.floor(quantity / 12);
     const remainder = quantity % 12;
@@ -75,10 +75,18 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
     // Start with base amount for all months
     const distribution = new Array(12).fill(baseAmount);
 
-    // Distribute remainder starting from December (index 11) backwards
-    for (let i = 0; i < remainder; i++) {
-      const monthIndex = 11 - i; // Start from December (11) and go backwards
-      distribution[monthIndex] += 1;
+    // First fill January to December
+    for (let i = 0; i < remainder && i < 12; i++) {
+      distribution[i] += 1; // Jan (0) to Dec (11)
+    }
+
+    // If still have remainder after filling Jan-Dec, continue backward from Dec
+    if (remainder > 12) {
+      const extraRemainder = remainder - 12;
+      for (let i = 0; i < extraRemainder; i++) {
+        const monthIndex = 11 - i; // Start from December (11) and go backwards
+        distribution[monthIndex] += 1;
+      }
     }
 
     return distribution;
@@ -247,7 +255,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                 min="0"
               />
               <p className="text-xs text-gray-500 mt-1">
-                System will distribute equally, excess goes to Dec→Nov→Jan...
+                System will fill Jan→Dec first, then Dec→Nov→Jan if remainder
               </p>
             </div>
           )}
@@ -288,7 +296,7 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                   {itemQuantity > 12 && (
                     <span className="block text-xs">
                       Base: {Math.floor(itemQuantity / 12)} per month,
-                      Extra: {itemQuantity % 12} items (Dec→Nov→Jan...)
+                      Extra: {itemQuantity % 12} items (Jan→Dec, then Dec→Nov→Jan)
                     </span>
                   )}
                 </div>
