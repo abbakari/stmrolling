@@ -621,10 +621,15 @@ const SalesBudget: React.FC = () => {
       return months.map((month, index) => {
         let monthlyValue = baseAmount;
 
-        // Add remainder starting from December (index 11) backwards
-        if (remainder > 0) {
-          const remainderIndex = 11 - (remainder - 1); // Start from December
-          if (index >= remainderIndex) {
+        // First fill January to December
+        if (remainder > 0 && index < remainder) {
+          monthlyValue += 1;
+        }
+        // If still have remainder after filling Jan-Dec, continue backward from Dec
+        else if (remainder > 12) {
+          const extraRemainder = remainder - 12;
+          const backwardIndex = 11 - (index - 12);
+          if (index >= 12 - extraRemainder && backwardIndex >= 0) {
             monthlyValue += 1;
           }
         }
