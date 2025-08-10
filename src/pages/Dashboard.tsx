@@ -384,6 +384,13 @@ const Dashboard: React.FC = () => {
             description: 'Manage all salesman stock requests',
             color: 'emerald-600',
             onClick: () => navigate('/sales-budget') // Will open stock management modal
+          },
+          {
+            icon: MessageSquare,
+            title: 'Communication Center',
+            description: 'Messages and notifications',
+            color: 'cyan-600',
+            onClick: () => setIsCommunicationCenterOpen(true)
           }
         ];
 
