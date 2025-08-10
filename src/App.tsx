@@ -157,13 +157,22 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      <Route 
-        path="/bi-dashboard" 
+      <Route
+        path="/advanced-admin"
+        element={
+          <RoleBasedRoute allowedRoles={['admin']}>
+            <AdvancedAdminDashboard />
+          </RoleBasedRoute>
+        }
+      />
+
+      <Route
+        path="/bi-dashboard"
         element={
           <RoleBasedRoute allowedRoles={['admin']}>
             <BiDashboard />
           </RoleBasedRoute>
-        } 
+        }
       />
 
       {/* Fallback */}
