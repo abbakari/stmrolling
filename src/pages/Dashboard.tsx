@@ -292,6 +292,13 @@ const Dashboard: React.FC = () => {
             description: 'Set stock quantities for all users',
             color: 'red-600',
             onClick: () => setIsAdminStockModalOpen(true)
+          },
+          {
+            icon: MessageSquare,
+            title: 'Advanced Admin Control',
+            description: 'Comprehensive system management',
+            color: 'gray-600',
+            onClick: () => navigate('/advanced-admin')
           }
         ];
 
