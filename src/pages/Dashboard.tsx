@@ -605,6 +605,14 @@ const Dashboard: React.FC = () => {
             items={[]} // We'll get this from global data
           />
         )}
+
+        {/* User Communication Center */}
+        {user?.role !== 'admin' && (
+          <UserCommunicationCenter
+            isOpen={isCommunicationCenterOpen}
+            onClose={() => setIsCommunicationCenterOpen(false)}
+          />
+        )}
       </div>
     </Layout>
   );
