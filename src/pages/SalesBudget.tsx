@@ -1296,6 +1296,18 @@ const SalesBudget: React.FC = () => {
                     <>
                       <button
                         onClick={() => {
+                          console.log('New Addition button clicked');
+                          setIsNewAdditionModalOpen(true);
+                        }}
+                        className="bg-gray-500 text-white font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                        title="Add new customer or item to the budget (Salesman only)"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>New Addition</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
                           console.log('Yearly Budget button clicked');
                           setIsYearlyBudgetModalOpen(true);
                         }}
