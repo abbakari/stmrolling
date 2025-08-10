@@ -331,6 +331,13 @@ const Dashboard: React.FC = () => {
             description: 'View personal targets',
             color: 'orange-600',
             onClick: () => showNotification('Personal targets opened', 'success')
+          },
+          {
+            icon: MessageSquare,
+            title: 'Communication Center',
+            description: 'Messages and notifications',
+            color: 'cyan-600',
+            onClick: () => setIsCommunicationCenterOpen(true)
           }
         ];
 
