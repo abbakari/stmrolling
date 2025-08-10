@@ -16,6 +16,7 @@ import BiDashboard from './pages/BiDashboard';
 import ApprovalCenter from './pages/ApprovalCenter';
 import AdminPanel from './pages/AdminPanel';
 import AdminInventoryDashboard from './pages/AdminInventoryDashboard';
+import AdvancedAdminDashboard from './pages/AdvancedAdminDashboard';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ 
