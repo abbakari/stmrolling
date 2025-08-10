@@ -129,6 +129,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           roles: ['admin']
         },
         {
+          name: 'Advanced Admin Control',
+          href: '/advanced-admin',
+          icon: Settings,
+          roles: ['admin']
+        },
+        {
           name: 'Admin Inventory Control',
           href: '/admin-inventory',
           icon: Monitor,
