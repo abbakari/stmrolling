@@ -11,6 +11,7 @@ import AdminStockManagement from '../components/AdminStockManagement';
 import UserCommunicationCenter from '../components/UserCommunicationCenter';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 import { useStock } from '../contexts/StockContext';
+import { initializeCommunicationDemo } from '../utils/communicationDemo';
 
 
 const Dashboard: React.FC = () => {
