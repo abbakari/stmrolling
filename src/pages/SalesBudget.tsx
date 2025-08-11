@@ -1928,15 +1928,15 @@ const SalesBudget: React.FC = () => {
                                             ];
 
                                             const totalBudget = editingMonthlyData[row.id]?.reduce((sum, month) => sum + month.budgetValue, 0) || row.budget2026 || 0;
-                                            const totalMultiplier = holidayOptimizedMultipliers.reduce((sum, mult) => sum + mult, 0);
+                                            const totalMultiplier = businessOptimizedMultipliers.reduce((sum, mult) => sum + mult, 0);
 
                                             if (totalBudget > 0) {
                                               const updatedData = editingMonthlyData[row.id]?.map((month, index) => ({
                                                 ...month,
-                                                budgetValue: Math.round((totalBudget * holidayOptimizedMultipliers[index]) / totalMultiplier)
+                                                budgetValue: Math.round((totalBudget * businessOptimizedMultipliers[index]) / totalMultiplier)
                                               })) || months.map((month, index) => ({
                                                 month: month.short,
-                                                budgetValue: Math.round((totalBudget * holidayOptimizedMultipliers[index]) / totalMultiplier),
+                                                budgetValue: Math.round((totalBudget * businessOptimizedMultipliers[index]) / totalMultiplier),
                                                 actualValue: 0,
                                                 rate: row.rate || 100,
                                                 stock: row.stock || 0,
