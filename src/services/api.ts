@@ -171,6 +171,40 @@ export interface SalesBudget {
   quarter: number;
 }
 
+export interface RollingForecast {
+  id: number;
+  customer: number;
+  customer_info: Customer;
+  item: number;
+  item_info: Item;
+  year: number;
+  month: number;
+  forecasted_quantity: number;
+  forecasted_amount: number;
+  budget_quantity: number;
+  budget_amount: number;
+  quantity_variance: number;
+  amount_variance: number;
+  quantity_variance_percentage: number;
+  amount_variance_percentage: number;
+  forecast_type: 'optimistic' | 'realistic' | 'pessimistic';
+  confidence_level: number;
+  is_latest: boolean;
+  version: number;
+  status: 'draft' | 'submitted' | 'approved' | 'rejected';
+  salesperson?: number;
+  salesperson_info?: User;
+  created_by?: number;
+  approved_by?: number;
+  approved_at?: string;
+  notes?: string;
+  forecast_reasoning?: string;
+  market_conditions?: string;
+  quarter: number;
+  created_at: string;
+  updated_at: string;
+}
+
 // API Services
 export class AuthService {
   static async login(username: string, password: string) {
