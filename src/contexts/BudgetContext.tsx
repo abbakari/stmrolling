@@ -24,6 +24,7 @@ export interface YearlyBudgetData {
 
 export interface BudgetContextType {
   budgetData: YearlyBudgetData;
+  forecastData: RollingForecast[];
   currentYear: number;
   selectedCustomer: Customer | null;
   selectedItems: Item[];
@@ -51,6 +52,24 @@ export interface BudgetContextType {
   refreshBudgetData: () => Promise<void>;
   getBudgetSummary: () => Promise<any>;
   getMonthlyBudget: (year: number, month: number) => Promise<any>;
+  // Rolling Forecast functions
+  createForecastEntry: (data: Partial<RollingForecast>) => Promise<void>;
+  updateForecastEntry: (id: number, data: Partial<RollingForecast>) => Promise<void>;
+  deleteForecastEntry: (id: number) => Promise<void>;
+  bulkCreateForecast: (data: {
+    customer: number;
+    items: number[];
+    year: number;
+    forecast_data: Array<{
+      month: number;
+      forecasted_amount: number;
+      forecast_type: string;
+    }>;
+  }) => Promise<void>;
+  refreshForecastData: () => Promise<void>;
+  getForecastSummary: () => Promise<any>;
+  getVarianceAnalysis: () => Promise<any>;
+  getMonthlyForecast: (year: number, month: number) => Promise<any>;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
