@@ -1643,8 +1643,9 @@ const SalesBudget: React.FC = () => {
                                         }}
                                         className="ml-2 w-6 h-6 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-all transform hover:scale-110 active:scale-95 cursor-pointer shadow-sm hover:shadow-md z-10 relative"
                                         title="View monthly distribution"
+                                        type="button"
                                       >
-                                        +
+                                        📊
                                       </button>
                                     )}
                                   </div>
@@ -1697,8 +1698,9 @@ const SalesBudget: React.FC = () => {
                                         }}
                                         className="ml-2 w-6 h-6 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-all transform hover:scale-110 active:scale-95 cursor-pointer shadow-sm hover:shadow-md z-10 relative"
                                         title="View monthly distribution"
+                                        type="button"
                                       >
-                                        +
+                                        📊
                                       </button>
                                     )}
                                   </div>
