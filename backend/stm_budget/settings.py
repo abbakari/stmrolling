@@ -36,7 +36,7 @@ THIRD_PARTY_APPS = [
     'drf_spectacular',
     'health_check',
     'health_check.db',
-    'health_check.cache',
+    # 'health_check.cache',  # Disabled for SQLite development
     'health_check.storage',
 ]
 
