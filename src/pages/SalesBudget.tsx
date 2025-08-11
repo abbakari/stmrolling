@@ -1257,7 +1257,9 @@ const SalesBudget: React.FC = () => {
             </div>
 
             {/* Filters and Action Buttons Row */}
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
+            <div className={`grid grid-cols-1 gap-4 mb-4 ${
+              activeView === 'customer-item' ? 'md:grid-cols-6' : 'md:grid-cols-5'
+            }`}>
               {/* Customer Filter - Hidden in item-wise mode */}
               {activeView === 'customer-item' && (
                 <div className={`bg-white p-3 rounded-lg shadow-sm border-2 transition-all duration-200 ${
