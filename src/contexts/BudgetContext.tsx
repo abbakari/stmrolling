@@ -100,10 +100,11 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
     }
   }, [isAuthenticated, user]);
 
-  // Load budget data when current year changes
+  // Load budget and forecast data when current year changes
   useEffect(() => {
     if (isAuthenticated) {
       refreshBudgetData();
+      refreshForecastData();
     }
   }, [currentYear, isAuthenticated]);
 
