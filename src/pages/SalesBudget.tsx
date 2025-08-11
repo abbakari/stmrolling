@@ -2182,17 +2182,6 @@ const SalesBudget: React.FC = () => {
           onApplyDistribution={handleApplyDistribution}
         />
 
-        <HolidaySeasonalDistributionModal
-          isOpen={isHolidaySeasonalModalOpen}
-          onClose={() => setIsHolidaySeasonalModalOpen(false)}
-          items={tableData}
-          selectedCustomer={selectedCustomer}
-          selectedCategory={selectedCategory}
-          selectedBrand={selectedBrand}
-          selectedItem={selectedItem}
-          onApplyDistribution={handleApplyDistribution}
-        />
-
         {/* Admin Stock Management Modal */}
         {user?.role === 'admin' && (
           <AdminStockManagement
