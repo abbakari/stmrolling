@@ -1741,30 +1741,14 @@ const SalesBudget: React.FC = () => {
                             ) : (
                               <>
                                 <td className="p-2 border-b border-r border-gray-200 text-xs">
-                                  <div className="truncate" title={row.item}>
-                                    <div className="font-medium text-gray-900 truncate">
-                                      {row.item}
-                                    </div>
-                                    <div className="text-xs text-gray-500 truncate">
-                                      {row.category} - {row.brand}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="p-2 border-b border-r border-gray-200 text-xs">
                                   <div className="flex items-center justify-between">
-                                    <div
-                                      className={`truncate ${
-                                        user?.role === 'manager'
-                                          ? 'cursor-pointer hover:text-blue-600 hover:underline'
-                                          : ''
-                                      }`}
-                                      title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
-                                      onClick={() => handleCustomerClick(row.customer)}
-                                    >
-                                      {row.customer}
-                                      {user?.role === 'manager' && (
-                                        <span className="ml-1 text-blue-500">👑</span>
-                                      )}
+                                    <div className="truncate" title={row.item}>
+                                      <div className="font-medium text-gray-900 truncate">
+                                        {row.item}
+                                      </div>
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {row.category} - {row.brand}
+                                      </div>
                                     </div>
                                     {user?.role === 'manager' && (
                                       <button
