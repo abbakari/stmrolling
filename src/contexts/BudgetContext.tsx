@@ -267,6 +267,116 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
     }
   };
 
+  // Rolling Forecast Functions
+  const refreshForecastData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Load rolling forecast data for current year
+      const forecastRes = await RollingForecastService.getRollingForecasts({
+        year: currentYear,
+        is_latest: true,
+        page_size: 1000
+      });
+
+      setForecastData(forecastRes.results || []);
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      console.error('Failed to refresh forecast data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const createForecastEntry = async (data: Partial<RollingForecast>) => {
+    try {
+      setError(null);
+      await RollingForecastService.createRollingForecast(data);
+      await refreshForecastData();
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  const updateForecastEntry = async (id: number, data: Partial<RollingForecast>) => {
+    try {
+      setError(null);
+      await RollingForecastService.updateRollingForecast(id, data);
+      await refreshForecastData();
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  const deleteForecastEntry = async (id: number) => {
+    try {
+      setError(null);
+      await RollingForecastService.deleteRollingForecast(id);
+      await refreshForecastData();
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  const bulkCreateForecast = async (data: {
+    customer: number;
+    items: number[];
+    year: number;
+    forecast_data: Array<{
+      month: number;
+      forecasted_amount: number;
+      forecast_type: string;
+    }>;
+  }) => {
+    try {
+      setError(null);
+      await RollingForecastService.bulkCreateForecast(data);
+      await refreshForecastData();
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  const getForecastSummary = async () => {
+    try {
+      return await RollingForecastService.getForecastSummary({ year: currentYear });
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  const getVarianceAnalysis = async () => {
+    try {
+      return await RollingForecastService.getForecastVarianceAnalysis({ year: currentYear });
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  const getMonthlyForecast = async (year: number, month: number) => {
+    try {
+      return await RollingForecastService.getMonthlyForecast({ year, month });
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
   const value: BudgetContextType = {
     budgetData,
     currentYear,
