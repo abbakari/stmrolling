@@ -1643,11 +1643,8 @@ const SalesBudget: React.FC = () => {
                           </>
                         ) : (
                           <>
-                            <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r border-gray-200" style={{width: '200px'}}>
+                            <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r border-gray-200" style={{width: '350px'}}>
                               Item (Category - Brand)
-                            </th>
-                            <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r border-gray-200" style={{width: '150px'}}>
-                              Customer
                             </th>
                           </>
                         )}
