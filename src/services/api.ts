@@ -394,6 +394,66 @@ export class SalesBudgetService {
   }
 }
 
+export class RollingForecastService {
+  static async getRollingForecasts(params?: Record<string, any>) {
+    const response = await api.get('/rolling-forecast/', { params });
+    return response.data;
+  }
+
+  static async getRollingForecast(id: number): Promise<RollingForecast> {
+    const response = await api.get(`/rolling-forecast/${id}/`);
+    return response.data;
+  }
+
+  static async createRollingForecast(data: Partial<RollingForecast>): Promise<RollingForecast> {
+    const response = await api.post('/rolling-forecast/', data);
+    return response.data;
+  }
+
+  static async updateRollingForecast(id: number, data: Partial<RollingForecast>): Promise<RollingForecast> {
+    const response = await api.put(`/rolling-forecast/${id}/`, data);
+    return response.data;
+  }
+
+  static async deleteRollingForecast(id: number) {
+    await api.delete(`/rolling-forecast/${id}/`);
+  }
+
+  static async getForecastVarianceAnalysis(params?: Record<string, any>) {
+    const response = await api.get('/rolling-forecast/variance-analysis/', { params });
+    return response.data;
+  }
+
+  static async getForecastSummary(params?: Record<string, any>) {
+    const response = await api.get('/rolling-forecast/summary/', { params });
+    return response.data;
+  }
+
+  static async getMonthlyForecast(params?: Record<string, any>) {
+    const response = await api.get('/rolling-forecast/monthly/', { params });
+    return response.data;
+  }
+
+  static async bulkCreateForecast(data: {
+    customer: number;
+    items: number[];
+    year: number;
+    forecast_data: Array<{
+      month: number;
+      forecasted_amount: number;
+      forecast_type: string;
+    }>;
+  }) {
+    const response = await api.post('/rolling-forecast/bulk-create/', data);
+    return response.data;
+  }
+
+  static async approveForecastEntries(entryIds: number[]) {
+    const response = await api.post('/rolling-forecast/approve/', { entry_ids: entryIds });
+    return response.data;
+  }
+}
+
 export class UserService {
   static async getUsers(params?: Record<string, any>) {
     const response = await api.get('/auth/users/', { params });
