@@ -1922,6 +1922,8 @@ const SalesBudget: React.FC = () => {
                                             // Enhanced seasonal multipliers with holiday business optimization
                                             // Research-based approach: Studies show 40-60% increase in business transactions during Nov-Dec
                                             // Reference: Holiday Commerce Trends, McKinsey & Company (2023)
+                                            // Implementation rationale: Pre-position inventory during slow periods to maximize sales
+                                            // when customers make purchasing decisions (see /src/docs/SeasonalGrowthStrategy.md)
                                             const holidayOptimizedMultipliers = [
                                               0.70, // Jan - Post-holiday recovery period
                                               0.75, // Feb - Gradual business resumption
