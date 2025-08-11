@@ -306,55 +306,104 @@ const SalesBudget: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Load saved salesman data for current user
+  // Load saved salesman data and manual budget entries for current user
   useEffect(() => {
     if (user) {
+      // First load regular saved budget data
       const savedBudgetData = DataPersistenceManager.getSalesBudgetDataByUser(user.name);
-      if (savedBudgetData.length > 0) {
-        console.log('Loading saved budget data for', user.name, ':', savedBudgetData.length, 'items');
 
-        // Merge saved data with original table data
-        const mergedData = [...originalTableData];
+      // Then load manual budget entries
+      const manualEntries = ManualBudgetPersistence.getAllManualEntries();
 
-        savedBudgetData.forEach(savedItem => {
-          const existingIndex = mergedData.findIndex(item =>
-            item.customer === savedItem.customer && item.item === savedItem.item
-          );
+      console.log('Loading data for', user.name, '- Saved:', savedBudgetData.length, 'Manual:', manualEntries.length);
 
-          if (existingIndex >= 0) {
-            // Update existing item with saved data
-            mergedData[existingIndex] = {
-              ...mergedData[existingIndex],
-              budget2026: savedItem.budget2026,
-              budgetValue2026: savedItem.budgetValue2026,
-              discount: savedItem.discount,
-              monthlyData: savedItem.monthlyData
-            };
-          } else {
-            // Add new item from saved data
-            const newItem = {
-              id: Math.max(...mergedData.map(item => item.id)) + 1,
-              selected: false,
-              customer: savedItem.customer,
-              item: savedItem.item,
-              category: savedItem.category,
-              brand: savedItem.brand,
-              itemCombined: `${savedItem.item} (${savedItem.category} - ${savedItem.brand})`,
-              budget2025: savedItem.budget2025,
-              actual2025: savedItem.actual2025,
-              budget2026: savedItem.budget2026,
-              rate: savedItem.rate,
-              stock: savedItem.stock,
-              git: savedItem.git,
-              budgetValue2026: savedItem.budgetValue2026,
-              discount: savedItem.discount,
-              monthlyData: savedItem.monthlyData
-            };
-            mergedData.push(newItem);
-          }
+      // Merge saved data with original table data
+      let mergedData = [...originalTableData];
+
+      // Apply saved budget data first
+      savedBudgetData.forEach(savedItem => {
+        const existingIndex = mergedData.findIndex(item =>
+          item.customer === savedItem.customer && item.item === savedItem.item
+        );
+
+        if (existingIndex >= 0) {
+          // Update existing item with saved data
+          mergedData[existingIndex] = {
+            ...mergedData[existingIndex],
+            budget2026: savedItem.budget2026,
+            budgetValue2026: savedItem.budgetValue2026,
+            discount: savedItem.discount,
+            monthlyData: savedItem.monthlyData
+          };
+        } else {
+          // Add new item from saved data
+          const newItem = {
+            id: Math.max(...mergedData.map(item => item.id)) + 1,
+            selected: false,
+            customer: savedItem.customer,
+            item: savedItem.item,
+            category: savedItem.category,
+            brand: savedItem.brand,
+            itemCombined: `${savedItem.item} (${savedItem.category} - ${savedItem.brand})`,
+            budget2025: savedItem.budget2025,
+            actual2025: savedItem.actual2025,
+            budget2026: savedItem.budget2026,
+            rate: savedItem.rate,
+            stock: savedItem.stock,
+            git: savedItem.git,
+            budgetValue2026: savedItem.budgetValue2026,
+            discount: savedItem.discount,
+            monthlyData: savedItem.monthlyData
+          };
+          mergedData.push(newItem);
+        }
+      });
+
+      // Apply manual budget entries (these take priority)
+      manualEntries.forEach(manualEntry => {
+        const existingIndex = mergedData.findIndex(item =>
+          item.id === manualEntry.id &&
+          item.customer === manualEntry.customer &&
+          item.item === manualEntry.item
+        );
+
+        if (existingIndex >= 0) {
+          // Calculate discount for this manual entry
+          const discountAmount = getDiscountAmount(manualEntry.budget2026 * (mergedData[existingIndex].rate || 1), {
+            category: manualEntry.category,
+            brand: manualEntry.brand
+          });
+
+          // Update with manual entry data (overrides automatic calculations)
+          mergedData[existingIndex] = {
+            ...mergedData[existingIndex],
+            budget2026: manualEntry.budget2026,
+            budgetValue2026: manualEntry.budget2026 * (mergedData[existingIndex].rate || 1),
+            discount: discountAmount,
+            category: manualEntry.category,
+            brand: manualEntry.brand
+          };
+        }
+      });
+
+      // Apply discount calculations to all items on load
+      mergedData = mergedData.map(item => {
+        const discountAmount = getDiscountAmount(item.budgetValue2026 || (item.budget2026 * (item.rate || 1)), {
+          category: item.category,
+          brand: item.brand
         });
 
-        setOriginalTableData(mergedData);
+        return {
+          ...item,
+          discount: discountAmount
+        };
+      });
+
+      setOriginalTableData(mergedData);
+
+      const manualCount = manualEntries.length;
+      if (manualCount > 0) {
+        showNotification(`✅ Loaded ${manualCount} permanent manual budget entries`, 'success');
       }
     }
   }, [user]);
