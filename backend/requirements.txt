@@ -1,0 +1,41 @@
+# Core Django
+Django==4.2.7
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+django-filter==23.3
+
+# Database & ORM optimizations
+psycopg2-binary==2.9.7
+django-extensions==3.2.3
+
+# Authentication & Security
+djangorestframework-simplejwt==5.3.0
+django-allauth==0.57.0
+
+# Performance & Caching
+redis==5.0.1
+django-redis==5.4.0
+django-cachalot==2.6.1
+django-debug-toolbar==4.2.0
+
+# Background Tasks
+celery==5.3.4
+celery[redis]==5.3.4
+
+# API Documentation
+drf-spectacular==0.26.5
+
+# Monitoring & Logging
+django-health-check==3.17.0
+sentry-sdk==1.38.0
+
+# Development
+django-environ==0.11.2
+python-decouple==3.8
+
+# Performance & Compression
+django-compressor==4.4
+whitenoise==6.6.0
+
+# Pagination
+django-rest-framework-cursor-pagination==0.1.0
