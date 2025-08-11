@@ -53,6 +53,7 @@ const RollingForecast: React.FC = () => {
   });
   const [selectedExistingCustomer, setSelectedExistingCustomer] = useState('');
   const [selectedExistingItem, setSelectedExistingItem] = useState('');
+  const [activeView, setActiveView] = useState<'customer-item' | 'item-wise'>('customer-item');
   const [showBudgetData, setShowBudgetData] = useState(true);
   const [isCustomerForecastModalOpen, setIsCustomerForecastModalOpen] = useState(false);
   const [selectedCustomerForBreakdown, setSelectedCustomerForBreakdown] = useState<string>('');
