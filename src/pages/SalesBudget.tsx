@@ -1915,31 +1915,62 @@ const SalesBudget: React.FC = () => {
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs">
                               <div className="flex flex-col gap-1">
-                                {user?.role === 'manager' ? (
-                                  <div className="text-center p-1 bg-gray-100 rounded text-gray-600">
-                                    {Math.round(row.discount)}
-                                  </div>
-                                ) : (
-                                  <input
-                                    type="number"
-                                    className="w-full p-1 text-center border border-gray-300 rounded text-xs"
-                                    value={Math.round(row.discount)}
-                                    onChange={(e) => {
-                                      const value = parseInt(e.target.value) || 0;
-                                      setTableData(prev => prev.map(item =>
-                                        item.id === row.id ? {
-                                          ...item,
-                                          discount: value,
-                                          budgetValue2026: (item.budget2026 * item.rate) - value
-                                        } : item
-                                      ));
-                                    }}
-                                    placeholder="0"
-                                  />
-                                )}
-                                <div className="text-xs text-gray-500">
-                                  {((row.discount / (row.budget2026 * row.rate || 1)) * 100).toFixed(1)}%
-                                </div>
+                                {(() => {
+                                  const automaticDiscount = getDiscountAmount(row.budget2026 * (row.rate || 1), {
+                                    category: row.category,
+                                    brand: row.brand
+                                  });
+                                  const automaticDiscountPercentage = getDiscountPercentage({
+                                    category: row.category,
+                                    brand: row.brand
+                                  });
+                                  const hasAutomaticDiscount = automaticDiscountPercentage > 0;
+
+                                  return user?.role === 'manager' ? (
+                                    <div className="text-center space-y-1">
+                                      <div className={`p-1 rounded text-gray-600 ${
+                                        hasAutomaticDiscount ? 'bg-orange-100 border border-orange-300' : 'bg-gray-100'
+                                      }`}>
+                                        {Math.round(hasAutomaticDiscount ? automaticDiscount : row.discount)}
+                                      </div>
+                                      {hasAutomaticDiscount && (
+                                        <div className="text-xs text-orange-600">
+                                          Auto: {automaticDiscountPercentage}%
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-1">
+                                      {hasAutomaticDiscount ? (
+                                        <div className="text-center space-y-1">
+                                          <div className="p-1 bg-orange-100 border border-orange-300 rounded text-orange-800 font-medium">
+                                            {Math.round(automaticDiscount)}
+                                          </div>
+                                          <div className="text-xs text-orange-600">
+                                            Auto: {automaticDiscountPercentage}%
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <input
+                                          type="number"
+                                          className="w-full p-1 text-center border border-gray-300 rounded text-xs"
+                                          value={Math.round(row.discount)}
+                                          onChange={(e) => {
+                                            const value = parseInt(e.target.value) || 0;
+                                            setTableData(prev => prev.map(item =>
+                                              item.id === row.id ? {
+                                                ...item,
+                                                discount: value,
+                                                budgetValue2026: (item.budget2026 * item.rate) - value
+                                              } : item
+                                            ));
+                                          }}
+                                          placeholder="Manual discount"
+                                        />
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
