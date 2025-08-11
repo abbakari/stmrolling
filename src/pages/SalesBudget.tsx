@@ -1176,16 +1176,30 @@ const SalesBudget: React.FC = () => {
                 <div className="bg-blue-50 border-l-4 border-blue-600 text-blue-800 p-4 rounded-r-lg flex items-center gap-2">
                   <InfoIcon className="w-5 h-5" />
                   <div>
-                    <p className="font-bold">Instructions: Select a customer row to open monthly budget forms</p>
-                    <p className="text-xs text-blue-700 mt-1">💡 Simplified 2-row layout shows months and budget values for easy entry and budget growth tracking</p>
+                    <p className="font-bold">
+                      Instructions: {activeView === 'customer-item'
+                        ? 'Select customer row to open monthly budget forms'
+                        : 'Focus on item budgeting (customer column hidden)'}
+                    </p>
+                    <p className="text-xs text-blue-700 mt-1">
+                      💡 {activeView === 'customer-item'
+                        ? 'Customer-Item view: Work with both customers and items'
+                        : 'Item-wise view: Focus solely on item budgeting without customer context'}
+                    </p>
                   </div>
                 </div>
               ) : (
                 <div className="bg-purple-50 border-l-4 border-purple-600 text-purple-800 p-4 rounded-r-lg flex items-center gap-2">
                   <InfoIcon className="w-5 h-5" />
                   <div>
-                    <p className="font-bold">Manager View: Sales Budget Overview (View-Only)</p>
-                    <p className="text-xs text-purple-700 mt-1">👑 View salesman-created budgets and send to supply chain when ready. Stock management available for oversight.</p>
+                    <p className="font-bold">
+                      Manager View: Sales Budget Overview ({activeView === 'customer-item' ? 'Customer-Item' : 'Item-wise'} Mode)
+                    </p>
+                    <p className="text-xs text-purple-700 mt-1">
+                      👑 {activeView === 'customer-item'
+                        ? 'View salesman-created budgets with customer context'
+                        : 'Focus on item-level budget analysis without customer grouping'}
+                    </p>
                   </div>
                 </div>
               )}
