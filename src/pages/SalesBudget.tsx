@@ -1855,11 +1855,16 @@ const SalesBudget: React.FC = () => {
                                     </>
                                   ) : (
                                     <button
-                                      onClick={() => handleEditMonthlyData(row.id)}
-                                      className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
-                                      title="Edit monthly budget"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleEditMonthlyData(row.id);
+                                      }}
+                                      className="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-blue-700 transition-all transform hover:scale-105 active:scale-95 cursor-pointer shadow-sm hover:shadow-md"
+                                      title="Edit monthly budget distribution"
+                                      type="button"
                                     >
-                                      <Calendar className="w-3 h-3" />
+                                      <Calendar className="w-4 h-4" />
                                     </button>
                                   )
                                 )}
