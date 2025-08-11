@@ -118,10 +118,10 @@ class RollingForecastBulkCreateSerializer(serializers.Serializer):
     """Serializer for bulk creating rolling forecast entries."""
     
     customer = serializers.PrimaryKeyRelatedField(
-        queryset=None  # Will be set in __init__
+        read_only=False
     )
     items = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=None),
+        child=serializers.PrimaryKeyRelatedField(read_only=False),
         min_length=1
     )
     year = serializers.IntegerField(min_value=2020, max_value=2030)
@@ -130,24 +130,29 @@ class RollingForecastBulkCreateSerializer(serializers.Serializer):
         min_length=1
     )
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def get_customer_queryset(self):
         request = self.context.get('request')
-        
         if request and request.user:
             from apps.customers.models import Customer
-            from apps.items.models import Item
-            
+
             # Filter customers based on user permissions
             if request.user.role == request.user.Role.SALESPERSON:
-                customer_queryset = Customer.objects.filter(
+                return Customer.objects.filter(
                     salesperson=request.user, is_active=True
                 )
             else:
-                customer_queryset = Customer.objects.filter(is_active=True)
-            
-            self.fields['customer'].queryset = customer_queryset
-            self.fields['items'].child.queryset = Item.objects.filter(is_active=True)
+                return Customer.objects.filter(is_active=True)
+        from apps.customers.models import Customer
+        return Customer.objects.filter(is_active=True)
+
+    def get_items_queryset(self):
+        from apps.items.models import Item
+        return Item.objects.filter(is_active=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['customer'].queryset = self.get_customer_queryset()
+        self.fields['items'].child.queryset = self.get_items_queryset()
 
 
 class ForecastVarianceAnalysisSerializer(serializers.Serializer):
