@@ -1962,9 +1962,9 @@ const SalesBudget: React.FC = () => {
                                               showNotification('Please set a budget value first before applying seasonal distribution', 'error');
                                             }
                                           }}
-                                          className="bg-gradient-to-r from-green-100 to-red-100 text-green-800 px-3 py-1 rounded text-xs hover:from-green-200 hover:to-red-200 transition-all transform hover:scale-105"
+                                          className="bg-gradient-to-r from-blue-100 to-green-100 text-blue-800 px-3 py-1 rounded text-xs hover:from-blue-200 hover:to-green-200 transition-all transform hover:scale-105"
                                         >
-                                          🎄 Holiday Seasonal Growth
+                                          📈 Business Seasonal Growth
                                         </button>
                                         <button
                                           onClick={() => {
