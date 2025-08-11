@@ -1949,11 +1949,13 @@ const SalesBudget: React.FC = () => {
                                                 [row.id]: updatedData
                                               }));
 
-                                              const novAllocation = Math.round((totalBudget * 1.55) / totalMultiplier);
-                                              const decAllocation = Math.round((totalBudget * 1.70) / totalMultiplier);
+                                              const janAllocation = Math.round((totalBudget * 1.60) / totalMultiplier);
+                                              const febAllocation = Math.round((totalBudget * 1.50) / totalMultiplier);
+                                              const novAllocation = Math.round((totalBudget * 0.70) / totalMultiplier);
+                                              const decAllocation = Math.round((totalBudget * 0.60) / totalMultiplier);
 
                                               showNotification(
-                                                `🎄 Holiday optimization applied! Nov: ${novAllocation}, Dec: ${decAllocation} units (${((novAllocation + decAllocation) / totalBudget * 100).toFixed(1)}% of total budget)`,
+                                                `📈 Business-optimized distribution applied! Jan: ${janAllocation}, Feb: ${febAllocation} units (high), Nov: ${novAllocation}, Dec: ${decAllocation} units (holiday reduction)`,
                                                 'success'
                                               );
                                             } else {
