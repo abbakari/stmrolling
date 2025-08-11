@@ -81,6 +81,7 @@ interface BudgetProviderProps {
 export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
   const [budgetData, setBudgetData] = useState<YearlyBudgetData>({});
+  const [forecastData, setForecastData] = useState<RollingForecast[]>([]);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
