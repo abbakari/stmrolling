@@ -214,7 +214,7 @@ class SalesBudget(models.Model):
             models.Index(fields=['distribution_type', 'year'], name='sales_budget_dist_year_idx'),
             models.Index(fields=['is_manual_entry', 'year'], name='sales_budget_manual_year_idx'),
             models.Index(fields=['total_amount', 'year'], name='sales_budget_amount_year_idx'),
-            models.Index(fields=['created_at', 'status'], name='sales_budget_created_status_idx'),
+            models.Index(fields=['created_at', 'status'], name='sb_created_status_idx'),
         ]
         constraints = [
             models.UniqueConstraint(

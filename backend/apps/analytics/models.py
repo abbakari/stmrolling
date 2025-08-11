@@ -7,7 +7,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from django.contrib.postgres.fields import JSONField
+# JSONField is now part of django.db.models in Django 3.1+
 
 User = get_user_model()
 
