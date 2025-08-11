@@ -24,9 +24,9 @@ interface YearlyBudgetData {
 interface YearlyBudgetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: YearlyBudgetData) => void;
-  selectedCustomer?: string;
-  year: string;
+  onSubmit: (data: any) => void;
+  customers: any[];
+  items: any[];
 }
 
 const YearlyBudgetModal: React.FC<YearlyBudgetModalProps> = ({
