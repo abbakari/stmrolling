@@ -1795,20 +1795,53 @@ const SalesBudget: React.FC = () => {
                             </td>
                             <td className="p-2 border-b border-gray-200 bg-blue-50 text-xs">
                               {user?.role === 'manager' ? (
-                                <div className="text-center p-1 bg-gray-100 rounded text-gray-600">
-                                  {row.budget2026}
+                                <div className="text-center">
+                                  <div className={`p-1 rounded text-gray-600 ${
+                                    ManualBudgetPersistence.isManualEntry(row.id, row.customer, row.item)
+                                      ? 'bg-green-100 border border-green-300'
+                                      : 'bg-gray-100'
+                                  }`}>
+                                    {row.budget2026}
+                                    {ManualBudgetPersistence.isManualEntry(row.id, row.customer, row.item) && (
+                                      <span className="ml-1 text-green-600 font-bold" title="Manual Entry">📝</span>
+                                    )}
+                                  </div>
+                                  {getDiscountPercentage({ category: row.category, brand: row.brand }) > 0 && (
+                                    <div className="text-xs text-orange-600 mt-1">
+                                      -{getDiscountPercentage({ category: row.category, brand: row.brand })}%
+                                    </div>
+                                  )}
                                 </div>
                               ) : (
-                                <input
-                                  type="number"
-                                  className="w-full p-1 text-center border border-gray-300 rounded text-xs"
-                                  value={row.budget2026}
-                                  onChange={(e) => {
-                                    const value = parseInt(e.target.value) || 0;
-                                    handleBudget2026Change(row.id, value);
-                                  }}
-                                  placeholder="Enter quantity"
-                                />
+                                <div className="space-y-1">
+                                  <div className="relative">
+                                    <input
+                                      type="number"
+                                      className={`w-full p-1 text-center border rounded text-xs ${
+                                        ManualBudgetPersistence.isManualEntry(row.id, row.customer, row.item)
+                                          ? 'border-green-400 bg-green-50 font-bold'
+                                          : 'border-gray-300'
+                                      }`}
+                                      value={row.budget2026}
+                                      onChange={(e) => {
+                                        const value = parseInt(e.target.value) || 0;
+                                        handleBudget2026Change(row.id, value);
+                                      }}
+                                      placeholder="Enter quantity"
+                                      title={ManualBudgetPersistence.isManualEntry(row.id, row.customer, row.item)
+                                        ? "Manual Entry - Permanently Saved"
+                                        : "Enter budget quantity"}
+                                    />
+                                    {ManualBudgetPersistence.isManualEntry(row.id, row.customer, row.item) && (
+                                      <span className="absolute -top-1 -right-1 text-green-600 text-xs" title="Manual Entry">📝</span>
+                                    )}
+                                  </div>
+                                  {getDiscountPercentage({ category: row.category, brand: row.brand }) > 0 && (
+                                    <div className="text-xs text-orange-600 text-center">
+                                      -{getDiscountPercentage({ category: row.category, brand: row.brand })}% disc
+                                    </div>
+                                  )}
+                                </div>
                               )}
                             </td>
                             <td className="p-2 border-b border-gray-200 text-xs text-center">
