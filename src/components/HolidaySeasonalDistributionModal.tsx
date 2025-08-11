@@ -208,9 +208,19 @@ const HolidaySeasonalDistributionModal: React.FC<HolidaySeasonalDistributionModa
         <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Business Rationale Section */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Info className="w-5 h-5 text-blue-600" />
-              <h3 className="text-sm font-medium text-blue-800">Business Rationale</h3>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Info className="w-5 h-5 text-blue-600" />
+                <h3 className="text-sm font-medium text-blue-800">Business Rationale</h3>
+              </div>
+              <a
+                href="/src/docs/SeasonalGrowthStrategy.md"
+                target="_blank"
+                className="text-xs text-blue-600 hover:text-blue-800 underline"
+                title="View comprehensive seasonal growth strategy documentation"
+              >
+                📖 View Full Documentation
+              </a>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="bg-white p-3 rounded border">
