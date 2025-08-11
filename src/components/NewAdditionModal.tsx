@@ -4,8 +4,10 @@ import { X, Plus, User, Package, DollarSign, Truck, Save } from 'lucide-react';
 interface NewAdditionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (item: NewItemData) => void;
+  onSubmit: (item: NewItemData) => void;
   type: 'customer' | 'item';
+  customers: any[];
+  items: any[];
 }
 
 export interface NewItemData {
