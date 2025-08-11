@@ -138,4 +138,63 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
+// Utility functions for role-based access control
+export const getUserRoleName = (role: string | undefined): string => {
+  if (!role) return 'Unknown';
+
+  const roleMap: Record<string, string> = {
+    'admin': 'Administrator',
+    'manager': 'Manager',
+    'salesperson': 'Salesperson',
+    'viewer': 'Viewer',
+    'salesman': 'Salesman',
+    'supply_chain': 'Supply Chain'
+  };
+
+  return roleMap[role] || role.charAt(0).toUpperCase() + role.slice(1);
+};
+
+export const hasPermission = (user: User | null, resource: string, action: string): boolean => {
+  if (!user) return false;
+
+  // Admin has all permissions
+  if (user.role === 'admin') return true;
+
+  // Map API roles to auth types
+  const roleMap: Record<string, UserRole> = {
+    'manager': 'manager',
+    'salesperson': 'salesman',
+    'viewer': 'supply_chain',
+    'admin': 'admin'
+  };
+
+  const mappedRole = roleMap[user.role] || 'salesman';
+  const permissions = ROLE_PERMISSIONS[mappedRole] || [];
+
+  return permissions.some(perm =>
+    perm.resource === resource &&
+    (perm.action === action || perm.action === 'manage')
+  );
+};
+
+export const canAccessDashboard = (user: User | null, dashboard: string): boolean => {
+  if (!user) return false;
+
+  // Admin can access everything
+  if (user.role === 'admin') return true;
+
+  // Map API roles to auth types
+  const roleMap: Record<string, UserRole> = {
+    'manager': 'manager',
+    'salesperson': 'salesman',
+    'viewer': 'supply_chain',
+    'admin': 'admin'
+  };
+
+  const mappedRole = roleMap[user.role] || 'salesman';
+  const allowedDashboards = ROLE_DASHBOARDS[mappedRole] || [];
+
+  return allowedDashboards.includes(dashboard);
+};
+
 export default AuthContext;
