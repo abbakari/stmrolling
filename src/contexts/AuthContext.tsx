@@ -72,21 +72,76 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check for existing session on mount
+  // Initialize auth state
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
+    const initializeAuth = async () => {
       try {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
+        // Try to get current Supabase session
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session?.user) {
+          // Get user data from our users table
+          const { data: userData } = await userService.getById(session.user.id);
+          if (userData && Array.isArray(userData) && userData.length > 0) {
+            setUser(mapUserData(userData[0]));
+            await userService.updateLastLogin(session.user.id);
+          }
+        } else {
+          // Check for mock/local session as fallback
+          const savedUser = localStorage.getItem('user');
+          if (savedUser) {
+            try {
+              const parsedUser = JSON.parse(savedUser);
+              setUser(parsedUser);
+            } catch (error) {
+              console.error('Error parsing saved user:', error);
+              localStorage.removeItem('user');
+            }
+          }
+        }
       } catch (error) {
-        console.error('Error parsing saved user:', error);
+        console.error('Error initializing auth:', error);
+        // Fallback to localStorage check
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          try {
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+          } catch (error) {
+            console.error('Error parsing saved user:', error);
+            localStorage.removeItem('user');
+          }
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        try {
+          const { data: userData } = await userService.getById(session.user.id);
+          if (userData && Array.isArray(userData) && userData.length > 0) {
+            setUser(mapUserData(userData[0]));
+            await userService.updateLastLogin(session.user.id);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
         localStorage.removeItem('user');
       }
-    }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -94,22 +149,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Try Supabase authentication first
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-      // Mock authentication - in real app, this would be an API call
+      if (!authError && data.user) {
+        const { data: userData } = await userService.getById(data.user.id);
+        if (userData && Array.isArray(userData) && userData.length > 0) {
+          const userInfo = userData[0];
+
+          if (!userInfo.is_active) {
+            await supabase.auth.signOut();
+            throw new Error('Account is deactivated. Please contact administrator.');
+          }
+
+          setUser(mapUserData(userInfo));
+          await userService.updateLastLogin(data.user.id);
+          return;
+        } else {
+          await supabase.auth.signOut();
+          throw new Error('User profile not found. Please contact administrator.');
+        }
+      }
+
+      // Fallback to mock authentication for development
+      console.log('Supabase auth failed, falling back to mock auth:', authError?.message);
+
       const mockUser = MOCK_USERS[email];
-      
+
       if (!mockUser) {
         throw new Error('Invalid email or password');
       }
 
-      // In real app, you would verify password here
+      // Simple password check for mock auth
       if (password !== 'password') {
         throw new Error('Invalid email or password');
       }
 
-      // Update last login
       const updatedUser = {
         ...mockUser,
         lastLogin: new Date().toISOString()
@@ -117,7 +195,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -125,9 +203,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      // Try to sign out from Supabase
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out from Supabase:', error);
+    } finally {
+      setUser(null);
+      localStorage.removeItem('user');
+      setIsLoading(false);
+    }
   };
 
   const value: AuthContextType = {
