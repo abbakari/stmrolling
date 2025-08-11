@@ -1049,6 +1049,14 @@ const SalesBudget: React.FC = () => {
               {/* Download, Set Distribution, and Admin Stock Buttons */}
               <div className="flex items-center justify-end gap-3">
                 <button
+                  onClick={() => setIsHolidaySeasonalModalOpen(true)}
+                  className="bg-gradient-to-r from-green-600 to-red-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:from-green-700 hover:to-red-700 transition-all transform hover:scale-105 active:scale-95"
+                  title="Apply holiday seasonal distribution with November-December optimization"
+                >
+                  <Calendar className="w-5 h-5" />
+                  <span>🎄 Holiday Distribution</span>
+                </button>
+                <button
                   onClick={() => setIsSetDistributionModalOpen(true)}
                   className="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors transform hover:scale-105 active:scale-95"
                   title="Set automatic distribution for filtered items"
