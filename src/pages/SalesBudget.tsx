@@ -1201,7 +1201,7 @@ const SalesBudget: React.FC = () => {
                       ? 'bg-orange-500 text-white shadow-md transform scale-105'
                       : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
                   }`}
-                  title="View data organized by customer and their items"
+                  title="View sales budget for both customer and items"
                 >
                   Customer - Item
                 </button>
@@ -1209,14 +1209,16 @@ const SalesBudget: React.FC = () => {
                   onClick={() => {
                     console.log('Switching to item-wise view');
                     setActiveView('item-wise');
-                    showNotification('Switched to Item-Wise view', 'success');
+                    // Clear customer filter in item-wise mode
+                    setSelectedCustomer('');
+                    showNotification('Switched to Item-Wise view (customer column hidden)', 'success');
                   }}
                   className={`px-6 py-2 font-semibold transition-all duration-200 ${
                     activeView === 'item-wise'
                       ? 'bg-orange-500 text-white shadow-md transform scale-105'
                       : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
                   }`}
-                  title="View data organized by items and their customers"
+                  title="View sales budget for items only (customer column hidden)"
                 >
                   Item Wise
                 </button>
