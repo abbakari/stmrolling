@@ -71,13 +71,13 @@ class AnalyticsReport(models.Model):
     period_end = models.DateField(db_index=True)
     
     # Report data (stored as JSON for flexibility)
-    data = JSONField(
+    data = models.JSONField(
         default=dict,
         help_text="Report data in JSON format"
     )
     
     # Metadata
-    parameters = JSONField(
+    parameters = models.JSONField(
         default=dict,
         help_text="Report generation parameters"
     )
