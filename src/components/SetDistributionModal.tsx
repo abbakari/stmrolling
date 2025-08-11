@@ -150,7 +150,10 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
       if (distributionType === 'equal') {
         distribution = distributeQuantityEqually(itemQuantity);
       } else {
-        distribution = distributeByPercentage(item.budget2026, percentageValue);
+        // Calculate the budget base: use budget2026 if available, otherwise sum of current monthly data, otherwise use a default value
+        const currentMonthlyTotal = item.monthlyData.reduce((sum, month) => sum + month.budgetValue, 0);
+        const budgetBase = item.budget2026 > 0 ? item.budget2026 : (currentMonthlyTotal > 0 ? currentMonthlyTotal : 100);
+        distribution = distributeByPercentage(budgetBase, percentageValue);
       }
 
       // Apply distribution to monthly data
