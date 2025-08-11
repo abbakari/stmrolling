@@ -36,7 +36,7 @@ THIRD_PARTY_APPS = [
     'drf_spectacular',
     'health_check',
     'health_check.db',
-    'health_check.cache',
+    # 'health_check.cache',  # Disabled for SQLite development
     'health_check.storage',
 ]
 
@@ -85,45 +85,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'stm_budget.wsgi.application'
 
-# Database Configuration with Performance Optimizations
+# Database Configuration - SQLite3 for Development
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='stm_budget'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='password'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'MAX_CONNS': 20,
-            'OPTIONS': {
-                'MAX_CONNS': 20,
-                'connect_timeout': 10,
-            }
-        },
-        'CONN_MAX_AGE': 600,  # Connection pooling
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
-# Redis Configuration for Caching
-REDIS_URL = config('REDIS_URL', default='redis://localhost:6379/0')
-
+# Simple Cache Configuration for Development
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URL,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
-        },
-        'KEY_PREFIX': 'stm_budget',
-        'TIMEOUT': 300,  # 5 minutes default
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
     }
 }
 
-# Session Configuration
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
+# Session Configuration - Use database for development
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -191,13 +170,15 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True,
 }
 
-# Celery Configuration
-CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = REDIS_URL
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'UTC'
+# Celery Configuration - Disabled for SQLite development
+# For development with SQLite, we'll disable Celery
+# CELERY_BROKER_URL = 'memory://'
+# CELERY_RESULT_BACKEND = 'cache+memory://'
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TIMEZONE = 'UTC'
+# CELERY_TASK_ALWAYS_EAGER = True  # Execute tasks synchronously for development
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
