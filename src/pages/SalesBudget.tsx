@@ -1839,18 +1839,28 @@ const SalesBudget: React.FC = () => {
                                   editingRowId === row.id ? (
                                     <>
                                       <button
-                                        onClick={() => handleSaveMonthlyData(row.id)}
-                                        className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition-colors"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleSaveMonthlyData(row.id);
+                                        }}
+                                        className="bg-green-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-green-700 transition-all transform hover:scale-105 active:scale-95 cursor-pointer shadow-sm hover:shadow-md"
                                         title="Save monthly data"
+                                        type="button"
                                       >
-                                        <Save className="w-3 h-3" />
+                                        <Save className="w-4 h-4" />
                                       </button>
                                       <button
-                                        onClick={() => handleCancelMonthlyEdit(row.id)}
-                                        className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 transition-colors"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleCancelMonthlyEdit(row.id);
+                                        }}
+                                        className="bg-red-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-red-700 transition-all transform hover:scale-105 active:scale-95 cursor-pointer shadow-sm hover:shadow-md"
                                         title="Cancel edit"
+                                        type="button"
                                       >
-                                        <X className="w-3 h-3" />
+                                        <X className="w-4 h-4" />
                                       </button>
                                     </>
                                   ) : (
