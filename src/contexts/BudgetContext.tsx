@@ -379,6 +379,7 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
   const value: BudgetContextType = {
     budgetData,
+    forecastData,
     currentYear,
     selectedCustomer,
     selectedItems,
@@ -399,7 +400,16 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
     bulkCreateBudget,
     refreshBudgetData,
     getBudgetSummary,
-    getMonthlyBudget
+    getMonthlyBudget,
+    // Rolling Forecast functions
+    createForecastEntry,
+    updateForecastEntry,
+    deleteForecastEntry,
+    bulkCreateForecast,
+    refreshForecastData,
+    getForecastSummary,
+    getVarianceAnalysis,
+    getMonthlyForecast
   };
 
   return (
