@@ -612,7 +612,7 @@ const SalesBudget: React.FC = () => {
     showNotification(`Distribution applied to ${Object.keys(distributionData).length} items successfully!`, 'success');
   };
 
-  // Auto-distribute when user enters quantity in BUD 2026 column
+  // Auto-distribute when user enters quantity in BUD 2026 column with permanent saving and discount calculation
   const handleBudget2026Change = (itemId: number, value: number) => {
     const distributeQuantityEqually = (quantity: number): MonthlyBudget[] => {
       const baseAmount = Math.floor(quantity / 12);
@@ -651,13 +651,38 @@ const SalesBudget: React.FC = () => {
     setTableData(prevData =>
       prevData.map(item => {
         if (item.id === itemId) {
+          // Calculate discount based on category and brand
+          const discountMultiplier = getCategoryDiscount({
+            category: item.category,
+            brand: item.brand
+          });
+
+          const discountAmount = getDiscountAmount(value * (item.rate || 1), {
+            category: item.category,
+            brand: item.brand
+          });
+
           const newMonthlyData = distributeQuantityEqually(value);
           const newBudgetValue2026 = value * (item.rate || 1);
+
+          // Save manual entry permanently
+          if (user) {
+            ManualBudgetPersistence.saveManualEntry(
+              item.id,
+              item.customer,
+              item.item,
+              item.category,
+              item.brand,
+              value,
+              user.name
+            );
+          }
 
           return {
             ...item,
             budget2026: value,
             budgetValue2026: newBudgetValue2026,
+            discount: discountAmount,
             monthlyData: newMonthlyData
           };
         }
@@ -671,6 +696,20 @@ const SalesBudget: React.FC = () => {
       ...prev,
       [itemId]: newMonthlyData
     }));
+
+    // Show notification about manual entry being saved
+    const item = tableData.find(i => i.id === itemId);
+    if (item) {
+      const discountPercentage = getDiscountPercentage({
+        category: item.category,
+        brand: item.brand
+      });
+
+      showNotification(
+        `✅ Manual entry saved permanently: ${value} units. ${discountPercentage > 0 ? `Discount: ${discountPercentage}%` : 'No discount applied'}.`,
+        'success'
+      );
+    }
   };
 
   const handleExport = (config: ExportConfig) => {
