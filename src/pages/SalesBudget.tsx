@@ -1909,24 +1909,22 @@ const SalesBudget: React.FC = () => {
                                             e.preventDefault();
                                             e.stopPropagation();
 
-                                            // Enhanced seasonal multipliers with holiday business optimization
-                                            // Research-based approach: Studies show 40-60% increase in business transactions during Nov-Dec
-                                            // Reference: Holiday Commerce Trends, McKinsey & Company (2023)
-                                            // Implementation rationale: Pre-position inventory during slow periods to maximize sales
-                                            // when customers make purchasing decisions (see /src/docs/SeasonalGrowthStrategy.md)
-                                            const holidayOptimizedMultipliers = [
-                                              0.70, // Jan - Post-holiday recovery period
-                                              0.75, // Feb - Gradual business resumption
-                                              0.85, // Mar - Quarter-end growth
-                                              0.90, // Apr - Spring business pickup
-                                              0.95, // May - Steady demand phase
-                                              1.00, // Jun - Baseline reference month
-                                              1.05, // Jul - Mid-year activity increase
-                                              1.10, // Aug - Summer business peak
-                                              1.15, // Sep - Back-to-business season
-                                              1.25, // Oct - Pre-holiday preparation surge
-                                              1.55, // Nov - Major holiday business boost (55% above baseline)
-                                              1.70  // Dec - Peak holiday demand (70% above baseline)
+                                            // Inverted seasonal multipliers for early year focus and holiday reduction
+                                            // Business rationale: Front-load inventory during high-sales months (Jan-Apr)
+                                            // and reduce during holiday months (Nov-Dec) when sales are traditionally poor
+                                            const businessOptimizedMultipliers = [
+                                              1.60, // Jan - Peak business season start
+                                              1.50, // Feb - Strong business continuation
+                                              1.40, // Mar - High business activity
+                                              1.30, // Apr - Sustained high demand
+                                              1.20, // May - Good business levels
+                                              1.10, // Jun - Above baseline activity
+                                              1.05, // Jul - Steady mid-year performance
+                                              1.00, // Aug - Baseline reference month
+                                              0.95, // Sep - Slight decline begins
+                                              0.90, // Oct - Pre-holiday reduction
+                                              0.70, // Nov - Holiday period low sales
+                                              0.60  // Dec - Minimal holiday period allocation
                                             ];
 
                                             const totalBudget = editingMonthlyData[row.id]?.reduce((sum, month) => sum + month.budgetValue, 0) || row.budget2026 || 0;
