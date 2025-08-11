@@ -44,7 +44,9 @@ const AppContent: React.FC = () => {
           element={
             <ProtectedRoute>
               <BudgetProvider>
-                <Dashboard />
+                <StockProvider>
+                  <Dashboard />
+                </StockProvider>
               </BudgetProvider>
             </ProtectedRoute>
           }
