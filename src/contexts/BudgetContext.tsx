@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { SalesBudgetService, CustomerService, ItemService, SalesBudget, Customer, Item, handleApiError } from '../services/api';
+import { useAuth } from './AuthContext';
 
 export interface MonthlyBudget {
   month: string;
@@ -11,80 +13,262 @@ export interface MonthlyBudget {
 }
 
 export interface YearlyBudgetData {
-  id: string;
-  customer: string;
-  item: string;
-  category: string;
-  brand: string;
-  year: string;
-  totalBudget: number;
-  monthlyData: MonthlyBudget[];
-  createdBy: string;
-  createdAt: string;
+  [year: number]: {
+    [customerId: number]: {
+      customer: Customer;
+      months: MonthlyBudget[];
+      total: number;
+    };
+  };
 }
 
 export interface BudgetContextType {
-  yearlyBudgets: YearlyBudgetData[];
-  addYearlyBudget: (budget: Omit<YearlyBudgetData, 'id' | 'createdAt'>) => void;
-  updateYearlyBudget: (id: string, budget: Partial<YearlyBudgetData>) => void;
-  deleteYearlyBudget: (id: string) => void;
-  getBudgetsByCustomer: (customer: string) => YearlyBudgetData[];
-  getBudgetsByYear: (year: string) => YearlyBudgetData[];
+  budgetData: YearlyBudgetData;
+  currentYear: number;
+  selectedCustomer: Customer | null;
+  selectedItems: Item[];
+  customers: Customer[];
+  items: Item[];
+  categories: any[];
+  brands: any[];
+  isLoading: boolean;
+  error: string | null;
+  viewMode: 'customer-item' | 'item-wise';
+  setCurrentYear: (year: number) => void;
+  setSelectedCustomer: (customer: Customer | null) => void;
+  setSelectedItems: (items: Item[]) => void;
+  setViewMode: (mode: 'customer-item' | 'item-wise') => void;
+  createBudgetEntry: (data: Partial<SalesBudget>) => Promise<void>;
+  updateBudgetEntry: (id: number, data: Partial<SalesBudget>) => Promise<void>;
+  deleteBudgetEntry: (id: number) => Promise<void>;
+  bulkCreateBudget: (data: {
+    customer: number;
+    items: number[];
+    year: number;
+    total_amount: number;
+    distribution_type: string;
+  }) => Promise<void>;
+  refreshBudgetData: () => Promise<void>;
+  getBudgetSummary: () => Promise<any>;
+  getMonthlyBudget: (year: number, month: number) => Promise<any>;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
-
-export const useBudget = () => {
-  const context = useContext(BudgetContext);
-  if (context === undefined) {
-    throw new Error('useBudget must be used within a BudgetProvider');
-  }
-  return context;
-};
 
 interface BudgetProviderProps {
   children: ReactNode;
 }
 
 export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
-  const [yearlyBudgets, setYearlyBudgets] = useState<YearlyBudgetData[]>([]);
+  const { user, isAuthenticated } = useAuth();
+  const [budgetData, setBudgetData] = useState<YearlyBudgetData>({});
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Item[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'customer-item' | 'item-wise'>('customer-item');
 
-  const addYearlyBudget = (budget: Omit<YearlyBudgetData, 'id' | 'createdAt'>) => {
-    const newBudget: YearlyBudgetData = {
-      ...budget,
-      id: `budget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date().toISOString()
-    };
-    setYearlyBudgets(prev => [...prev, newBudget]);
+  // Initialize data when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadInitialData();
+    }
+  }, [isAuthenticated, user]);
+
+  // Load budget data when current year changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshBudgetData();
+    }
+  }, [currentYear, isAuthenticated]);
+
+  const loadInitialData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Load customers, items, categories, and brands in parallel
+      const [customersRes, itemsRes, categoriesRes, brandsRes] = await Promise.all([
+        CustomerService.getCustomerSummary(),
+        ItemService.getItemSummary(),
+        ItemService.getCategorySummary(),
+        ItemService.getBrandSummary()
+      ]);
+
+      setCustomers(customersRes);
+      setItems(itemsRes);
+      setCategories(categoriesRes);
+      setBrands(brandsRes);
+
+      // Load user's preferred view mode
+      if (user?.profile?.preferred_view_mode) {
+        setViewMode(user.profile.preferred_view_mode as 'customer-item' | 'item-wise');
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      console.error('Failed to load initial data:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const updateYearlyBudget = (id: string, budget: Partial<YearlyBudgetData>) => {
-    setYearlyBudgets(prev => 
-      prev.map(b => b.id === id ? { ...b, ...budget } : b)
-    );
+  const refreshBudgetData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Load sales budget data for current year
+      const budgetRes = await SalesBudgetService.getSalesBudget({
+        year: currentYear,
+        page_size: 1000 // Get all entries for the year
+      });
+
+      // Transform API data to match the existing interface
+      const transformedData: YearlyBudgetData = {};
+      transformedData[currentYear] = {};
+
+      budgetRes.results?.forEach((entry: SalesBudget) => {
+        const customerId = entry.customer;
+        
+        if (!transformedData[currentYear][customerId]) {
+          transformedData[currentYear][customerId] = {
+            customer: entry.customer_info,
+            months: Array.from({ length: 12 }, (_, i) => ({
+              month: new Date(0, i).toLocaleString('default', { month: 'long' }),
+              budgetValue: 0,
+              actualValue: 0,
+              rate: 0,
+              stock: 0,
+              git: 0,
+              discount: entry.discount_percentage || 0
+            })),
+            total: 0
+          };
+        }
+
+        // Update month data
+        const monthIndex = entry.month - 1;
+        if (monthIndex >= 0 && monthIndex < 12) {
+          transformedData[currentYear][customerId].months[monthIndex].budgetValue += entry.total_amount;
+          transformedData[currentYear][customerId].months[monthIndex].rate = entry.unit_price;
+          transformedData[currentYear][customerId].months[monthIndex].discount = entry.discount_percentage || 0;
+          transformedData[currentYear][customerId].total += entry.total_amount;
+        }
+      });
+
+      setBudgetData(transformedData);
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      console.error('Failed to refresh budget data:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const deleteYearlyBudget = (id: string) => {
-    setYearlyBudgets(prev => prev.filter(b => b.id !== id));
+  const createBudgetEntry = async (data: Partial<SalesBudget>) => {
+    try {
+      setError(null);
+      await SalesBudgetService.createSalesBudgetEntry(data);
+      await refreshBudgetData();
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
   };
 
-  const getBudgetsByCustomer = (customer: string) => {
-    return yearlyBudgets.filter(b => 
-      b.customer.toLowerCase().includes(customer.toLowerCase())
-    );
+  const updateBudgetEntry = async (id: number, data: Partial<SalesBudget>) => {
+    try {
+      setError(null);
+      await SalesBudgetService.updateSalesBudgetEntry(id, data);
+      await refreshBudgetData();
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
   };
 
-  const getBudgetsByYear = (year: string) => {
-    return yearlyBudgets.filter(b => b.year === year);
+  const deleteBudgetEntry = async (id: number) => {
+    try {
+      setError(null);
+      await SalesBudgetService.deleteSalesBudgetEntry(id);
+      await refreshBudgetData();
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  const bulkCreateBudget = async (data: {
+    customer: number;
+    items: number[];
+    year: number;
+    total_amount: number;
+    distribution_type: string;
+  }) => {
+    try {
+      setError(null);
+      await SalesBudgetService.bulkCreateSalesBudget(data);
+      await refreshBudgetData();
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  const getBudgetSummary = async () => {
+    try {
+      return await SalesBudgetService.getSalesBudgetSummary({ year: currentYear });
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
+  };
+
+  const getMonthlyBudget = async (year: number, month: number) => {
+    try {
+      return await SalesBudgetService.getMonthlyBudget({ year, month });
+    } catch (error) {
+      const errorMessage = handleApiError(error as any);
+      setError(errorMessage);
+      throw error;
+    }
   };
 
   const value: BudgetContextType = {
-    yearlyBudgets,
-    addYearlyBudget,
-    updateYearlyBudget,
-    deleteYearlyBudget,
-    getBudgetsByCustomer,
-    getBudgetsByYear
+    budgetData,
+    currentYear,
+    selectedCustomer,
+    selectedItems,
+    customers,
+    items,
+    categories,
+    brands,
+    isLoading,
+    error,
+    viewMode,
+    setCurrentYear,
+    setSelectedCustomer,
+    setSelectedItems,
+    setViewMode,
+    createBudgetEntry,
+    updateBudgetEntry,
+    deleteBudgetEntry,
+    bulkCreateBudget,
+    refreshBudgetData,
+    getBudgetSummary,
+    getMonthlyBudget
   };
 
   return (
@@ -93,3 +277,13 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
     </BudgetContext.Provider>
   );
 };
+
+export const useBudget = (): BudgetContextType => {
+  const context = useContext(BudgetContext);
+  if (context === undefined) {
+    throw new Error('useBudget must be used within a BudgetProvider');
+  }
+  return context;
+};
+
+export default BudgetContext;
