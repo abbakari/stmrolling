@@ -1301,24 +1301,38 @@ const RollingForecast: React.FC = () => {
                       onChange={handleSelectAll}
                     />
                   </th>
-                  <th
-                    className="px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-48"
-                    onClick={() => handleSort('customer')}
-                  >
-                    <div className="flex items-center gap-1">
-                      CUSTOMER
-                      {getSortIcon('customer')}
-                    </div>
-                  </th>
-                  <th
-                    className="px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-64"
-                    onClick={() => handleSort('item')}
-                  >
-                    <div className="flex items-center gap-1">
-                      ITEM
-                      {getSortIcon('item')}
-                    </div>
-                  </th>
+                  {activeView === 'customer-item' ? (
+                    <>
+                      <th
+                        className="px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-48"
+                        onClick={() => handleSort('customer')}
+                      >
+                        <div className="flex items-center gap-1">
+                          CUSTOMER
+                          {getSortIcon('customer')}
+                        </div>
+                      </th>
+                      <th
+                        className="px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-64"
+                        onClick={() => handleSort('item')}
+                      >
+                        <div className="flex items-center gap-1">
+                          ITEM
+                          {getSortIcon('item')}
+                        </div>
+                      </th>
+                    </>
+                  ) : (
+                    <th
+                      className="px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-auto"
+                      onClick={() => handleSort('item')}
+                    >
+                      <div className="flex items-center gap-1">
+                        ITEM (Category - Brand)
+                        {getSortIcon('item')}
+                      </div>
+                    </th>
+                  )}
                   <th
                     className="px-1 sm:px-2 py-2 sm:py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-20"
                     onClick={() => handleSort('bud25')}
