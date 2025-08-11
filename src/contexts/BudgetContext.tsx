@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { SalesBudgetService, CustomerService, ItemService, SalesBudget, Customer, Item, handleApiError } from '../services/api';
+import { SalesBudgetService, RollingForecastService, CustomerService, ItemService, SalesBudget, RollingForecast, Customer, Item, handleApiError } from '../services/api';
 import { useAuth } from './AuthContext';
 
 export interface MonthlyBudget {
