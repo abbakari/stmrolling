@@ -63,6 +63,12 @@ const RollingForecast: React.FC = () => {
   const [showReportView, setShowReportView] = useState(false);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
+  // Helper function for showing notifications
+  const showNotification = (message: string, type: 'success' | 'error') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
     {
