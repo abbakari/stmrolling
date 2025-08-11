@@ -1410,60 +1410,106 @@ const RollingForecast: React.FC = () => {
                           onChange={() => handleRowSelect(row.id)}
                         />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                        <div className="flex items-center justify-between">
-                          <div
-                            className={`${
-                              user?.role === 'manager'
-                                ? 'cursor-pointer hover:text-blue-600 hover:underline'
-                                : ''
-                            }`}
-                            title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
-                            onClick={() => handleCustomerClick(row.customer)}
-                          >
-                            {row.customer}
+                      {activeView === 'customer-item' ? (
+                        <>
+                          <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <div className="flex items-center justify-between">
+                              <div
+                                className={`${
+                                  user?.role === 'manager'
+                                    ? 'cursor-pointer hover:text-blue-600 hover:underline'
+                                    : ''
+                                }`}
+                                title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
+                                onClick={() => handleCustomerClick(row.customer)}
+                              >
+                                {row.customer}
+                                {user?.role === 'manager' && (
+                                  <span className="ml-1 text-blue-500">👑</span>
+                                )}
+                              </div>
+                              {user?.role === 'manager' && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (user?.role === 'manager') {
+                                      // Convert row data to monthly format for view-only modal
+                                      const monthlyData = getShortMonthNames().map(month => ({
+                                        month,
+                                        budgetValue: getMonthlyData(row.id)[month] || 0,
+                                        actualValue: 0,
+                                        rate: 100,
+                                        stock: row.stock,
+                                        git: row.git,
+                                        discount: 0
+                                      }));
+
+                                      setSelectedRowForViewOnly({
+                                        ...row,
+                                        monthlyData,
+                                        category: 'TYRE SERVICE',
+                                        brand: 'Various'
+                                      });
+                                      setIsViewOnlyModalOpen(true);
+                                    } else {
+                                      handleExpandRow(row.id);
+                                    }
+                                  }}
+                                  className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                                  title={user?.role === 'manager' ? "View monthly forecast distribution" : "Edit monthly forecast"}
+                                >
+                                  +
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {row.item}
+                          </td>
+                        </>
+                      ) : (
+                        <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium">{row.item}</div>
+                              <div className="text-xs text-gray-500">TYRE SERVICE - Various</div>
+                            </div>
                             {user?.role === 'manager' && (
-                              <span className="ml-1 text-blue-500">👑</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (user?.role === 'manager') {
+                                    // Convert row data to monthly format for view-only modal
+                                    const monthlyData = getShortMonthNames().map(month => ({
+                                      month,
+                                      budgetValue: getMonthlyData(row.id)[month] || 0,
+                                      actualValue: 0,
+                                      rate: 100,
+                                      stock: row.stock,
+                                      git: row.git,
+                                      discount: 0
+                                    }));
+
+                                    setSelectedRowForViewOnly({
+                                      ...row,
+                                      monthlyData,
+                                      category: 'TYRE SERVICE',
+                                      brand: 'Various'
+                                    });
+                                    setIsViewOnlyModalOpen(true);
+                                  } else {
+                                    handleExpandRow(row.id);
+                                  }
+                                }}
+                                className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                                title={user?.role === 'manager' ? "View monthly forecast distribution" : "Edit monthly forecast"}
+                              >
+                                +
+                              </button>
                             )}
                           </div>
-                          {user?.role === 'manager' && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (user?.role === 'manager') {
-                                  // Convert row data to monthly format for view-only modal
-                                  const monthlyData = getShortMonthNames().map(month => ({
-                                    month,
-                                    budgetValue: getMonthlyData(row.id)[month] || 0,
-                                    actualValue: 0,
-                                    rate: 100,
-                                    stock: row.stock,
-                                    git: row.git,
-                                    discount: 0
-                                  }));
-
-                                  setSelectedRowForViewOnly({
-                                    ...row,
-                                    monthlyData,
-                                    category: 'TYRE SERVICE',
-                                    brand: 'Various'
-                                  });
-                                  setIsViewOnlyModalOpen(true);
-                                } else {
-                                  handleExpandRow(row.id);
-                                }
-                              }}
-                              className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                              title={user?.role === 'manager' ? "View monthly forecast distribution" : "Edit monthly forecast"}
-                            >
-                              +
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {row.item}
-                      </td>
+                        </td>
+                      )}
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
                         {row.bud25}
                       </td>
