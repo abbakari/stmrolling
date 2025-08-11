@@ -827,13 +827,40 @@ const RollingForecast: React.FC = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for 2025-2026</h1>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" className="rounded" />
-              <span className="text-sm text-gray-700">Item-wise</span>
-            </label>
-            <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
-              Customer-Item
-            </button>
+            <div className="flex shadow-sm rounded-md overflow-hidden">
+              <button
+                onClick={() => {
+                  console.log('Switching to customer-item view in Rolling Forecast');
+                  setActiveView('customer-item');
+                  showNotification('Switched to Customer-Item view', 'success');
+                }}
+                className={`px-6 py-2 font-semibold transition-all duration-200 ${
+                  activeView === 'customer-item'
+                    ? 'bg-orange-500 text-white shadow-md transform scale-105'
+                    : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
+                }`}
+                title="View rolling forecast for both customer and items"
+              >
+                Customer - Item
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Switching to item-wise view in Rolling Forecast');
+                  setActiveView('item-wise');
+                  // Clear customer filter in item-wise mode
+                  setSelectedCustomer('');
+                  showNotification('Switched to Item-Wise view (customer column hidden)', 'success');
+                }}
+                className={`px-6 py-2 font-semibold transition-all duration-200 ${
+                  activeView === 'item-wise'
+                    ? 'bg-orange-500 text-white shadow-md transform scale-105'
+                    : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
+                }`}
+                title="View rolling forecast for items only (customer column hidden)"
+              >
+                Item Wise
+              </button>
+            </div>
             {/* Follow-backs button for salesman and manager */}
             {(user?.role === 'salesman' || user?.role === 'manager') && (
               <FollowBacksButton />
