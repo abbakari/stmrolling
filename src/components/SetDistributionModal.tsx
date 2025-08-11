@@ -338,13 +338,20 @@ const SetDistributionModal: React.FC<SetDistributionModalProps> = ({
                 Selected Items for Distribution ({filteredItems.length})
               </h3>
               <div className="max-h-32 overflow-y-auto space-y-1">
-                {filteredItems.map(item => (
-                  <div key={item.id} className="text-sm text-green-700 bg-white p-2 rounded border">
-                    <div className="font-medium">{item.customer}</div>
-                    <div className="text-xs">{item.category} - {item.brand} - {item.item}</div>
-                    <div className="text-xs text-gray-600">Current Budget 2026: {item.budget2026}</div>
-                  </div>
-                ))}
+                {filteredItems.map(item => {
+                  const currentMonthlyTotal = item.monthlyData.reduce((sum, month) => sum + month.budgetValue, 0);
+                  const budgetBase = item.budget2026 > 0 ? item.budget2026 : (currentMonthlyTotal > 0 ? currentMonthlyTotal : 100);
+                  return (
+                    <div key={item.id} className="text-sm text-green-700 bg-white p-2 rounded border">
+                      <div className="font-medium">{item.customer}</div>
+                      <div className="text-xs">{item.category} - {item.brand} - {item.item}</div>
+                      <div className="text-xs text-gray-600">
+                        Budget Base: {budgetBase}
+                        {item.budget2026 > 0 ? ' (Budget 2026)' : currentMonthlyTotal > 0 ? ' (Monthly Total)' : ' (Default)'}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
