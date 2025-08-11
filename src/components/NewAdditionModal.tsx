@@ -9,7 +9,16 @@ interface NewAdditionModalProps {
 }
 
 export interface NewItemData {
-  // Customer fields
+  type?: 'yearlyBudget' | 'budgetEntry';
+  customer: string;
+  items: string[];
+  totalAmount: number;
+  distributionType?: string;
+  quantity?: number;
+  rate?: number;
+  discount?: number;
+
+  // Legacy fields for backward compatibility
   customerName?: string;
   customerCode?: string;
   customerType?: string;
