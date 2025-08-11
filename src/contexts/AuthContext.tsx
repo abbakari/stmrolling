@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthService, User, handleApiError } from '../services/api';
+import { UserRole, Permission, ROLE_PERMISSIONS, ROLE_DASHBOARDS } from '../types/auth';
 
 interface LoginCredentials {
   username: string;
