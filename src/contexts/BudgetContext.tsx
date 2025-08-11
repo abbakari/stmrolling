@@ -144,15 +144,6 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      const isDemoMode = localStorage.getItem('demo_mode') === 'true';
-
-      if (isDemoMode) {
-        // In demo mode, just update the existing demo data with some random variations
-        console.log('Demo mode: Refreshing demo budget data');
-        // The demo data is already set in loadInitialData, so just indicate success
-        return;
-      }
-
       // Load sales budget data for current year
       const budgetRes = await SalesBudgetService.getSalesBudget({
         year: currentYear,
