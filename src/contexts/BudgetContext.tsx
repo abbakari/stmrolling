@@ -345,6 +345,55 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
+      const isDemoMode = localStorage.getItem('demo_mode') === 'true';
+
+      if (isDemoMode) {
+        // Create demo forecast data
+        const demoForecastData: RollingForecast[] = customers.slice(0, 3).flatMap(customer =>
+          items.slice(0, 2).map((item, index) => ({
+            id: customer.id * 10 + item.id,
+            customer: customer.id,
+            customer_info: customer,
+            item: item.id,
+            item_info: item,
+            year: currentYear,
+            month: 3 + index, // March and April
+            forecasted_quantity: Math.floor(Math.random() * 100) + 50,
+            forecasted_amount: Math.floor(Math.random() * 15000) + 8000,
+            budget_quantity: Math.floor(Math.random() * 80) + 40,
+            budget_amount: Math.floor(Math.random() * 12000) + 6000,
+            quantity_variance: 0,
+            amount_variance: 0,
+            quantity_variance_percentage: 0,
+            amount_variance_percentage: 0,
+            forecast_type: ['optimistic', 'realistic', 'pessimistic'][Math.floor(Math.random() * 3)] as any,
+            confidence_level: Math.floor(Math.random() * 30) + 70, // 70-100%
+            is_latest: true,
+            version: 1,
+            status: ['draft', 'submitted', 'approved'][Math.floor(Math.random() * 3)] as any,
+            quarter: Math.floor((3 + index - 1) / 3) + 1,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }))
+        );
+
+        // Calculate variances
+        demoForecastData.forEach(forecast => {
+          forecast.quantity_variance = forecast.forecasted_quantity - forecast.budget_quantity;
+          forecast.amount_variance = forecast.forecasted_amount - forecast.budget_amount;
+          forecast.quantity_variance_percentage = forecast.budget_quantity > 0
+            ? (forecast.quantity_variance / forecast.budget_quantity) * 100
+            : 0;
+          forecast.amount_variance_percentage = forecast.budget_amount > 0
+            ? (forecast.amount_variance / forecast.budget_amount) * 100
+            : 0;
+        });
+
+        setForecastData(demoForecastData);
+        console.log('Demo mode: Created demo forecast data');
+        return;
+      }
+
       // Load rolling forecast data for current year
       const forecastRes = await RollingForecastService.getRollingForecasts({
         year: currentYear,
