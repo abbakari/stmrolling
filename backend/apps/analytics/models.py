@@ -7,7 +7,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from django.contrib.postgres.fields import JSONField
+# JSONField is now part of django.db.models in Django 3.1+
 
 User = get_user_model()
 
@@ -71,13 +71,13 @@ class AnalyticsReport(models.Model):
     period_end = models.DateField(db_index=True)
     
     # Report data (stored as JSON for flexibility)
-    data = JSONField(
+    data = models.JSONField(
         default=dict,
         help_text="Report data in JSON format"
     )
     
     # Metadata
-    parameters = JSONField(
+    parameters = models.JSONField(
         default=dict,
         help_text="Report generation parameters"
     )
