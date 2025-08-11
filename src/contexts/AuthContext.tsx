@@ -55,70 +55,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (credentials: LoginCredentials) => {
     try {
       setIsLoading(true);
+      const response = await AuthService.login(credentials.username, credentials.password);
 
-      try {
-        // Try to connect to Django backend first
-        const response = await AuthService.login(credentials.username, credentials.password);
+      // Store tokens
+      localStorage.setItem('access_token', response.access);
+      localStorage.setItem('refresh_token', response.refresh);
 
-        // Store tokens
-        localStorage.setItem('access_token', response.access);
-        localStorage.setItem('refresh_token', response.refresh);
+      // Store user data
+      setUser(response.user);
+      localStorage.setItem('user', JSON.stringify(response.user));
 
-        // Store user data
-        setUser(response.user);
-        localStorage.setItem('user', JSON.stringify(response.user));
-
-        // Get user stats
-        await refreshUserStats();
-      } catch (backendError) {
-        // If backend is not available, use demo mode
-        console.log('Backend not available, using demo mode');
-
-        // Demo credentials for fallback
-        const demoUsers = {
-          'admin': { username: 'admin', password: 'admin123', role: 'admin' },
-          'manager1': { username: 'manager1', password: 'manager123', role: 'manager' },
-          'sales1': { username: 'sales1', password: 'sales123', role: 'salesperson' },
-          'viewer1': { username: 'viewer1', password: 'viewer123', role: 'viewer' }
-        };
-
-        const demoUser = demoUsers[credentials.username as keyof typeof demoUsers];
-
-        if (!demoUser || demoUser.password !== credentials.password) {
-          throw new Error('Invalid demo credentials. Try: admin/admin123, manager1/manager123, sales1/sales123, or viewer1/viewer123');
-        }
-
-        // Create demo user object
-        const user: User = {
-          id: Date.now(),
-          username: demoUser.username,
-          email: `${demoUser.username}@demo.com`,
-          first_name: demoUser.username === 'admin' ? 'Demo' : demoUser.username.charAt(0).toUpperCase() + demoUser.username.slice(1),
-          last_name: demoUser.role === 'admin' ? 'Administrator' : demoUser.role.charAt(0).toUpperCase() + demoUser.role.slice(1),
-          full_name: `${demoUser.username.charAt(0).toUpperCase() + demoUser.username.slice(1)} ${demoUser.role.charAt(0).toUpperCase() + demoUser.role.slice(1)}`,
-          role: demoUser.role as any,
-          department: demoUser.role === 'admin' ? 'IT' : 'Sales',
-          phone: '+1-555-0123',
-          is_active: true,
-          customer_count: Math.floor(Math.random() * 20) + 5,
-          sales_budget_count: Math.floor(Math.random() * 50) + 10
-        };
-
-        // Store demo user data
-        setUser(user);
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('demo_mode', 'true');
-
-        // Set demo stats
-        setUserStats({
-          total_users: 25,
-          total_salespersons: 8,
-          my_customers: user.customer_count,
-          my_sales_budget_entries: user.sales_budget_count
-        });
-      }
+      // Get user stats
+      await refreshUserStats();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      const errorMessage = handleApiError(error as any);
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
