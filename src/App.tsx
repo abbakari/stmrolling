@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { BudgetProvider } from './contexts/BudgetContext';
+import { StockProvider } from './contexts/StockContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import SalesBudget from './pages/SalesBudget';
