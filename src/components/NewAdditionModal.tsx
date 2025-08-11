@@ -4,12 +4,23 @@ import { X, Plus, User, Package, DollarSign, Truck, Save } from 'lucide-react';
 interface NewAdditionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (item: NewItemData) => void;
+  onSubmit: (item: NewItemData) => void;
   type: 'customer' | 'item';
+  customers: any[];
+  items: any[];
 }
 
 export interface NewItemData {
-  // Customer fields
+  type?: 'yearlyBudget' | 'budgetEntry';
+  customer: string;
+  items: string[];
+  totalAmount: number;
+  distributionType?: string;
+  quantity?: number;
+  rate?: number;
+  discount?: number;
+
+  // Legacy fields for backward compatibility
   customerName?: string;
   customerCode?: string;
   customerType?: string;
