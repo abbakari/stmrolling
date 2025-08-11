@@ -113,22 +113,85 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      // Load customers, items, categories, and brands in parallel
-      const [customersRes, itemsRes, categoriesRes, brandsRes] = await Promise.all([
-        CustomerService.getCustomerSummary(),
-        ItemService.getItemSummary(),
-        ItemService.getCategorySummary(),
-        ItemService.getBrandSummary()
-      ]);
+      // Check if we're in demo mode
+      const isDemoMode = localStorage.getItem('demo_mode') === 'true';
 
-      setCustomers(customersRes);
-      setItems(itemsRes);
-      setCategories(categoriesRes);
-      setBrands(brandsRes);
+      if (isDemoMode) {
+        // Use demo data when backend is not available
+        const demoCustomers = [
+          { id: 1, code: 'CUST001', name: 'Action Aid International', status: 'active', category: 'premium', is_active: true },
+          { id: 2, code: 'CUST002', name: 'ADVENT CONSTRUCTION LTD', status: 'active', category: 'standard', is_active: true },
+          { id: 3, code: 'CUST003', name: 'ABC Electronics Store', status: 'active', category: 'basic', is_active: true }
+        ];
 
-      // Load user's preferred view mode
-      if (user?.profile?.preferred_view_mode) {
-        setViewMode(user.profile.preferred_view_mode as 'customer-item' | 'item-wise');
+        const demoItems = [
+          { id: 1, code: 'ITEM001', name: 'BF Goodrich Tyres', category_name: 'Automotive', brand_name: 'BF Goodrich', unit_price: 150, is_active: true },
+          { id: 2, code: 'ITEM002', name: 'Michelin Tyres', category_name: 'Automotive', brand_name: 'Michelin', unit_price: 180, is_active: true },
+          { id: 3, code: 'ITEM003', name: 'Office Desk', category_name: 'Furniture', brand_name: 'IKEA', unit_price: 299, is_active: true }
+        ];
+
+        const demoCategories = [
+          { id: 1, code: 'AUTO', name: 'Automotive', is_active: true },
+          { id: 2, code: 'FURN', name: 'Furniture', is_active: true },
+          { id: 3, code: 'ELEC', name: 'Electronics', is_active: true }
+        ];
+
+        const demoBrands = [
+          { id: 1, code: 'BFG', name: 'BF Goodrich', is_active: true },
+          { id: 2, code: 'MICH', name: 'Michelin', is_active: true },
+          { id: 3, code: 'IKEA', name: 'IKEA', is_active: true }
+        ];
+
+        setCustomers(demoCustomers);
+        setItems(demoItems);
+        setCategories(demoCategories);
+        setBrands(demoBrands);
+
+        // Create demo budget data
+        const demoBudgetData: YearlyBudgetData = {};
+        demoBudgetData[currentYear] = {};
+
+        demoCustomers.forEach(customer => {
+          demoBudgetData[currentYear][customer.id] = {
+            customer: customer as any,
+            months: Array.from({ length: 12 }, (_, i) => ({
+              month: new Date(0, i).toLocaleString('default', { month: 'long' }),
+              budgetValue: Math.floor(Math.random() * 10000) + 5000,
+              actualValue: Math.floor(Math.random() * 8000) + 3000,
+              rate: 150 + Math.floor(Math.random() * 100),
+              stock: Math.floor(Math.random() * 100) + 20,
+              git: Math.floor(Math.random() * 30) + 5,
+              discount: Math.floor(Math.random() * 15) + 2
+            })),
+            total: 0
+          };
+
+          // Calculate total
+          demoBudgetData[currentYear][customer.id].total =
+            demoBudgetData[currentYear][customer.id].months.reduce((sum, month) => sum + month.budgetValue, 0);
+        });
+
+        setBudgetData(demoBudgetData);
+
+        console.log('Demo mode: Loaded demo data successfully');
+      } else {
+        // Load real data from backend
+        const [customersRes, itemsRes, categoriesRes, brandsRes] = await Promise.all([
+          CustomerService.getCustomerSummary(),
+          ItemService.getItemSummary(),
+          ItemService.getCategorySummary(),
+          ItemService.getBrandSummary()
+        ]);
+
+        setCustomers(customersRes);
+        setItems(itemsRes);
+        setCategories(categoriesRes);
+        setBrands(brandsRes);
+
+        // Load user's preferred view mode
+        if (user?.profile?.preferred_view_mode) {
+          setViewMode(user.profile.preferred_view_mode as 'customer-item' | 'item-wise');
+        }
       }
     } catch (error) {
       const errorMessage = handleApiError(error as any);
