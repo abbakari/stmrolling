@@ -112,12 +112,9 @@ class SalesBudgetCreateSerializer(serializers.ModelSerializer):
 class SalesBudgetBulkCreateSerializer(serializers.Serializer):
     """Serializer for bulk creating sales budget entries."""
     
-    customer = serializers.PrimaryKeyRelatedField(
-        queryset=None,  # Will be set in __init__
-        read_only=False
-    )
+    customer = serializers.PrimaryKeyRelatedField(read_only=False)
     items = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=None),  # Will be set in __init__
+        child=serializers.PrimaryKeyRelatedField(),
         min_length=1
     )
     year = serializers.IntegerField(min_value=2020, max_value=2030)
