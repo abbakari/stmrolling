@@ -117,12 +117,9 @@ class RollingForecastCreateSerializer(serializers.ModelSerializer):
 class RollingForecastBulkCreateSerializer(serializers.Serializer):
     """Serializer for bulk creating rolling forecast entries."""
     
-    customer = serializers.PrimaryKeyRelatedField(
-        queryset=None,  # Will be set in __init__
-        read_only=False
-    )
+    customer = serializers.PrimaryKeyRelatedField(read_only=False)
     items = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=None),  # Will be set in __init__
+        child=serializers.PrimaryKeyRelatedField(),
         min_length=1
     )
     year = serializers.IntegerField(min_value=2020, max_value=2030)
