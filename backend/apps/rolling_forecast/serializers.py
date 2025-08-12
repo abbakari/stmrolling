@@ -117,6 +117,12 @@ class RollingForecastCreateSerializer(serializers.ModelSerializer):
 class RollingForecastBulkCreateSerializer(serializers.Serializer):
     """Serializer for bulk creating rolling forecast entries."""
 
+    year = serializers.IntegerField(min_value=2020, max_value=2030)
+    forecast_data = serializers.ListField(
+        child=serializers.DictField(),
+        min_length=1
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Initialize fields with querysets
@@ -131,11 +137,6 @@ class RollingForecastBulkCreateSerializer(serializers.Serializer):
             child=serializers.PrimaryKeyRelatedField(queryset=self.get_items_queryset()),
             min_length=1
         )
-    year = serializers.IntegerField(min_value=2020, max_value=2030)
-    forecast_data = serializers.ListField(
-        child=serializers.DictField(),
-        min_length=1
-    )
     
     def get_customer_queryset(self):
         request = self.context.get('request')
