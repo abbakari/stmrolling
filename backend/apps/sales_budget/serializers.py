@@ -111,12 +111,21 @@ class SalesBudgetCreateSerializer(serializers.ModelSerializer):
 
 class SalesBudgetBulkCreateSerializer(serializers.Serializer):
     """Serializer for bulk creating sales budget entries."""
-    
-    customer = serializers.PrimaryKeyRelatedField(read_only=False)
-    items = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(),
-        min_length=1
-    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Initialize fields with querysets
+        from apps.customers.models import Customer
+        from apps.items.models import Item
+
+        self.fields['customer'] = serializers.PrimaryKeyRelatedField(
+            queryset=self.get_customer_queryset(),
+            read_only=False
+        )
+        self.fields['items'] = serializers.ListField(
+            child=serializers.PrimaryKeyRelatedField(queryset=self.get_items_queryset()),
+            min_length=1
+        )
     year = serializers.IntegerField(min_value=2020, max_value=2030)
     total_amount = serializers.DecimalField(max_digits=15, decimal_places=2, min_value=0)
     distribution_type = serializers.ChoiceField(choices=SalesBudget.DistributionType.choices)
