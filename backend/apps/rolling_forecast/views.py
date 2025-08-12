@@ -12,7 +12,7 @@ from apps.core.pagination import OptimizedCursorPagination
 from .models import RollingForecast
 from .serializers import (
     RollingForecastSerializer, RollingForecastCreateSerializer,
-    RollingForecastBulkCreateSerializer, ForecastVarianceAnalysisSerializer,
+    ForecastVarianceAnalysisSerializer,
     MonthlyForecastSerializer
 )
 
