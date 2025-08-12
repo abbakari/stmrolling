@@ -117,6 +117,11 @@ class RollingForecastCreateSerializer(serializers.ModelSerializer):
 class RollingForecastBulkCreateSerializer(serializers.Serializer):
     """Serializer for bulk creating rolling forecast entries."""
 
+    customer = serializers.PrimaryKeyRelatedField(read_only=True)
+    items = serializers.ListField(
+        child=serializers.PrimaryKeyRelatedField(read_only=True),
+        min_length=1
+    )
     year = serializers.IntegerField(min_value=2020, max_value=2030)
     forecast_data = serializers.ListField(
         child=serializers.DictField(),
@@ -125,18 +130,11 @@ class RollingForecastBulkCreateSerializer(serializers.Serializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Initialize fields with querysets
-        from apps.customers.models import Customer
-        from apps.items.models import Item
-
-        self.fields['customer'] = serializers.PrimaryKeyRelatedField(
-            queryset=self.get_customer_queryset(),
-            read_only=False
-        )
-        self.fields['items'] = serializers.ListField(
-            child=serializers.PrimaryKeyRelatedField(queryset=self.get_items_queryset()),
-            min_length=1
-        )
+        # Set querysets for writable fields
+        self.fields['customer'].read_only = False
+        self.fields['customer'].queryset = self.get_customer_queryset()
+        self.fields['items'].child.read_only = False
+        self.fields['items'].child.queryset = self.get_items_queryset()
     
     def get_customer_queryset(self):
         request = self.context.get('request')
