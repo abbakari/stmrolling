@@ -12,7 +12,7 @@ from apps.core.pagination import OptimizedCursorPagination
 from .models import SalesBudget, SalesBudgetTemplate
 from .serializers import (
     SalesBudgetSerializer, SalesBudgetCreateSerializer,
-    SalesBudgetBulkCreateSerializer, SalesBudgetTemplateSerializer,
+    SalesBudgetTemplateSerializer,
     SalesBudgetSummarySerializer, MonthlyBudgetSerializer
 )
 
