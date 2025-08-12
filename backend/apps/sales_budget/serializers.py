@@ -112,41 +112,37 @@ class SalesBudgetCreateSerializer(serializers.ModelSerializer):
 class SalesBudgetBulkCreateSerializer(serializers.Serializer):
     """Serializer for bulk creating sales budget entries."""
 
-    customer = serializers.PrimaryKeyRelatedField(read_only=True)
-    items = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(read_only=True),
+    customer_id = serializers.IntegerField()
+    item_ids = serializers.ListField(
+        child=serializers.IntegerField(),
         min_length=1
     )
     year = serializers.IntegerField(min_value=2020, max_value=2030)
     total_amount = serializers.DecimalField(max_digits=15, decimal_places=2, min_value=0)
     distribution_type = serializers.ChoiceField(choices=SalesBudget.DistributionType.choices)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Set querysets for writable fields
-        self.fields['customer'].read_only = False
-        self.fields['customer'].queryset = self.get_customer_queryset()
-        self.fields['items'].child.read_only = False
-        self.fields['items'].child.queryset = self.get_items_queryset()
-    
-    def get_customer_queryset(self):
-        request = self.context.get('request')
-        if request and request.user:
-            from apps.customers.models import Customer
-
-            # Filter customers based on user permissions
-            if request.user.role == request.user.Role.SALESPERSON:
-                return Customer.objects.filter(
-                    salesperson=request.user, is_active=True
-                )
-            else:
-                return Customer.objects.filter(is_active=True)
+    def validate_customer_id(self, value):
+        """Validate customer exists and user has permission."""
         from apps.customers.models import Customer
-        return Customer.objects.filter(is_active=True)
+        try:
+            customer = Customer.objects.get(id=value, is_active=True)
+            request = self.context.get('request')
+            if request and request.user:
+                if request.user.role == 'salesperson':
+                    if customer.salesperson != request.user:
+                        raise serializers.ValidationError("You can only create budgets for your assigned customers.")
+            return value
+        except Customer.DoesNotExist:
+            raise serializers.ValidationError("Customer not found or inactive.")
 
-    def get_items_queryset(self):
+    def validate_item_ids(self, value):
+        """Validate all items exist and are active."""
         from apps.items.models import Item
-        return Item.objects.filter(is_active=True)
+        items = Item.objects.filter(id__in=value, is_active=True)
+        if len(items) != len(value):
+            raise serializers.ValidationError("One or more items not found or inactive.")
+        return value
+    
 
 
 
