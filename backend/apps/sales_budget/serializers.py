@@ -149,10 +149,6 @@ class SalesBudgetBulkCreateSerializer(serializers.Serializer):
         from apps.items.models import Item
         return Item.objects.filter(is_active=True)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['customer'].queryset = self.get_customer_queryset()
-        self.fields['items'].child.queryset = self.get_items_queryset()
 
 
 class SalesBudgetTemplateSerializer(serializers.ModelSerializer):
