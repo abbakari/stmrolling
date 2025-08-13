@@ -7,6 +7,7 @@ export interface User {
   role: string;
   first_name: string;
   last_name: string;
+  name?: string; // For backward compatibility
   department?: string;
   isActive: boolean;
 }
