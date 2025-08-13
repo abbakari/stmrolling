@@ -87,7 +87,7 @@ const Dashboard: React.FC = () => {
         ];
 
       case 'salesman':
-        const salesmanData = getRequestsBySalesman(user?.name || '');
+        const salesmanData = getRequestsBySalesman(user?.username || '');
         const pendingStockItems = salesmanData.requests.filter(r => r.status === 'sent_to_manager').length +
                                  salesmanData.alerts.filter(a => a.status === 'sent_to_manager').length;
         const approvedStockItems = salesmanData.requests.filter(r => r.status === 'approved').length +
@@ -456,7 +456,7 @@ const Dashboard: React.FC = () => {
               <span className="text-gray-500 font-light">Dashboard /</span> {getUserRoleName(user.role)}
             </h4>
             <p className="text-sm text-gray-600">
-              Welcome back, {user.name}! Last updated: {lastRefresh.toLocaleTimeString()}
+              Welcome back, {user.first_name ? `${user.first_name} ${user.last_name}` : user.username}! Last updated: {lastRefresh.toLocaleTimeString()}
             </p>
           </div>
           <div className="flex space-x-2">
