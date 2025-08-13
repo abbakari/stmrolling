@@ -29,6 +29,7 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
       role: 'admin',
       first_name: 'System',
       last_name: 'Administrator',
+      name: 'System Administrator',
       department: 'IT',
       isActive: true
     }
@@ -42,6 +43,7 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
       role: 'manager',
       first_name: 'John',
       last_name: 'Manager',
+      name: 'John Manager',
       department: 'Sales',
       isActive: true
     }
@@ -55,6 +57,7 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
       role: 'salesperson',
       first_name: 'Sarah',
       last_name: 'Sales',
+      name: 'Sarah Sales',
       department: 'Sales',
       isActive: true
     }
@@ -68,6 +71,7 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
       role: 'viewer',
       first_name: 'Mike',
       last_name: 'Viewer',
+      name: 'Mike Viewer',
       department: 'Operations',
       isActive: true
     }
