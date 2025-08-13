@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Bell, Menu, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import UserSwitcher from './UserSwitcher';
 
 interface NavbarProps {
   onPasswordModalOpen: () => void;
@@ -175,6 +176,9 @@ const Navbar: React.FC<NavbarProps> = ({ onPasswordModalOpen }) => {
                 </div>
               )}
             </div>
+
+            {/* User Switcher */}
+            <UserSwitcher />
 
             {/* User Menu */}
             <div className="relative">
