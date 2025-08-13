@@ -5,52 +5,9 @@ import { Plus, Edit, Trash2, Search, Filter, Users, UserCheck, UserX, UserPlus }
 import { UserRole } from '../types/auth';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 
-// Mock users data
-const MOCK_USERS = [
-  {
-    id: '1',
-    name: 'John Admin',
-    email: 'admin@example.com',
-    role: 'admin' as UserRole,
-    department: 'IT',
-    isActive: true,
-    createdAt: '2024-01-15',
-    lastLogin: '2024-12-15T10:30:00Z'
-  },
-  {
-    id: '2',
-    name: 'Sarah Manager',
-    email: 'manager@example.com',
-    role: 'manager' as UserRole,
-    department: 'Sales',
-    isActive: true,
-    createdAt: '2024-02-20',
-    lastLogin: '2024-12-15T09:15:00Z'
-  },
-  {
-    id: '3',
-    name: 'Mike Salesman',
-    email: 'salesman@example.com',
-    role: 'salesman' as UserRole,
-    department: 'Sales',
-    isActive: true,
-    createdAt: '2024-03-10',
-    lastLogin: '2024-12-15T08:45:00Z'
-  },
-  {
-    id: '4',
-    name: 'Lisa Supply',
-    email: 'supply@example.com',
-    role: 'supply_chain' as UserRole,
-    department: 'Operations',
-    isActive: true,
-    createdAt: '2024-04-05',
-    lastLogin: '2024-12-14T16:20:00Z'
-  }
-];
 
 const UserManagement: React.FC = () => {
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState<any[]>([]);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<UserRole | 'all'>('all');

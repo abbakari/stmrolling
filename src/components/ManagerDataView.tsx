@@ -122,7 +122,7 @@ const ManagerDataView: React.FC<ManagerDataViewProps> = ({ isOpen, onClose }) =>
       }
     }
 
-    // Generate mock monthly data
+    // Generate monthly data
     const monthlyData = Array.from({ length: 12 }, (_, i) => {
       const month = new Date(2025, i).toLocaleDateString('en', { month: 'short' });
       return {
