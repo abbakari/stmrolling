@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AuthService, User, handleApiError } from '../services/api';
+import { MockAuthService, User } from '../services/mockAuth';
 import { UserRole, Permission, ROLE_PERMISSIONS, ROLE_DASHBOARDS } from '../types/auth';
 
 interface LoginCredentials {
@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const token = localStorage.getItem('access_token');
       if (token) {
-        const userData = await AuthService.getCurrentUser();
+        const userData = await MockAuthService.getCurrentUser();
         setUser(userData);
         await refreshUserStats();
       }
@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (credentials: LoginCredentials) => {
     try {
       setIsLoading(true);
-      const response = await AuthService.login(credentials.username, credentials.password);
+      const response = await MockAuthService.login(credentials.username, credentials.password);
 
       // Store tokens
       localStorage.setItem('access_token', response.access);
@@ -68,8 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Get user stats
       await refreshUserStats();
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
-      throw new Error(errorMessage);
+      throw new Error(error instanceof Error ? error.message : 'Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
-        await AuthService.logout(refreshToken);
+        await MockAuthService.logout(refreshToken);
       }
     } catch (error) {
       console.error('Logout error:', error);
@@ -103,7 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const refreshUserStats = async () => {
     try {
-      const stats = await AuthService.getUserStats();
+      const stats = await MockAuthService.getUserStats();
       setUserStats(stats);
     } catch (error) {
       console.error('Failed to fetch user stats:', error);
