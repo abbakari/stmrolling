@@ -144,7 +144,7 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       setError(null);
 
       // Load sales budget data for current year
-      const budgetRes = await SalesBudgetService.getSalesBudget({
+      const budgetRes = await MockBudgetService.getSalesBudget({
         year: currentYear,
         page_size: 1000 // Get all entries for the year
       });
