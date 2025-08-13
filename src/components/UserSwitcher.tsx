@@ -83,7 +83,7 @@ const UserSwitcher: React.FC = () => {
           <User className="w-4 h-4 text-white" />
         </div>
         <div className="text-left">
-          <div className="text-sm font-medium text-gray-900">{currentUser?.name || 'Unknown User'}</div>
+          <div className="text-sm font-medium text-gray-900">{currentUser?.name || (user?.first_name ? `${user.first_name} ${user.last_name}` : user?.username) || 'Unknown User'}</div>
           <div className="text-xs text-gray-500">{user?.role || 'No Role'}</div>
         </div>
         <ChevronDown className="w-4 h-4 text-gray-400" />
