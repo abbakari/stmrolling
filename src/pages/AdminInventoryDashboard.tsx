@@ -276,7 +276,7 @@ const AdminInventoryDashboard: React.FC = () => {
       const workflowItems = JSON.parse(localStorage.getItem('admin_workflow_center') || '[]');
       
       const newStats: AdminInventoryStats = {
-        totalUsers: 12, // Mock data - in real app would come from user management system
+        totalUsers: 0,
         activeUsers: 8,
         pendingRequests: workflowItems.filter((item: any) => item.status === 'pending').length,
         criticalAlerts: notifications.filter(n => n.priority === 'critical' && !n.isRead).length,

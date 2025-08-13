@@ -315,7 +315,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <div className="flex items-center gap-x-2">
                 <User className="h-5 w-5 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">{user.name}</span>
+                <span className="text-sm font-medium text-gray-700">{user.first_name ? `${user.first_name} ${user.last_name}` : user.username}</span>
                 <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
                   {getUserRoleName(user.role)}
                 </span>
