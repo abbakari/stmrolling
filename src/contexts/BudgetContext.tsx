@@ -22,19 +22,22 @@ export interface YearlyBudgetData {
   };
 }
 
-export interface BudgetContextType {
+interface BudgetContextType {
+  // State
   budgetData: YearlyBudgetData;
   forecastData: RollingForecast[];
-  currentYear: number;
-  selectedCustomer: Customer | null;
-  selectedItems: Item[];
   customers: Customer[];
   items: Item[];
   categories: any[];
   brands: any[];
   isLoading: boolean;
   error: string | null;
+  currentYear: number;
+  selectedCustomer: Customer | null;
+  selectedItems: Item[];
   viewMode: 'customer-item' | 'item-wise';
+  
+  // Actions
   setCurrentYear: (year: number) => void;
   setSelectedCustomer: (customer: Customer | null) => void;
   setSelectedItems: (items: Item[]) => void;
@@ -113,7 +116,7 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      // Load customers, items, categories, and brands in parallel
+      // Load customers, items, and categories in parallel
       const [customersRes, itemsRes, categoriesRes] = await Promise.all([
         MockCustomerService.getCustomers(),
         MockItemService.getItems(),
@@ -125,12 +128,8 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       setCategories(categoriesRes.categories || []);
       setBrands([]);
 
-      // Load user's preferred view mode
-      if (user?.profile?.preferred_view_mode) {
-        setViewMode(user.profile.preferred_view_mode as 'customer-item' | 'item-wise');
-      }
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       console.error('Failed to load initial data:', error);
     } finally {
@@ -145,28 +144,39 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
       // Load sales budget data for current year
       const budgetRes = await MockBudgetService.getSalesBudget({
-        year: currentYear,
-        page_size: 1000 // Get all entries for the year
+        year: currentYear
       });
 
-      // Transform API data to match the existing interface
+      // Transform mock data to match the existing interface
       const transformedData: YearlyBudgetData = {};
       transformedData[currentYear] = {};
 
-      budgetRes.results?.forEach((entry: SalesBudget) => {
+      // Group by customer and create monthly structure
+      budgetRes.forEach(entry => {
         const customerId = entry.customer;
-
+        
         if (!transformedData[currentYear][customerId]) {
+          const customer = customers.find(c => c.id === customerId) || {
+            id: customerId,
+            name: `Customer ${customerId}`,
+            email: '',
+            phone: '',
+            address: '',
+            region: '',
+            sales_representative: '',
+            created_at: new Date().toISOString()
+          };
+
           transformedData[currentYear][customerId] = {
-            customer: entry.customer_info,
+            customer,
             months: Array.from({ length: 12 }, (_, i) => ({
-              month: new Date(0, i).toLocaleString('default', { month: 'long' }),
+              month: new Date(0, i).toLocaleDateString('en', { month: 'short' }),
               budgetValue: 0,
               actualValue: 0,
-              rate: 0,
+              rate: 100,
               stock: 0,
               git: 0,
-              discount: entry.discount_percentage || 0
+              discount: 0
             })),
             total: 0
           };
@@ -175,16 +185,15 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
         // Update month data
         const monthIndex = entry.month - 1;
         if (monthIndex >= 0 && monthIndex < 12) {
-          transformedData[currentYear][customerId].months[monthIndex].budgetValue += entry.total_amount;
-          transformedData[currentYear][customerId].months[monthIndex].rate = entry.unit_price;
-          transformedData[currentYear][customerId].months[monthIndex].discount = entry.discount_percentage || 0;
-          transformedData[currentYear][customerId].total += entry.total_amount;
+          transformedData[currentYear][customerId].months[monthIndex].budgetValue += entry.budget_amount;
+          transformedData[currentYear][customerId].months[monthIndex].actualValue += entry.actual_amount;
+          transformedData[currentYear][customerId].total += entry.budget_amount;
         }
       });
 
       setBudgetData(transformedData);
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       console.error('Failed to refresh budget data:', error);
     } finally {
@@ -195,10 +204,10 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
   const createBudgetEntry = async (data: Partial<SalesBudget>) => {
     try {
       setError(null);
-      await SalesBudgetService.createSalesBudgetEntry(data);
+      await MockBudgetService.createSalesBudget(data);
       await refreshBudgetData();
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
@@ -207,10 +216,10 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
   const updateBudgetEntry = async (id: number, data: Partial<SalesBudget>) => {
     try {
       setError(null);
-      await SalesBudgetService.updateSalesBudgetEntry(id, data);
+      await MockBudgetService.updateSalesBudget(id, data);
       await refreshBudgetData();
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
@@ -219,10 +228,10 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
   const deleteBudgetEntry = async (id: number) => {
     try {
       setError(null);
-      await SalesBudgetService.deleteSalesBudgetEntry(id);
+      await MockBudgetService.deleteSalesBudget(id);
       await refreshBudgetData();
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
@@ -237,10 +246,20 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
   }) => {
     try {
       setError(null);
-      await SalesBudgetService.bulkCreateSalesBudget(data);
+      // Mock bulk create by creating individual entries
+      for (const itemId of data.items) {
+        await MockBudgetService.createSalesBudget({
+          customer: data.customer,
+          item: itemId,
+          year: data.year,
+          month: 1,
+          budget_amount: data.total_amount / data.items.length,
+          actual_amount: 0
+        });
+      }
       await refreshBudgetData();
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
@@ -248,9 +267,9 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
   const getBudgetSummary = async () => {
     try {
-      return await SalesBudgetService.getSalesBudgetSummary({ year: currentYear });
+      return await MockBudgetService.getBudgetSummary();
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
@@ -258,30 +277,28 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
   const getMonthlyBudget = async (year: number, month: number) => {
     try {
-      return await SalesBudgetService.getMonthlyBudget({ year, month });
+      return { budget_amount: 50000, actual_amount: 45000, variance: 5000 };
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
   };
 
-  // Rolling Forecast Functions
+  // Rolling Forecast functions
   const refreshForecastData = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
       // Load rolling forecast data for current year
-      const forecastRes = await RollingForecastService.getRollingForecasts({
-        year: currentYear,
-        is_latest: true,
-        page_size: 1000
+      const forecastRes = await MockRollingForecastService.getRollingForecasts({
+        year: currentYear
       });
 
-      setForecastData(forecastRes.results || []);
+      setForecastData(forecastRes || []);
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       console.error('Failed to refresh forecast data:', error);
     } finally {
@@ -292,10 +309,10 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
   const createForecastEntry = async (data: Partial<RollingForecast>) => {
     try {
       setError(null);
-      await RollingForecastService.createRollingForecast(data);
+      await MockRollingForecastService.createRollingForecast(data);
       await refreshForecastData();
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
@@ -304,10 +321,10 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
   const updateForecastEntry = async (id: number, data: Partial<RollingForecast>) => {
     try {
       setError(null);
-      await RollingForecastService.updateRollingForecast(id, data);
+      await MockRollingForecastService.updateRollingForecast(id, data);
       await refreshForecastData();
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
@@ -316,10 +333,10 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
   const deleteForecastEntry = async (id: number) => {
     try {
       setError(null);
-      await RollingForecastService.deleteRollingForecast(id);
+      await MockRollingForecastService.deleteForecast(id);
       await refreshForecastData();
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
@@ -337,10 +354,24 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
   }) => {
     try {
       setError(null);
-      await RollingForecastService.bulkCreateForecast(data);
+      // Mock bulk create by creating individual entries
+      for (const itemId of data.items) {
+        for (const forecastMonth of data.forecast_data) {
+          await MockRollingForecastService.createRollingForecast({
+            customer: data.customer,
+            item: itemId,
+            year: data.year,
+            month: forecastMonth.month,
+            forecasted_amount: forecastMonth.forecasted_amount,
+            budget_amount: forecastMonth.forecasted_amount * 0.9, // Mock budget amount
+            forecast_type: forecastMonth.forecast_type,
+            confidence_level: 80
+          });
+        }
+      }
       await refreshForecastData();
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
@@ -348,9 +379,9 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
   const getForecastSummary = async () => {
     try {
-      return await RollingForecastService.getForecastSummary({ year: currentYear });
+      return await MockRollingForecastService.getForecastSummary();
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
@@ -358,9 +389,15 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
   const getVarianceAnalysis = async () => {
     try {
-      return await RollingForecastService.getForecastVarianceAnalysis({ year: currentYear });
+      return {
+        total_variance: 200000,
+        variance_percentage: 16.0,
+        positive_variance_count: 75,
+        negative_variance_count: 69,
+        average_confidence: 82.5
+      };
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
@@ -368,27 +405,35 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
 
   const getMonthlyForecast = async (year: number, month: number) => {
     try {
-      return await RollingForecastService.getMonthlyForecast({ year, month });
+      return { 
+        forecast_amount: 120000, 
+        budget_amount: 100000, 
+        variance: 20000,
+        confidence: 85
+      };
     } catch (error) {
-      const errorMessage = handleApiError(error as any);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     }
   };
 
   const value: BudgetContextType = {
+    // State
     budgetData,
     forecastData,
-    currentYear,
-    selectedCustomer,
-    selectedItems,
     customers,
     items,
     categories,
     brands,
     isLoading,
     error,
+    currentYear,
+    selectedCustomer,
+    selectedItems,
     viewMode,
+    
+    // Actions
     setCurrentYear,
     setSelectedCustomer,
     setSelectedItems,
@@ -400,7 +445,6 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
     refreshBudgetData,
     getBudgetSummary,
     getMonthlyBudget,
-    // Rolling Forecast functions
     createForecastEntry,
     updateForecastEntry,
     deleteForecastEntry,
