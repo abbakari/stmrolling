@@ -9,10 +9,8 @@ import ManagerDataView from '../components/ManagerDataView';
 import GitSummaryWidget from '../components/GitSummaryWidget';
 import AdminStockManagement from '../components/AdminStockManagement';
 import UserCommunicationCenter from '../components/UserCommunicationCenter';
-import CommunicationDemoInfo from '../components/CommunicationDemoInfo';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 import { useStock } from '../contexts/StockContext';
-import { initializeCommunicationDemo } from '../utils/communicationDemo';
 
 
 const Dashboard: React.FC = () => {
@@ -27,13 +25,6 @@ const Dashboard: React.FC = () => {
   const [isCommunicationCenterOpen, setIsCommunicationCenterOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  // Initialize demo communication data
-  React.useEffect(() => {
-    const initialized = initializeCommunicationDemo();
-    if (initialized) {
-      console.log('Communication demo data initialized');
-    }
-  }, []);
 
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type });
@@ -534,8 +525,6 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Communication Demo Info - Show for all users */}
-        <CommunicationDemoInfo />
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
