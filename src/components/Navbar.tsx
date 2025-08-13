@@ -188,10 +188,12 @@ const Navbar: React.FC<NavbarProps> = ({ onPasswordModalOpen }) => {
               >
                 <div className="avatar avatar-online">
                   <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium text-sm">
-                    {user?.name.charAt(0).toUpperCase() || 'U'}
+                    {(user?.first_name?.charAt(0) || user?.username?.charAt(0) || 'U').toUpperCase()}
                   </div>
                 </div>
-                <span className="mx-1 text-sm font-medium hidden md:block">{user?.name || 'User'}</span>
+                <span className="mx-1 text-sm font-medium hidden md:block">
+                  {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.username || 'User'}
+                </span>
               </button>
               
               {isUserMenuOpen && (
