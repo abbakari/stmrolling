@@ -114,17 +114,16 @@ export const BudgetProvider: React.FC<BudgetProviderProps> = ({ children }) => {
       setError(null);
 
       // Load customers, items, categories, and brands in parallel
-      const [customersRes, itemsRes, categoriesRes, brandsRes] = await Promise.all([
-        CustomerService.getCustomerSummary(),
-        ItemService.getItemSummary(),
-        ItemService.getCategorySummary(),
-        ItemService.getBrandSummary()
+      const [customersRes, itemsRes, categoriesRes] = await Promise.all([
+        MockCustomerService.getCustomers(),
+        MockItemService.getItems(),
+        MockItemService.getCategorySummary()
       ]);
 
       setCustomers(customersRes);
       setItems(itemsRes);
-      setCategories(categoriesRes);
-      setBrands(brandsRes);
+      setCategories(categoriesRes.categories || []);
+      setBrands([]);
 
       // Load user's preferred view mode
       if (user?.profile?.preferred_view_mode) {
